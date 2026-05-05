@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>Burger King · Fútbol en Vivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bk-red:    #D62300;
+  --bk-yellow: #F5AA1C;
+  --bk-brown:  #502314;
+  --bk-cream:  #FFF4DC;
+  --bk-dark:   #1A0A00;
+  --white:     #FFFFFF;
+  --black:     #000000;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  font-family: 'Barlow Condensed', sans-serif;
+  background: var(--bk-dark);
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════
+   PLACA BASE — oculta por defecto
+═══════════════════════════════════════════ */
+.placa {
+  position: absolute;
+  inset: 0;
+  width: 1920px;
+  height: 1080px;
+  display: none;
+  overflow: hidden;
+}
+.placa.active { display: flex; }
+
+/* ═══════════════════════════════════════════
+   PLACA 1 — ESPERANDO PARTIDO
+═══════════════════════════════════════════ */
+#placa-waiting {
+  background: var(--bk-dark);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+#placa-waiting .bg-flame {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 1200px 600px at 50% 110%, rgba(214,35,0,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 400px at 50% 100%, rgba(245,170,28,0.2) 0%, transparent 50%);
+}
+#placa-waiting .bk-logo-big {
+  font-family: 'Anton', sans-serif;
+  font-size: 120px;
+  color: var(--bk-yellow);
+  letter-spacing: -2px;
+  line-height: 1;
+  position: relative;
+  text-shadow: 6px 6px 0 var(--bk-brown), 0 0 80px rgba(245,170,28,0.4);
+}
+#placa-waiting .tagline {
+  font-family: 'Anton', sans-serif;
+  font-size: 42px;
+  color: var(--white);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+#placa-waiting .loading-bar {
+  width: 400px; height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+#placa-waiting .loading-fill {
+  position: absolute; top:0; left:-100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--bk-yellow), transparent);
+  animation: shimmer-bar 1.8s ease infinite;
+}
+#placa-waiting .wait-status {
+  font-size: 22px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════
+   PLACA 2 — PRÓXIMO PARTIDO (pre-match)
+═══════════════════════════════════════════ */
+#placa-prematch {
+  background: var(--bk-yellow);
+  flex-direction: row;
+  align-items: stretch;
+}
+#placa-prematch .left-col {
+  width: 480px;
+  background: var(--bk-red);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+}
+#placa-prematch .left-col::after {
+  content: '';
+  position: absolute;
+  right: -40px; top: 0; bottom: 0;
+  width: 80px;
+  background: var(--bk-yellow);
+  clip-path: polygon(40px 0, 100% 0, 100% 100%, 40px 100%, 0 50%);
+}
+#placa-prematch .bk-logo {
+  font-family: 'Anton', sans-serif;
+  font-size: 56px;
+  color: var(--bk-yellow);
+  text-shadow: 3px 3px 0 var(--bk-brown);
+  letter-spacing: -1px;
+}
+#placa-prematch .prox-label {
+  font-family: 'Anton', sans-serif;
+  font-size: 26px;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+}
+#placa-prematch .match-date {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--white);
+  text-align: center;
+  line-height: 1.4;
+}
+#placa-prematch .competition-badge {
+  background: var(--bk-yellow);
+  color: var(--bk-red);
+  font-family: 'Anton', sans-serif;
+  font-size: 18px;
+  letter-spacing: 3px;
+  padding: 8px 20px;
+  border-radius: 4px;
+  text-align: center;
+  margin-top: 8px;
+}
+
+#placa-prematch .right-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px 60px 120px;
+  gap: 40px;
+}
+#placa-prematch .teams-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  width: 100%;
+}
+#placa-prematch .team-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+#placa-prematch .team-crest {
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.1);
+  border: 4px solid var(--bk-brown);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 80px;
+  box-shadow: 0 8px 32px rgba(80,35,20,0.3);
+}
+#placa-prematch .team-name {
+  font-family: 'Anton', sans-serif;
+  font-size: 44px;
+  color: var(--bk-brown);
+  text-align: center;
+  line-height: 1;
+  letter-spacing: 1px;
+}
+#placa-prematch .vs-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+#placa-prematch .vs-text {
+  font-family: 'Anton', sans-serif;
+  font-size: 80px;
+  color: var(--bk-red);
+  line-height: 1;
+  text-shadow: 4px 4px 0 var(--bk-brown);
+}
+#placa-prematch .kick-time {
+  font-family: 'Anton', sans-serif;
+  font-size: 36px;
+  color: var(--bk-brown);
+  background: rgba(80,35,20,0.12);
+  padding: 8px 24px;
+  border-radius: 8px;
+  letter-spacing: 2px;
+}
+
+/* ═══════════════════════════════════════════
+   PLACA 3 — EN VIVO (live score)
+═══════════════════════════════════════════ */
+#placa-live {
+  flex-direction: row;
+  align-items: stretch;
+  background: var(--bk-dark);
+}
+
+/* Franja diagonal de fondo */
+#placa-live::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse 800px 500px at 0% 50%, rgba(214,35,0,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 800px 500px at 100% 50%, rgba(245,170,28,0.08) 0%, transparent 60%);
+  z-index: 0;
+}
+
+/* Línea diagonal decorativa */
+#placa-live .diag-stripe {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) skewX(-8deg);
+  width: 420px;
+  background: rgba(245,170,28,0.04);
+  border-left: 2px solid rgba(245,170,28,0.08);
+  border-right: 2px solid rgba(245,170,28,0.08);
+  z-index: 0;
+}
+
+#placa-live .live-left {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 50px 40px;
+  position: relative; z-index: 1;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+#placa-live .bk-wordmark {
+  font-family: 'Anton', sans-serif;
+  font-size: 52px;
+  color: var(--bk-yellow);
+  text-shadow: 3px 3px 0 var(--bk-brown);
+  letter-spacing: -1px;
+}
+#placa-live .live-badge {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bk-red);
+  border-radius: 6px;
+  padding: 10px 24px;
+  box-shadow: 0 4px 20px rgba(214,35,0,0.4);
+}
+#placa-live .live-dot {
+  width: 10px; height: 10px;
+  background: var(--white);
+  border-radius: 50%;
+  animation: live-blink 1s infinite;
+  box-shadow: 0 0 8px rgba(255,255,255,0.8);
+}
+#placa-live .live-text {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  color: var(--white);
+  letter-spacing: 4px;
+}
+#placa-live .competition-name {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.6;
+}
+#placa-live .minute-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+#placa-live .minute-num {
+  font-family: 'Anton', sans-serif;
+  font-size: 100px;
+  color: var(--bk-yellow);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(245,170,28,0.3);
+}
+#placa-live .minute-label {
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+
+#placa-live .live-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative; z-index: 1;
+  gap: 32px;
+}
+#placa-live .teams-live {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  width: 100%;
+  justify-content: center;
+}
+#placa-live .team-live {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  max-width: 340px;
+}
+#placa-live .crest-live {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 72px;
+}
+#placa-live .name-live {
+  font-family: 'Anton', sans-serif;
+  font-size: 42px;
+  color: var(--white);
+  text-align: center;
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+
+#placa-live .score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+}
+#placa-live .score-nums {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+#placa-live .score-n {
+  font-family: 'Anton', sans-serif;
+  font-size: 160px;
+  color: var(--white);
+  line-height: 1;
+  transition: color 0.3s, text-shadow 0.3s;
+}
+#placa-live .score-n.flash {
+  animation: score-flash 0.6s ease;
+}
+#placa-live .score-dash {
+  font-family: 'Anton', sans-serif;
+  font-size: 80px;
+  color: rgba(255,255,255,0.2);
+  line-height: 1;
+  margin-top: -20px;
+}
+#placa-live .halftime-label {
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+
+#placa-live .live-right {
+  width: 380px;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  padding: 50px 36px;
+  position: relative; z-index: 1;
+  gap: 0;
+}
+#placa-live .events-title {
+  font-size: 11px;
+  letter-spacing: 5px;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+#placa-live .event-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  animation: slide-right 0.4s ease;
+}
+#placa-live .ev-min {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  color: var(--bk-yellow);
+  min-width: 40px;
+  text-align: right;
+}
+#placa-live .ev-icon { font-size: 18px; min-width: 24px; text-align: center; }
+#placa-live .ev-info { flex: 1; }
+#placa-live .ev-player { font-size: 15px; font-weight: 600; color: var(--white); }
+#placa-live .ev-team { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+#placa-live .ev-tag {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 4px; font-weight: 700;
+}
+.tag-g { background: rgba(214,35,0,0.2); color: var(--bk-red); border: 1px solid rgba(214,35,0,0.4); }
+.tag-y { background: rgba(245,170,28,0.15); color: var(--bk-yellow); border: 1px solid rgba(245,170,28,0.3); }
+.tag-r { background: rgba(180,0,0,0.2); color: #ff6060; border: 1px solid rgba(180,0,0,0.4); }
+.tag-s { background: rgba(80,200,80,0.1); color: #80e080; border: 1px solid rgba(80,200,80,0.2); }
+
+/* Footer live */
+#placa-live .live-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: rgba(245,170,28,0.06);
+  border-top: 1px solid rgba(245,170,28,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 50px;
+}
+#placa-live .footer-update {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+}
+#placa-live .footer-update span { color: var(--bk-yellow); }
+#placa-live .footer-slogan {
+  font-family: 'Anton', sans-serif;
+  font-size: 20px;
+  color: var(--bk-yellow);
+  letter-spacing: 3px;
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════
+   PLACA 4 — GOL 🔥
+═══════════════════════════════════════════ */
+#placa-gol {
+  background: var(--bk-red);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+#placa-gol .gol-bg-text {
+  position: absolute;
+  font-family: 'Anton', sans-serif;
+  font-size: 600px;
+  color: rgba(0,0,0,0.12);
+  line-height: 1;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-8deg);
+  white-space: nowrap;
+  pointer-events: none;
+  letter-spacing: -20px;
+}
+#placa-gol .gol-flames {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 300px;
+  background: linear-gradient(to top,
+    rgba(245,170,28,0.4) 0%,
+    rgba(245,170,28,0.15) 40%,
+    transparent 100%);
+}
+#placa-gol .gol-top {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; gap: 24px;
+  margin-bottom: 20px;
+}
+#placa-gol .gol-ball { font-size: 72px; animation: ball-spin 0.6s ease; }
+#placa-gol .gol-word {
+  font-family: 'Anton', sans-serif;
+  font-size: 220px;
+  color: var(--bk-yellow);
+  line-height: 0.9;
+  text-shadow:
+    8px 8px 0 var(--bk-brown),
+    0 0 80px rgba(245,170,28,0.5);
+  letter-spacing: 4px;
+  animation: gol-slam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#placa-gol .gol-scorer {
+  position: relative; z-index: 2;
+  font-family: 'Anton', sans-serif;
+  font-size: 72px;
+  color: var(--white);
+  letter-spacing: 4px;
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+}
+#placa-gol .gol-team {
+  position: relative; z-index: 2;
+  font-size: 28px;
+  letter-spacing: 6px;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+#placa-gol .gol-score-pill {
+  position: relative; z-index: 2;
+  margin-top: 28px;
+  background: rgba(0,0,0,0.3);
+  border: 2px solid rgba(245,170,28,0.4);
+  border-radius: 100px;
+  padding: 12px 48px;
+  display: flex; align-items: center; gap: 20px;
+}
+#placa-gol .gol-score-teams {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+#placa-gol .gol-score-num {
+  font-family: 'Anton', sans-serif;
+  font-size: 52px;
+  color: var(--bk-yellow);
+  letter-spacing: 4px;
+}
+#placa-gol .bk-corner {
+  position: absolute; bottom: 40px; right: 60px; z-index: 3;
+  font-family: 'Anton', sans-serif;
+  font-size: 40px;
+  color: var(--bk-yellow);
+  opacity: 0.7;
+  text-shadow: 2px 2px 0 var(--bk-brown);
+}
+
+/* ═══════════════════════════════════════════
+   PLACA 5 — TARJETA ROJA
+═══════════════════════════════════════════ */
+#placa-roja {
+  background: #1a0000;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+#placa-roja .roja-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(180,0,0,0.3) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 400px at 50% 50%, rgba(214,35,0,0.15) 0%, transparent 50%);
+}
+#placa-roja .roja-card {
+  position: relative; z-index: 2;
+  width: 180px; height: 240px;
+  background: var(--bk-red);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 6px rgba(255,255,255,0.1),
+    0 0 80px rgba(214,35,0,0.6),
+    0 0 160px rgba(214,35,0,0.3);
+  animation: card-show 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin-bottom: 40px;
+}
+#placa-roja .roja-title {
+  position: relative; z-index: 2;
+  font-family: 'Anton', sans-serif;
+  font-size: 100px;
+  color: var(--white);
+  letter-spacing: 8px;
+  text-shadow:
+    4px 4px 0 rgba(0,0,0,0.4),
+    0 0 60px rgba(214,35,0,0.5);
+  animation: gol-slam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#placa-roja .roja-player {
+  position: relative; z-index: 2;
+  font-family: 'Anton', sans-serif;
+  font-size: 60px;
+  color: var(--bk-yellow);
+  letter-spacing: 3px;
+  margin-top: 12px;
+}
+#placa-roja .roja-team {
+  position: relative; z-index: 2;
+  font-size: 24px;
+  letter-spacing: 5px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+#placa-roja .roja-minute {
+  position: relative; z-index: 2;
+  font-family: 'Anton', sans-serif;
+  font-size: 36px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 16px;
+  letter-spacing: 2px;
+}
+#placa-roja .bk-corner {
+  position: absolute; bottom: 40px; right: 60px; z-index: 3;
+  font-family: 'Anton', sans-serif;
+  font-size: 40px;
+  color: var(--bk-yellow);
+  opacity: 0.5;
+  text-shadow: 2px 2px 0 var(--bk-brown);
+}
+
+/* ═══════════════════════════════════════════
+   PLACA 6 — FINAL DEL PARTIDO
+═══════════════════════════════════════════ */
+#placa-final {
+  background: var(--bk-brown);
+  flex-direction: row;
+  align-items: stretch;
+  position: relative;
+  overflow: hidden;
+}
+#placa-final .final-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 1400px 800px at 50% 120%, rgba(245,170,28,0.15) 0%, transparent 60%);
+}
+#placa-final .final-left {
+  width: 520px;
+  background: var(--bk-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 50px;
+  gap: 24px;
+  position: relative; z-index: 1;
+}
+#placa-final .final-bk {
+  font-family: 'Anton', sans-serif;
+  font-size: 64px;
+  color: var(--bk-yellow);
+  text-shadow: 3px 3px 0 var(--bk-brown);
+}
+#placa-final .final-ft-label {
+  font-family: 'Anton', sans-serif;
+  font-size: 120px;
+  color: var(--white);
+  line-height: 1;
+  letter-spacing: 4px;
+  text-shadow: 0 0 40px rgba(255,255,255,0.1);
+}
+#placa-final .final-ft-sub {
+  font-size: 18px;
+  letter-spacing: 5px;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+#placa-final .final-competition {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.2);
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 8px;
+}
+
+#placa-final .final-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px;
+  position: relative; z-index: 1;
+  gap: 48px;
+}
+#placa-final .final-teams {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+  justify-content: center;
+}
+#placa-final .final-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+#placa-final .final-crest {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 60px;
+}
+#placa-final .final-team-name {
+  font-family: 'Anton', sans-serif;
+  font-size: 40px;
+  color: var(--bk-cream);
+  text-align: center;
+  letter-spacing: 1px;
+}
+#placa-final .final-score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+#placa-final .final-score {
+  font-family: 'Anton', sans-serif;
+  font-size: 140px;
+  color: var(--bk-yellow);
+  line-height: 1;
+  letter-spacing: 12px;
+  text-shadow: 6px 6px 0 rgba(0,0,0,0.3), 0 0 60px rgba(245,170,28,0.2);
+}
+#placa-final .final-winner {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  color: var(--bk-red);
+  letter-spacing: 5px;
+  background: rgba(214,35,0,0.1);
+  border: 1px solid rgba(214,35,0,0.3);
+  padding: 8px 32px;
+  border-radius: 4px;
+}
+#placa-final .bk-bottom {
+  position: absolute;
+  bottom: 32px;
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  color: var(--bk-yellow);
+  letter-spacing: 6px;
+  opacity: 0.4;
+}
+
+/* ═══════════════════════════════════════════
+   ANIMACIONES
+═══════════════════════════════════════════ */
+@keyframes shimmer-bar {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+@keyframes live-blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes gol-slam {
+  0%   { transform: scale(0.4) rotate(-4deg); opacity: 0; }
+  60%  { transform: scale(1.08) rotate(1deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes card-show {
+  0%   { transform: scale(0.3) rotate(-20deg); opacity: 0; }
+  60%  { transform: scale(1.05) rotate(3deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes score-flash {
+  0%   { color: var(--bk-yellow); text-shadow: 0 0 60px rgba(245,170,28,0.8); }
+  100% { color: var(--white); text-shadow: none; }
+}
+@keyframes ball-spin {
+  from { transform: rotate(0deg) scale(0.5); }
+  to   { transform: rotate(360deg) scale(1); }
+}
+</style>
+</head>
+<body>
+
+<!-- PLACA 1: Esperando / Cargando -->
+<div class="placa active" id="placa-waiting">
+  <div class="bg-flame"></div>
+  <div class="bk-logo-big">BURGER KING®</div>
+  <div class="tagline">Fútbol en vivo</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+  <div class="wait-status" id="wait-status">Buscando partido...</div>
+</div>
+
+<!-- PLACA 2: Pre-partido -->
+<div class="placa" id="placa-prematch">
+  <div class="left-col">
+    <div class="bk-logo">BURGER KING®</div>
+    <div class="prox-label">Próximo</div>
+    <div class="match-date" id="pm-date">—</div>
+    <div class="competition-badge" id="pm-comp">—</div>
+  </div>
+  <div class="right-col">
+    <div class="teams-row">
+      <div class="team-block">
+        <div class="team-crest" id="pm-crest1">🏟️</div>
+        <div class="team-name" id="pm-team1">—</div>
+      </div>
+      <div class="vs-block">
+        <div class="vs-text">VS</div>
+        <div class="kick-time" id="pm-time">--:--</div>
+      </div>
+      <div class="team-block">
+        <div class="team-crest" id="pm-crest2">🏟️</div>
+        <div class="team-name" id="pm-team2">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLACA 3: En vivo -->
+<div class="placa" id="placa-live">
+  <div class="diag-stripe"></div>
+
+  <div class="live-left">
+    <div class="bk-wordmark">BURGER KING®</div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <div class="live-text">EN VIVO</div>
+    </div>
+    <div class="competition-name" id="live-comp">—</div>
+    <div class="minute-display">
+      <div class="minute-num" id="live-min">0</div>
+      <div class="minute-label">Minuto</div>
+    </div>
+  </div>
+
+  <div class="live-center">
+    <div class="teams-live">
+      <div class="team-live">
+        <div class="crest-live" id="live-crest1">🏟️</div>
+        <div class="name-live" id="live-team1">—</div>
+      </div>
+      <div class="score-block">
+        <div class="score-nums">
+          <div class="score-n" id="live-score1">0</div>
+          <div class="score-dash">—</div>
+          <div class="score-n" id="live-score2">0</div>
+        </div>
+        <div class="halftime-label" id="live-status-label">Primer tiempo</div>
+      </div>
+      <div class="team-live">
+        <div class="crest-live" id="live-crest2">🏟️</div>
+        <div class="name-live" id="live-team2">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="live-right">
+    <div class="events-title">Eventos del partido</div>
+    <div id="live-events"></div>
+  </div>
+
+  <div class="live-footer">
+    <div class="footer-update">Actualizado <span id="live-update">--:--:--</span></div>
+    <div class="footer-slogan">HAVE IT YOUR WAY</div>
+  </div>
+</div>
+
+<!-- PLACA 4: GOL -->
+<div class="placa" id="placa-gol">
+  <div class="gol-bg-text">GOL</div>
+  <div class="gol-flames"></div>
+  <div class="gol-top">
+    <div class="gol-ball">⚽</div>
+    <div class="gol-word">GOL</div>
+    <div class="gol-ball">⚽</div>
+  </div>
+  <div class="gol-scorer" id="gol-scorer">—</div>
+  <div class="gol-team" id="gol-team">—</div>
+  <div class="gol-score-pill">
+    <div class="gol-score-teams" id="gol-team1-name">—</div>
+    <div class="gol-score-num" id="gol-score">0 — 0</div>
+    <div class="gol-score-teams" id="gol-team2-name">—</div>
+  </div>
+  <div class="bk-corner">BURGER KING®</div>
+</div>
+
+<!-- PLACA 5: Tarjeta Roja -->
+<div class="placa" id="placa-roja">
+  <div class="roja-bg"></div>
+  <div class="roja-card"></div>
+  <div class="roja-title">EXPULSADO</div>
+  <div class="roja-player" id="roja-player">—</div>
+  <div class="roja-team" id="roja-team">—</div>
+  <div class="roja-minute" id="roja-minute">—'</div>
+  <div class="bk-corner">BURGER KING®</div>
+</div>
+
+<!-- PLACA 6: Final -->
+<div class="placa" id="placa-final">
+  <div class="final-bg"></div>
+  <div class="final-left">
+    <div class="final-bk">BURGER KING®</div>
+    <div class="final-ft-label">FT</div>
+    <div class="final-ft-sub">Partido finalizado</div>
+    <div class="final-competition" id="final-comp">—</div>
+  </div>
+  <div class="final-right">
+    <div class="final-teams">
+      <div class="final-team">
+        <div class="final-crest" id="final-crest1">🏟️</div>
+        <div class="final-team-name" id="final-team1">—</div>
+      </div>
+      <div class="final-score-block">
+        <div class="final-score" id="final-score">0 — 0</div>
+        <div class="final-winner" id="final-winner">—</div>
+      </div>
+      <div class="final-team">
+        <div class="final-crest" id="final-crest2">🏟️</div>
+        <div class="final-team-name" id="final-team2">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="bk-bottom">HAVE IT YOUR WAY</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════
+const API_KEY  = '9f549ea4705742d7bda0ab68e8f92a08';
+const API_BASE = 'https://api.football-data.org/v4';
+const POLL_MS  = 60 * 1000; // 60 segundos (free: 10 req/min)
+
+// Estado
+let state = {
+  currentPlaca: 'waiting',
+  match: null,
+  prevScore: { h: null, a: null },
+  prevEvents: [],
+  golTimeout: null,
+  rojaTimeout: null,
+};
+
+// ══════════════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════════════
+async function apiGet(path) {
+  const r = await fetch(`${API_BASE}${path}`, {
+    headers: { 'X-Auth-Token': API_KEY }
+  });
+  if (!r.ok) throw new Error(`API error ${r.status}`);
+  return r.json();
+}
+
+// ══════════════════════════════════════════════════════
+// FETCH PARTIDO EN VIVO
+// ══════════════════════════════════════════════════════
+async function fetchLiveMatch() {
+  try {
+    // Buscar partidos en vivo en todas las competiciones disponibles
+    const data = await apiGet('/matches?status=IN_PLAY,PAUSED');
+    const matches = data.matches || [];
+
+    if (matches.length > 0) {
+      // Priorizar Champions si hay
+      const ucl = matches.find(m => m.competition?.code === 'CL');
+      const match = ucl || matches[0];
+      handleLiveMatch(match);
+      return;
+    }
+
+    // No hay en vivo — buscar próximo
+    const next = await apiGet('/matches?status=TIMED,SCHEDULED&limit=1');
+    const nextMatches = next.matches || [];
+    if (nextMatches.length > 0) {
+      handlePreMatch(nextMatches[0]);
+    } else {
+      // Buscar último finalizado
+      const finished = await apiGet('/matches?status=FINISHED&limit=1');
+      if (finished.matches?.length) handleFinished(finished.matches[0]);
+      else showWaiting('Sin partidos disponibles');
+    }
+
+  } catch(e) {
+    console.error('API error:', e);
+    showWaiting('Error de conexión · Reintentando...');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// HANDLERS
+// ══════════════════════════════════════════════════════
+function handleLiveMatch(m) {
+  const h = m.score?.fullTime?.home ?? m.score?.halfTime?.home ?? 0;
+  const a = m.score?.fullTime?.away ?? m.score?.halfTime?.away ?? 0;
+
+  // Detectar gol nuevo
+  if (state.prevScore.h !== null) {
+    if (h > state.prevScore.h) triggerGol(m.homeTeam.shortName || m.homeTeam.name, h, a, m, 'home');
+    if (a > state.prevScore.a) triggerGol(m.awayTeam.shortName || m.awayTeam.name, h, a, m, 'away');
+  }
+  state.prevScore = { h, a };
+  state.match = m;
+
+  // Actualizar placa live
+  setText('live-team1',  m.homeTeam.shortName || m.homeTeam.name);
+  setText('live-team2',  m.awayTeam.shortName || m.awayTeam.name);
+  setText('live-score1', h);
+  setText('live-score2', a);
+  setText('live-comp',   m.competition?.name || '—');
+  setText('live-min',    m.minute || '?');
+
+  const statusMap = {
+    'IN_PLAY': 'En juego',
+    'PAUSED':  'Medio tiempo',
+    'HT':      'Medio tiempo',
+  };
+  setText('live-status-label', statusMap[m.status] || m.status);
+
+  // Crests con emoji fallback
+  setEmoji('live-crest1', getTeamEmoji(m.homeTeam.name));
+  setEmoji('live-crest2', getTeamEmoji(m.awayTeam.name));
+
+  renderLiveEvents(m);
+  setText('live-update', new Date().toLocaleTimeString('es-UY'));
+
+  // Solo ir a live si no estamos mostrando gol/roja
+  if (state.currentPlaca !== 'gol' && state.currentPlaca !== 'roja') {
+    showPlaca('live');
+  }
+}
+
+function handlePreMatch(m) {
+  const date = new Date(m.utcDate);
+  const dateStr = date.toLocaleDateString('es-UY', { weekday:'long', day:'numeric', month:'long' });
+  const timeStr = date.toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' });
+
+  setText('pm-team1', m.homeTeam.shortName || m.homeTeam.name);
+  setText('pm-team2', m.awayTeam.shortName || m.awayTeam.name);
+  setText('pm-date',  dateStr);
+  setText('pm-time',  timeStr + 'h');
+  setText('pm-comp',  m.competition?.name || '—');
+  setEmoji('pm-crest1', getTeamEmoji(m.homeTeam.name));
+  setEmoji('pm-crest2', getTeamEmoji(m.awayTeam.name));
+
+  showPlaca('prematch');
+}
+
+function handleFinished(m) {
+  const h = m.score?.fullTime?.home ?? 0;
+  const a = m.score?.fullTime?.away ?? 0;
+
+  setText('final-team1', m.homeTeam.shortName || m.homeTeam.name);
+  setText('final-team2', m.awayTeam.shortName || m.awayTeam.name);
+  setText('final-score', `${h} — ${a}`);
+  setText('final-comp',  m.competition?.name || '—');
+  setEmoji('final-crest1', getTeamEmoji(m.homeTeam.name));
+  setEmoji('final-crest2', getTeamEmoji(m.awayTeam.name));
+
+  let winner = 'EMPATE';
+  if (h > a) winner = (m.homeTeam.shortName || m.homeTeam.name).toUpperCase() + ' GANA';
+  if (a > h) winner = (m.awayTeam.shortName || m.awayTeam.name).toUpperCase() + ' GANA';
+  setText('final-winner', winner);
+
+  showPlaca('final');
+}
+
+// ══════════════════════════════════════════════════════
+// EVENTOS
+// ══════════════════════════════════════════════════════
+function renderLiveEvents(m) {
+  // football-data v4 no da eventos detallados en free tier
+  // Mostramos goals del score si hay
+  const events = buildEventsFromScore(m);
+  const container = document.getElementById('live-events');
+  const iconMap  = { goal:'⚽', yellow:'🟨', red:'🟥', sub:'🔄' };
+  const tagClass = { goal:'tag-g', yellow:'tag-y', red:'tag-r', sub:'tag-s' };
+  const tagLabel = { goal:'GOL', yellow:'Amarilla', red:'Roja', sub:'Cambio' };
+
+  if (!events.length) {
+    container.innerHTML = `<div style="color:rgba(255,255,255,0.2);font-size:14px;padding:20px 0;letter-spacing:2px">Sin eventos aún</div>`;
+    return;
+  }
+
+  container.innerHTML = [...events].reverse().slice(0,5).map(e => `
+    <div class="event-row">
+      <span class="ev-min">${e.minute}'</span>
+      <span class="ev-icon">${iconMap[e.type]||'•'}</span>
+      <div class="ev-info">
+        <div class="ev-player">${e.player}</div>
+        <div class="ev-team">${e.team}</div>
+      </div>
+      <span class="ev-tag ${tagClass[e.type]||''}">${tagLabel[e.type]||''}</span>
+    </div>
+  `).join('');
+}
+
+function buildEventsFromScore(m) {
+  // Construye lista básica de goles a partir del score
+  const events = [];
+  const goals = m.goals || [];
+  goals.forEach(g => {
+    events.push({
+      minute: g.minute || '?',
+      type: g.type === 'OWN' ? 'goal' : 'goal',
+      player: g.scorer?.name || 'Gol',
+      team: g.team?.name || '—'
+    });
+  });
+  return events;
+}
+
+// ══════════════════════════════════════════════════════
+// PLACAS ESPECIALES — GOL Y ROJA
+// ══════════════════════════════════════════════════════
+function triggerGol(teamName, h, a, m, side) {
+  // Buscar goleador del último gol
+  const goals = m.goals || [];
+  const lastGoal = [...goals].reverse().find(g => g.team?.id === (side === 'home' ? m.homeTeam.id : m.awayTeam.id));
+  const scorer = lastGoal?.scorer?.name || '⚽';
+
+  setText('gol-scorer', scorer);
+  setText('gol-team', teamName);
+  setText('gol-team1-name', m.homeTeam.shortName || m.homeTeam.name);
+  setText('gol-team2-name', m.awayTeam.shortName || m.awayTeam.name);
+  setText('gol-score', `${h} — ${a}`);
+
+  // Flash en scores
+  flashEl('live-score1');
+  flashEl('live-score2');
+
+  showPlaca('gol');
+  clearTimeout(state.golTimeout);
+  state.golTimeout = setTimeout(() => {
+    showPlaca('live');
+  }, 8000); // 8 segundos de placa gol
+}
+
+function checkRoja(m) {
+  // Detectar nueva tarjeta roja comparando con estado previo
+  const bookings = m.bookings || [];
+  const newRojas = bookings.filter(b =>
+    b.card === 'RED_CARD' &&
+    !state.prevEvents.some(p => p.minute === b.minute && p.team?.id === b.team?.id)
+  );
+  if (newRojas.length) {
+    const roja = newRojas[0];
+    setText('roja-player', roja.player?.name || '—');
+    setText('roja-team', roja.team?.name || '—');
+    setText('roja-minute', (roja.minute || '?') + "'");
+    showPlaca('roja');
+    clearTimeout(state.rojaTimeout);
+    state.rojaTimeout = setTimeout(() => showPlaca('live'), 8000);
+  }
+  state.prevEvents = bookings;
+}
+
+// ══════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════
+function showPlaca(name) {
+  document.querySelectorAll('.placa').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('placa-' + name);
+  if (el) { el.classList.add('active'); state.currentPlaca = name; }
+}
+
+function showWaiting(msg) {
+  setText('wait-status', msg);
+  showPlaca('waiting');
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function setEmoji(id, emoji) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = emoji;
+}
+
+function flashEl(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('flash');
+  void el.offsetWidth;
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 600);
+}
+
+// Emojis representativos por equipos conocidos
+function getTeamEmoji(name) {
+  if (!name) return '🏟️';
+  const n = name.toLowerCase();
+  if (n.includes('real madrid'))   return '👑';
+  if (n.includes('barcelona'))     return '🔵🔴';
+  if (n.includes('manchester'))    return n.includes('city') ? '🔵' : '🔴';
+  if (n.includes('liverpool'))     return '🔴';
+  if (n.includes('chelsea'))       return '💙';
+  if (n.includes('arsenal'))       return '🔴';
+  if (n.includes('juventus'))      return '⚫⚪';
+  if (n.includes('milan'))         return n.includes('inter') ? '🔵⚫' : '🔴⚫';
+  if (n.includes('bayern'))        return '🔴';
+  if (n.includes('dortmund'))      return '🟡';
+  if (n.includes('psg') || n.includes('paris')) return '🔵🔴';
+  if (n.includes('ajax'))          return '🔴⚪';
+  if (n.includes('porto'))         return '🐉';
+  if (n.includes('benfica'))       return '🦅';
+  if (n.includes('atletico'))      return '🔴⚪';
+  if (n.includes('sevilla'))       return '⚪🔴';
+  if (n.includes('napoli'))        return '🔵';
+  if (n.includes('roma'))          return '🟡🔴';
+  return '⚽';
+}
+
+// ══════════════════════════════════════════════════════
+// TIMESTAMP
+// ══════════════════════════════════════════════════════
+setInterval(() => {
+  setText('live-update', new Date().toLocaleTimeString('es-UY'));
+}, 1000);
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+fetchLiveMatch();
+setInterval(fetchLiveMatch, POLL_MS);
+</script>
+</body>
+</html>
