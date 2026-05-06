@@ -980,9 +980,21 @@ async function fetchMatches() {
       return;
     }
 
-    // 2. Partidos de hoy (programados o en vivo)
-    const todayData = await apiGet(`/fixtures?league=${LEAGUE_ID}&season=2024&date=${today}`);
-    const todayFixtures = todayData.response || [];
+    // 2. Todos los partidos de la temporada, filtrar por fecha localmente
+    const todayData = await apiGet(`/fixtures?league=${LEAGUE_ID}&season=2024`);
+    const allFixtures = todayData.response || [];
+    // Filtrar partidos de hoy comparando fecha local
+    const todayFixtures = allFixtures.filter(f => {
+      const d = new Date(f.fixture.date);
+      const local = d.toLocaleDateString("en-CA"); // YYYY-MM-DD
+      return local === today;
+    });
+    // Si no hay de hoy, mostrar el más reciente
+    if (todayFixtures.length === 0 && allFixtures.length > 0) {
+      const sorted = allFixtures.sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
+      handleFinished(sorted[0]);
+      return;
+    }
 
     if (todayFixtures.length > 0) {
       // Separar en vivo, próximos y terminados
