@@ -943,165 +943,252 @@ body {
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════════════════
-const API_KEY  = '9f549ea4705742d7bda0ab68e8f92a08';
-const API_BASE = 'https://api.football-data.org/v4';
-const POLL_MS  = 60 * 1000; // 60 segundos (free: 10 req/min)
+const API_KEY  = '9d40f931c689a65888bde3f5f8a43953';
+const API_BASE = 'https://v3.football.api-sports.io';
+const LEAGUE_ID = 13; // Copa Libertadores
+const POLL_MS  = 5 * 60 * 1000; // 5 minutos
 
-// Estado
 let state = {
   currentPlaca: 'waiting',
-  match: null,
-  prevScore: { h: null, a: null },
-  prevEvents: [],
+  currentFixtureIdx: 0,
+  fixtures: [],
+  prevScore: {},
+  prevEvents: {},
   golTimeout: null,
   rojaTimeout: null,
+  rotateTimeout: null,
 };
 
-// ══════════════════════════════════════════════════════
-// API
-// ══════════════════════════════════════════════════════
 async function apiGet(path) {
-  const r = await fetch(`${API_BASE}${path}`, {
-    headers: { 'X-Auth-Token': API_KEY }
-  });
+  const r = await fetch(`${API_BASE}${path}`, { headers: { 'x-apisports-key': API_KEY } });
   if (!r.ok) throw new Error(`API error ${r.status}`);
   return r.json();
 }
 
-// ══════════════════════════════════════════════════════
-// FETCH PARTIDO EN VIVO
-// ══════════════════════════════════════════════════════
-async function fetchLiveMatch() {
+// ── FETCH PRINCIPAL ──────────────────────────────────
+async function fetchMatches() {
   try {
-    // Buscar partidos en vivo en todas las competiciones disponibles
-    const data = await apiGet('/matches?status=IN_PLAY,PAUSED');
-    const matches = data.matches || [];
+    const today = new Date().toISOString().split('T')[0];
 
-    if (matches.length > 0) {
-      // Priorizar Champions si hay
-      const ucl = matches.find(m => m.competition?.code === 'CL');
-      const match = ucl || matches[0];
-      handleLiveMatch(match);
+    // 1. Partidos en vivo de Libertadores
+    const liveData = await apiGet(`/fixtures?live=all&league=${LEAGUE_ID}`);
+    const live = liveData.response || [];
+
+    if (live.length > 0) {
+      state.fixtures = live;
+      handleLiveRotation();
       return;
     }
 
-    // No hay en vivo — buscar próximo
-    const next = await apiGet('/matches?status=TIMED,SCHEDULED&limit=1');
-    const nextMatches = next.matches || [];
-    if (nextMatches.length > 0) {
-      handlePreMatch(nextMatches[0]);
-    } else {
-      // Buscar último finalizado
-      const finished = await apiGet('/matches?status=FINISHED&limit=1');
-      if (finished.matches?.length) handleFinished(finished.matches[0]);
-      else showWaiting('Sin partidos disponibles');
+    // 2. Partidos de hoy (programados o en vivo)
+    const todayData = await apiGet(`/fixtures?league=${LEAGUE_ID}&season=2026&date=${today}`);
+    const todayFixtures = todayData.response || [];
+
+    if (todayFixtures.length > 0) {
+      // Separar en vivo, próximos y terminados
+      const inPlay    = todayFixtures.filter(f => ['1H','2H','HT','ET','P'].includes(f.fixture.status.short));
+      const scheduled = todayFixtures.filter(f => ['NS','TBD'].includes(f.fixture.status.short));
+      const finished  = todayFixtures.filter(f => f.fixture.status.short === 'FT');
+
+      if (inPlay.length > 0) {
+        state.fixtures = inPlay;
+        handleLiveRotation();
+      } else if (scheduled.length > 0) {
+        state.fixtures = scheduled;
+        showAllPreMatch(todayFixtures);
+      } else if (finished.length > 0) {
+        state.fixtures = finished;
+        showAllFinished(todayFixtures);
+      }
+      return;
     }
 
+    showWaiting('Sin partidos de Libertadores hoy');
+
   } catch(e) {
-    console.error('API error:', e);
+    console.error(e);
     showWaiting('Error de conexión · Reintentando...');
   }
 }
 
-// ══════════════════════════════════════════════════════
-// HANDLERS
-// ══════════════════════════════════════════════════════
-function handleLiveMatch(m) {
-  const h = m.score?.fullTime?.home ?? m.score?.halfTime?.home ?? 0;
-  const a = m.score?.fullTime?.away ?? m.score?.halfTime?.away ?? 0;
+// ── ROTACIÓN DE PARTIDOS EN VIVO ─────────────────────
+async function handleLiveRotation() {
+  clearTimeout(state.rotateTimeout);
+  const fixtures = state.fixtures;
+  if (!fixtures.length) return;
 
-  // Detectar gol nuevo
-  if (state.prevScore.h !== null) {
-    if (h > state.prevScore.h) triggerGol(m.homeTeam.shortName || m.homeTeam.name, h, a, m, 'home');
-    if (a > state.prevScore.a) triggerGol(m.awayTeam.shortName || m.awayTeam.name, h, a, m, 'away');
-  }
-  state.prevScore = { h, a };
-  state.match = m;
+  // Si hay más de un partido, rotamos cada 30s
+  const idx = state.currentFixtureIdx % fixtures.length;
+  await handleLiveFixture(fixtures[idx]);
 
-  // Actualizar placa live
-  setText('live-team1',  m.homeTeam.shortName || m.homeTeam.name);
-  setText('live-team2',  m.awayTeam.shortName || m.awayTeam.name);
-  setText('live-score1', h);
-  setText('live-score2', a);
-  setText('live-comp',   m.competition?.name || '—');
-  setText('live-min',    m.minute || '?');
-
-  const statusMap = {
-    'IN_PLAY': 'En juego',
-    'PAUSED':  'Medio tiempo',
-    'HT':      'Medio tiempo',
-  };
-  setText('live-status-label', statusMap[m.status] || m.status);
-
-  // Crests con emoji fallback
-  setEmoji('live-crest1', getTeamEmoji(m.homeTeam.name));
-  setEmoji('live-crest2', getTeamEmoji(m.awayTeam.name));
-
-  renderLiveEvents(m);
-  setText('live-update', new Date().toLocaleTimeString('es-UY'));
-
-  // Solo ir a live si no estamos mostrando gol/roja
-  if (state.currentPlaca !== 'gol' && state.currentPlaca !== 'roja') {
-    showPlaca('live');
+  if (fixtures.length > 1) {
+    state.rotateTimeout = setTimeout(() => {
+      state.currentFixtureIdx++;
+      handleLiveRotation();
+    }, 30000);
   }
 }
 
-function handlePreMatch(m) {
-  const date = new Date(m.utcDate);
-  const dateStr = date.toLocaleDateString('es-UY', { weekday:'long', day:'numeric', month:'long' });
-  const timeStr = date.toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' });
+async function handleLiveFixture(f) {
+  let events = [];
+  try {
+    const evData = await apiGet(`/fixtures/events?fixture=${f.fixture.id}`);
+    events = evData.response || [];
+  } catch(e) {}
 
-  setText('pm-team1', m.homeTeam.shortName || m.homeTeam.name);
-  setText('pm-team2', m.awayTeam.shortName || m.awayTeam.name);
-  setText('pm-date',  dateStr);
-  setText('pm-time',  timeStr + 'h');
-  setText('pm-comp',  m.competition?.name || '—');
-  setEmoji('pm-crest1', getTeamEmoji(m.homeTeam.name));
-  setEmoji('pm-crest2', getTeamEmoji(m.awayTeam.name));
+  const h = f.goals?.home ?? 0;
+  const a = f.goals?.away ?? 0;
+  const fid = f.fixture.id;
+  const prev = state.prevScore[fid] || { h: null, a: null };
 
+  if (prev.h !== null) {
+    if (h > prev.h) triggerGol(f.teams.home.name, h, a, f.teams.home.name, f.teams.away.name, events, f.teams.home.id);
+    if (a > prev.a) triggerGol(f.teams.away.name, h, a, f.teams.home.name, f.teams.away.name, events, f.teams.away.id);
+  }
+  state.prevScore[fid] = { h, a };
+
+  // Rojas
+  const rojas = events.filter(e => e.type === 'Card' && e.detail === 'Red Card');
+  const prevEv = state.prevEvents[fid] || [];
+  const newRojas = rojas.filter(e => !prevEv.some(p => p.time?.elapsed === e.time?.elapsed && p.team?.id === e.team?.id));
+  if (newRojas.length) {
+    const roja = newRojas[0];
+    setText('roja-player', roja.player?.name || '—');
+    setText('roja-team',   roja.team?.name   || '—');
+    setText('roja-minute', (roja.time?.elapsed || '?') + "'");
+    showPlaca('roja');
+    clearTimeout(state.rojaTimeout);
+    state.rojaTimeout = setTimeout(() => showPlaca('live'), 8000);
+  }
+  state.prevEvents[fid] = events;
+
+  const statusMap = { '1H':'Primer tiempo','HT':'Medio tiempo','2H':'Segundo tiempo','ET':'Prórroga','P':'Penales' };
+
+  // Indicador de múltiples partidos
+  const multiLabel = state.fixtures.length > 1
+    ? `Partido ${(state.currentFixtureIdx % state.fixtures.length) + 1} de ${state.fixtures.length}`
+    : f.league?.name || 'Copa Libertadores';
+
+  setText('live-team1',        f.teams.home.name);
+  setText('live-team2',        f.teams.away.name);
+  setText('live-score1',       h);
+  setText('live-score2',       a);
+  setText('live-comp',         multiLabel);
+  setText('live-min',          f.fixture.status.elapsed || '0');
+  setText('live-status-label', statusMap[f.fixture.status.short] || 'En juego');
+  setEmoji('live-crest1',      getTeamEmoji(f.teams.home.name));
+  setEmoji('live-crest2',      getTeamEmoji(f.teams.away.name));
+  renderLiveEvents(events);
+
+  if (state.currentPlaca !== 'gol' && state.currentPlaca !== 'roja') showPlaca('live');
+}
+
+// ── PRE-PARTIDO: mostrar todos los de hoy ────────────
+function showAllPreMatch(fixtures) {
+  // Mostrar el primero como pre-match, con lista de todos abajo
+  const f = fixtures[0];
+  const date = new Date(f.fixture.date);
+  setText('pm-team1', f.teams.home.name);
+  setText('pm-team2', f.teams.away.name);
+  setText('pm-date',  'Partidos de hoy · Copa Libertadores');
+  setText('pm-time',  date.toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' }) + 'h');
+  setText('pm-comp',  `${fixtures.length} partidos programados`);
+  setEmoji('pm-crest1', getTeamEmoji(f.teams.home.name));
+  setEmoji('pm-crest2', getTeamEmoji(f.teams.away.name));
   showPlaca('prematch');
+
+  // Rotar partidos pre-match cada 8s
+  let i = 0;
+  clearTimeout(state.rotateTimeout);
+  function rotatePreMatch() {
+    const fix = fixtures[i % fixtures.length];
+    const d = new Date(fix.fixture.date);
+    setText('pm-team1', fix.teams.home.name);
+    setText('pm-team2', fix.teams.away.name);
+    setText('pm-time',  d.toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' }) + 'h');
+    setEmoji('pm-crest1', getTeamEmoji(fix.teams.home.name));
+    setEmoji('pm-crest2', getTeamEmoji(fix.teams.away.name));
+    i++;
+    state.rotateTimeout = setTimeout(rotatePreMatch, 8000);
+  }
+  state.rotateTimeout = setTimeout(rotatePreMatch, 8000);
 }
 
-function handleFinished(m) {
-  const h = m.score?.fullTime?.home ?? 0;
-  const a = m.score?.fullTime?.away ?? 0;
+// ── FINAL: mostrar todos los resultados ─────────────
+function showAllFinished(fixtures) {
+  const f = fixtures[0];
+  const h = f.goals?.home ?? 0;
+  const a = f.goals?.away ?? 0;
 
-  setText('final-team1', m.homeTeam.shortName || m.homeTeam.name);
-  setText('final-team2', m.awayTeam.shortName || m.awayTeam.name);
-  setText('final-score', `${h} — ${a}`);
-  setText('final-comp',  m.competition?.name || '—');
-  setEmoji('final-crest1', getTeamEmoji(m.homeTeam.name));
-  setEmoji('final-crest2', getTeamEmoji(m.awayTeam.name));
+  setText('final-team1',  f.teams.home.name);
+  setText('final-team2',  f.teams.away.name);
+  setText('final-score',  `${h} — ${a}`);
+  setText('final-comp',   `Copa Libertadores · ${fixtures.length} partidos hoy`);
+  setEmoji('final-crest1', getTeamEmoji(f.teams.home.name));
+  setEmoji('final-crest2', getTeamEmoji(f.teams.away.name));
 
   let winner = 'EMPATE';
-  if (h > a) winner = (m.homeTeam.shortName || m.homeTeam.name).toUpperCase() + ' GANA';
-  if (a > h) winner = (m.awayTeam.shortName || m.awayTeam.name).toUpperCase() + ' GANA';
+  if (h > a) winner = f.teams.home.name.toUpperCase() + ' GANA';
+  if (a > h) winner = f.teams.away.name.toUpperCase() + ' GANA';
   setText('final-winner', winner);
-
   showPlaca('final');
+
+  // Rotar resultados cada 8s
+  let i = 0;
+  clearTimeout(state.rotateTimeout);
+  function rotateFinished() {
+    const fix = fixtures[i % fixtures.length];
+    const fh = fix.goals?.home ?? 0;
+    const fa = fix.goals?.away ?? 0;
+    setText('final-team1', fix.teams.home.name);
+    setText('final-team2', fix.teams.away.name);
+    setText('final-score', `${fh} — ${fa}`);
+    setEmoji('final-crest1', getTeamEmoji(fix.teams.home.name));
+    setEmoji('final-crest2', getTeamEmoji(fix.teams.away.name));
+    let w = 'EMPATE';
+    if (fh > fa) w = fix.teams.home.name.toUpperCase() + ' GANA';
+    if (fa > fh) w = fix.teams.away.name.toUpperCase() + ' GANA';
+    setText('final-winner', w);
+    i++;
+    state.rotateTimeout = setTimeout(rotateFinished, 8000);
+  }
+  state.rotateTimeout = setTimeout(rotateFinished, 8000);
 }
 
-// ══════════════════════════════════════════════════════
-// EVENTOS
-// ══════════════════════════════════════════════════════
-function renderLiveEvents(m) {
-  // football-data v4 no da eventos detallados en free tier
-  // Mostramos goals del score si hay
-  const events = buildEventsFromScore(m);
+// ── GOL ──────────────────────────────────────────────
+function triggerGol(scoringTeam, h, a, homeName, awayName, events, teamId) {
+  const lastGoal = [...events].reverse().find(e => e.type === 'Goal' && e.team?.id === teamId);
+  const scorer = lastGoal?.player?.name || '⚽';
+  setText('gol-scorer',    scorer);
+  setText('gol-team',      scoringTeam);
+  setText('gol-team1-name', homeName);
+  setText('gol-team2-name', awayName);
+  setText('gol-score',     `${h} — ${a}`);
+  flashEl('live-score1'); flashEl('live-score2');
+  showPlaca('gol');
+  clearTimeout(state.golTimeout);
+  state.golTimeout = setTimeout(() => showPlaca('live'), 8000);
+}
+
+// ── EVENTOS ──────────────────────────────────────────
+function renderLiveEvents(events) {
   const container = document.getElementById('live-events');
+  const typeMap  = { 'Goal':'goal', 'Card':'yellow', 'subst':'sub' };
   const iconMap  = { goal:'⚽', yellow:'🟨', red:'🟥', sub:'🔄' };
   const tagClass = { goal:'tag-g', yellow:'tag-y', red:'tag-r', sub:'tag-s' };
   const tagLabel = { goal:'GOL', yellow:'Amarilla', red:'Roja', sub:'Cambio' };
 
-  if (!events.length) {
+  const mapped = events.map(e => {
+    let type = typeMap[e.type] || 'sub';
+    if (e.type === 'Card' && e.detail === 'Red Card') type = 'red';
+    return { minute: e.time?.elapsed || '?', type, player: e.player?.name || '—', team: e.team?.name || '—' };
+  });
+
+  if (!mapped.length) {
     container.innerHTML = `<div style="color:rgba(255,255,255,0.2);font-size:14px;padding:20px 0;letter-spacing:2px">Sin eventos aún</div>`;
     return;
   }
-
-  container.innerHTML = [...events].reverse().slice(0,5).map(e => `
+  container.innerHTML = [...mapped].reverse().slice(0,5).map(e => `
     <div class="event-row">
       <span class="ev-min">${e.minute}'</span>
       <span class="ev-icon">${iconMap[e.type]||'•'}</span>
@@ -1114,136 +1201,48 @@ function renderLiveEvents(m) {
   `).join('');
 }
 
-function buildEventsFromScore(m) {
-  // Construye lista básica de goles a partir del score
-  const events = [];
-  const goals = m.goals || [];
-  goals.forEach(g => {
-    events.push({
-      minute: g.minute || '?',
-      type: g.type === 'OWN' ? 'goal' : 'goal',
-      player: g.scorer?.name || 'Gol',
-      team: g.team?.name || '—'
-    });
-  });
-  return events;
-}
-
-// ══════════════════════════════════════════════════════
-// PLACAS ESPECIALES — GOL Y ROJA
-// ══════════════════════════════════════════════════════
-function triggerGol(teamName, h, a, m, side) {
-  // Buscar goleador del último gol
-  const goals = m.goals || [];
-  const lastGoal = [...goals].reverse().find(g => g.team?.id === (side === 'home' ? m.homeTeam.id : m.awayTeam.id));
-  const scorer = lastGoal?.scorer?.name || '⚽';
-
-  setText('gol-scorer', scorer);
-  setText('gol-team', teamName);
-  setText('gol-team1-name', m.homeTeam.shortName || m.homeTeam.name);
-  setText('gol-team2-name', m.awayTeam.shortName || m.awayTeam.name);
-  setText('gol-score', `${h} — ${a}`);
-
-  // Flash en scores
-  flashEl('live-score1');
-  flashEl('live-score2');
-
-  showPlaca('gol');
-  clearTimeout(state.golTimeout);
-  state.golTimeout = setTimeout(() => {
-    showPlaca('live');
-  }, 8000); // 8 segundos de placa gol
-}
-
-function checkRoja(m) {
-  // Detectar nueva tarjeta roja comparando con estado previo
-  const bookings = m.bookings || [];
-  const newRojas = bookings.filter(b =>
-    b.card === 'RED_CARD' &&
-    !state.prevEvents.some(p => p.minute === b.minute && p.team?.id === b.team?.id)
-  );
-  if (newRojas.length) {
-    const roja = newRojas[0];
-    setText('roja-player', roja.player?.name || '—');
-    setText('roja-team', roja.team?.name || '—');
-    setText('roja-minute', (roja.minute || '?') + "'");
-    showPlaca('roja');
-    clearTimeout(state.rojaTimeout);
-    state.rojaTimeout = setTimeout(() => showPlaca('live'), 8000);
-  }
-  state.prevEvents = bookings;
-}
-
-// ══════════════════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════════════════
+// ── UTILS ────────────────────────────────────────────
 function showPlaca(name) {
   document.querySelectorAll('.placa').forEach(p => p.classList.remove('active'));
   const el = document.getElementById('placa-' + name);
   if (el) { el.classList.add('active'); state.currentPlaca = name; }
 }
-
-function showWaiting(msg) {
-  setText('wait-status', msg);
-  showPlaca('waiting');
-}
-
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-
-function setEmoji(id, emoji) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = emoji;
-}
-
+function showWaiting(msg) { setText('wait-status', msg); showPlaca('waiting'); }
+function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function setEmoji(id, e)  { const el = document.getElementById(id); if (el) el.textContent = e; }
 function flashEl(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.classList.remove('flash');
-  void el.offsetWidth;
-  el.classList.add('flash');
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
   setTimeout(() => el.classList.remove('flash'), 600);
 }
-
-// Emojis representativos por equipos conocidos
 function getTeamEmoji(name) {
   if (!name) return '🏟️';
   const n = name.toLowerCase();
-  if (n.includes('real madrid'))   return '👑';
-  if (n.includes('barcelona'))     return '🔵🔴';
-  if (n.includes('manchester'))    return n.includes('city') ? '🔵' : '🔴';
-  if (n.includes('liverpool'))     return '🔴';
-  if (n.includes('chelsea'))       return '💙';
-  if (n.includes('arsenal'))       return '🔴';
-  if (n.includes('juventus'))      return '⚫⚪';
-  if (n.includes('milan'))         return n.includes('inter') ? '🔵⚫' : '🔴⚫';
-  if (n.includes('bayern'))        return '🔴';
-  if (n.includes('dortmund'))      return '🟡';
-  if (n.includes('psg') || n.includes('paris')) return '🔵🔴';
-  if (n.includes('ajax'))          return '🔴⚪';
-  if (n.includes('porto'))         return '🐉';
-  if (n.includes('benfica'))       return '🦅';
-  if (n.includes('atletico'))      return '🔴⚪';
-  if (n.includes('sevilla'))       return '⚪🔴';
-  if (n.includes('napoli'))        return '🔵';
-  if (n.includes('roma'))          return '🟡🔴';
+  if (n.includes('river'))      return '⚪🔴';
+  if (n.includes('boca'))       return '🔵🟡';
+  if (n.includes('flamengo'))   return '🔴⚫';
+  if (n.includes('palmeiras'))  return '🟢';
+  if (n.includes('nacional') && n.includes('uru')) return '⚪🔴';
+  if (n.includes('peñarol'))    return '🟡⚫';
+  if (n.includes('colo'))       return '⚪';
+  if (n.includes('universidad')) return '🔵🔴';
+  if (n.includes('atletico') && n.includes('min')) return '⚫';
+  if (n.includes('santos'))     return '⚪⚫';
+  if (n.includes('fluminense')) return '🔴🟢';
+  if (n.includes('gremio'))     return '🔵⚫';
+  if (n.includes('talleres'))   return '🔵⚫';
+  if (n.includes('racing'))     return '⚪🔵';
+  if (n.includes('independiente')) return '🔴';
+  if (n.includes('olimpia'))    return '⚫';
+  if (n.includes('libertad'))   return '⚫🔴';
+  if (n.includes('nacional') && n.includes('par')) return '🔴';
   return '⚽';
 }
 
-// ══════════════════════════════════════════════════════
-// TIMESTAMP
-// ══════════════════════════════════════════════════════
-setInterval(() => {
-  setText('live-update', new Date().toLocaleTimeString('es-UY'));
-}, 1000);
-
-// ══════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════
-fetchLiveMatch();
-setInterval(fetchLiveMatch, POLL_MS);
+setInterval(() => setText('live-update', new Date().toLocaleTimeString('es-UY')), 1000);
+fetchMatches();
+setInterval(fetchMatches, POLL_MS);
 </script>
 </body>
 </html>
