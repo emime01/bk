@@ -1,5 +1,10 @@
 // Proxy to ESPN public soccer API — no auth/token required.
-// Frontend calls: /api/sports?competition=CL&date=2026-05-06
+//
+// Two modes:
+//   1) /api/sports?competition=CL&date=2026-05-06
+//      → list of matches that day (scoreboard)
+//   2) /api/sports?competition=CL&event=12345
+//      → events (goals, cards, subs) + team stats for one match (summary)
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 
@@ -78,33 +83,130 @@ function mapMatch(event) {
   };
 }
 
+// ── SUMMARY (live events + stats) ────────────────────
+function mapEvents(summary) {
+  const plays = summary.plays || summary.keyEvents || [];
+
+  return plays
+    .map(p => {
+      const txt = (p.type?.text || '').toLowerCase();
+      let type   = null;
+      let detail = null;
+
+      if (txt.includes('goal') && !txt.includes('no goal') && !txt.includes('disallow')) {
+        type = 'Goal';
+      } else if (txt.includes('yellow card')) {
+        type = 'Card';
+        detail = 'Yellow Card';
+      } else if (txt.includes('red card')) {
+        type = 'Card';
+        detail = 'Red Card';
+      } else if (txt.includes('substitution')) {
+        type = 'subst';
+      } else if (p.scoringPlay) {
+        type = 'Goal';
+      } else {
+        return null;
+      }
+
+      const clockTxt = (p.clock?.displayValue || '').replace("'", '').trim();
+      const elapsed  = parseInt(clockTxt) || null;
+
+      const player = p.participants?.[0]?.athlete?.displayName
+                  || p.participants?.[0]?.athlete?.shortName
+                  || p.athletesInvolved?.[0]?.displayName
+                  || '—';
+
+      return {
+        type,
+        detail,
+        time: { elapsed },
+        player: { name: player },
+        team:   { id: p.team?.id ? String(p.team.id) : null, name: '' },
+      };
+    })
+    .filter(Boolean);
+}
+
+function statValue(team, names) {
+  if (!team?.statistics) return null;
+  for (const n of names) {
+    const s = team.statistics.find(st => st.name === n || st.abbreviation === n);
+    if (s?.displayValue !== undefined && s.displayValue !== '') return s.displayValue;
+  }
+  return null;
+}
+
+function mapStats(summary) {
+  const teams = summary.boxscore?.teams || [];
+  if (teams.length < 2) return null;
+
+  const pick = (t) => ({
+    possession:    statValue(t, ['possessionPct', 'POS']) || '—',
+    shots:         statValue(t, ['totalShots', 'SH'])     || '—',
+    shotsOnTarget: statValue(t, ['shotsOnTarget', 'SOT']) || '—',
+    corners:       statValue(t, ['wonCorners', 'cornerKicks', 'C']) || '—',
+    fouls:         statValue(t, ['foulsCommitted', 'F']) || '—',
+    yellow:        statValue(t, ['yellowCards', 'YC'])   || '—',
+    red:           statValue(t, ['redCards', 'RC'])      || '—',
+  });
+
+  // ESPN puts home team first in boxscore.teams when homeAway flag matches.
+  const homeTeam = teams.find(t => t.homeAway === 'home') || teams[0];
+  const awayTeam = teams.find(t => t.homeAway === 'away') || teams[1];
+
+  return { home: pick(homeTeam), away: pick(awayTeam) };
+}
+
+async function fetchJson(url) {
+  const r = await fetch(url, {
+    headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' },
+  });
+  if (!r.ok) {
+    const err = new Error(`ESPN HTTP ${r.status}`);
+    err.status = r.status;
+    throw err;
+  }
+  return r.json();
+}
+
 module.exports = async function handler(req, res) {
   const competition = (req.query?.competition || 'CL').toString();
-  const date        = (req.query?.date || new Date().toISOString().slice(0, 10)).toString();
+  const league      = LEAGUE_MAP[competition] || 'uefa.champions';
 
-  const league    = LEAGUE_MAP[competition] || 'uefa.champions';
-  const dateParam = date.replace(/-/g, ''); // YYYYMMDD
-
-  const url = `${ESPN_BASE}/${league}/scoreboard?dates=${dateParam}`;
-
-  try {
-    const r = await fetch(url, {
-      headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' },
-    });
-
-    if (!r.ok) {
-      return res.status(r.status).json({
-        errors:   { api: `ESPN HTTP ${r.status}` },
-        response: [],
+  // Mode 2: single-event summary
+  if (req.query?.event) {
+    const eventId = String(req.query.event);
+    const url     = `${ESPN_BASE}/${league}/summary?event=${encodeURIComponent(eventId)}`;
+    try {
+      const data   = await fetchJson(url);
+      const events = mapEvents(data);
+      const stats  = mapStats(data);
+      res.setHeader('Cache-Control', 's-maxage=15, stale-while-revalidate=15');
+      return res.status(200).json({ events, stats, errors: {} });
+    } catch (e) {
+      return res.status(e.status || 502).json({
+        errors: { api: e.message },
+        events: [],
+        stats:  null,
       });
     }
+  }
 
-    const data    = await r.json();
+  // Mode 1: scoreboard for a date
+  const date      = (req.query?.date || new Date().toISOString().slice(0, 10)).toString();
+  const dateParam = date.replace(/-/g, ''); // YYYYMMDD
+  const url       = `${ESPN_BASE}/${league}/scoreboard?dates=${dateParam}`;
+
+  try {
+    const data    = await fetchJson(url);
     const matches = (data.events || []).map(mapMatch).filter(Boolean);
-
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
     return res.status(200).json({ response: matches, errors: {}, results: matches.length });
   } catch (e) {
-    return res.status(502).json({ errors: { proxy: e.message }, response: [] });
+    return res.status(e.status || 502).json({
+      errors:   { api: e.message },
+      response: [],
+    });
   }
 };

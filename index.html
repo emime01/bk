@@ -407,10 +407,48 @@ body {
   letter-spacing: 5px;
   color: rgba(255,255,255,0.25);
   text-transform: uppercase;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
+#placa-live .events-title.spaced { margin-top: 20px; }
+#placa-live .stat-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 7px 0;
+}
+#placa-live .stat-h, #placa-live .stat-a {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  color: var(--white);
+  line-height: 1;
+}
+#placa-live .stat-h { text-align: left;  color: var(--bk-yellow); }
+#placa-live .stat-a { text-align: right; color: var(--bk-cream); }
+#placa-live .stat-name {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  padding: 0 14px;
+}
+#placa-live .stat-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+  display: flex;
+}
+#placa-live .stat-bar > span {
+  height: 100%;
+  display: block;
+}
+#placa-live .stat-bar .bar-h { background: var(--bk-yellow); }
+#placa-live .stat-bar .bar-a { background: var(--bk-cream);  opacity: 0.5; }
 #placa-live .event-row {
   display: flex;
   align-items: center;
@@ -874,7 +912,9 @@ body {
   </div>
 
   <div class="live-right">
-    <div class="events-title">Eventos del partido</div>
+    <div class="events-title">Estadísticas</div>
+    <div id="live-stats"></div>
+    <div class="events-title spaced">Eventos del partido</div>
     <div id="live-events"></div>
   </div>
 
@@ -1036,10 +1076,16 @@ async function handleLiveRotation() {
 }
 
 async function handleLiveFixture(f) {
-  // football-data.org no expone eventos (goles/tarjetas/cambios) en el plan
-  // gratuito. Detectamos goles comparando el marcador y dejamos la lista de
-  // eventos vacía.
-  const events = [];
+  // ESPN summary endpoint expone goles, tarjetas, cambios y stats por equipo.
+  let events = [];
+  let stats  = null;
+  try {
+    const sum = await apiGet(`competition=${COMPETITION}&event=${encodeURIComponent(f.fixture.id)}`);
+    events = sum.events || [];
+    stats  = sum.stats  || null;
+  } catch (e) {
+    console.warn('Sin datos en vivo:', e?.message || e);
+  }
 
   const h = f.goals?.home ?? 0;
   const a = f.goals?.away ?? 0;
@@ -1053,13 +1099,19 @@ async function handleLiveFixture(f) {
   state.prevScore[fid] = { h, a };
 
   // Rojas
+  const teamNameById = (id) => {
+    if (!id) return '—';
+    if (String(f.teams.home.id) === String(id)) return f.teams.home.name;
+    if (String(f.teams.away.id) === String(id)) return f.teams.away.name;
+    return '—';
+  };
   const rojas = events.filter(e => e.type === 'Card' && e.detail === 'Red Card');
   const prevEv = state.prevEvents[fid] || [];
   const newRojas = rojas.filter(e => !prevEv.some(p => p.time?.elapsed === e.time?.elapsed && p.team?.id === e.team?.id));
   if (newRojas.length) {
     const roja = newRojas[0];
     setText('roja-player', roja.player?.name || '—');
-    setText('roja-team',   roja.team?.name   || '—');
+    setText('roja-team',   teamNameById(roja.team?.id));
     setText('roja-minute', (roja.time?.elapsed || '?') + "'");
     showPlaca('roja');
     clearTimeout(state.rojaTimeout);
@@ -1083,7 +1135,8 @@ async function handleLiveFixture(f) {
   setText('live-status-label', statusMap[f.fixture.status.short] || 'En juego');
   setCrest('live-crest1',      f.teams.home.logo, getTeamEmoji(f.teams.home.name));
   setCrest('live-crest2',      f.teams.away.logo, getTeamEmoji(f.teams.away.name));
-  renderLiveEvents(events);
+  renderLiveStats(stats, f.teams.home.id, f.teams.away.id);
+  renderLiveEvents(events, f.teams.home, f.teams.away);
 
   if (state.currentPlaca !== 'gol' && state.currentPlaca !== 'roja') showPlaca('live');
 }
@@ -1176,24 +1229,37 @@ function triggerGol(scoringTeam, h, a, homeName, awayName, events, teamId) {
 }
 
 // ── EVENTOS ──────────────────────────────────────────
-function renderLiveEvents(events) {
+function renderLiveEvents(events, home, away) {
   const container = document.getElementById('live-events');
-  const typeMap  = { 'Goal':'goal', 'Card':'yellow', 'subst':'sub' };
   const iconMap  = { goal:'⚽', yellow:'🟨', red:'🟥', sub:'🔄' };
   const tagClass = { goal:'tag-g', yellow:'tag-y', red:'tag-r', sub:'tag-s' };
   const tagLabel = { goal:'GOL', yellow:'Amarilla', red:'Roja', sub:'Cambio' };
 
+  const teamName = (id) => {
+    if (!id) return '—';
+    if (String(home?.id) === String(id)) return home.name;
+    if (String(away?.id) === String(id)) return away.name;
+    return '—';
+  };
+
   const mapped = events.map(e => {
-    let type = typeMap[e.type] || 'sub';
-    if (e.type === 'Card' && e.detail === 'Red Card') type = 'red';
-    return { minute: e.time?.elapsed || '?', type, player: e.player?.name || '—', team: e.team?.name || '—' };
+    let type = 'sub';
+    if (e.type === 'Goal') type = 'goal';
+    else if (e.type === 'Card' && e.detail === 'Red Card') type = 'red';
+    else if (e.type === 'Card') type = 'yellow';
+    return {
+      minute: e.time?.elapsed ?? '?',
+      type,
+      player: e.player?.name || '—',
+      team:   teamName(e.team?.id),
+    };
   });
 
   if (!mapped.length) {
-    container.innerHTML = `<div style="color:rgba(255,255,255,0.2);font-size:14px;padding:20px 0;letter-spacing:2px">Sin eventos aún</div>`;
+    container.innerHTML = `<div style="color:rgba(255,255,255,0.2);font-size:13px;padding:16px 0;letter-spacing:2px">Sin eventos aún</div>`;
     return;
   }
-  container.innerHTML = [...mapped].reverse().slice(0,5).map(e => `
+  container.innerHTML = [...mapped].reverse().slice(0,6).map(e => `
     <div class="event-row">
       <span class="ev-min">${e.minute}'</span>
       <span class="ev-icon">${iconMap[e.type]||'•'}</span>
@@ -1204,6 +1270,51 @@ function renderLiveEvents(events) {
       <span class="ev-tag ${tagClass[e.type]||''}">${tagLabel[e.type]||''}</span>
     </div>
   `).join('');
+}
+
+// ── STATS ────────────────────────────────────────────
+function renderLiveStats(stats) {
+  const container = document.getElementById('live-stats');
+  if (!stats) {
+    container.innerHTML = `<div style="color:rgba(255,255,255,0.2);font-size:13px;padding:8px 0;letter-spacing:2px">Cargando estadísticas…</div>`;
+    return;
+  }
+
+  const num = (v) => {
+    if (v === '—' || v == null) return null;
+    const n = parseFloat(String(v).replace('%','').trim());
+    return isNaN(n) ? null : n;
+  };
+  const pct = (h, a) => {
+    const nh = num(h), na = num(a);
+    if (nh === null || na === null || (nh + na) === 0) return [50, 50];
+    const total = nh + na;
+    return [(nh / total) * 100, (na / total) * 100];
+  };
+
+  const rows = [
+    ['Posesión',  stats.home.possession + (String(stats.home.possession).includes('%') ? '' : '%'),
+                  stats.away.possession + (String(stats.away.possession).includes('%') ? '' : '%')],
+    ['Tiros',     stats.home.shots,         stats.away.shots],
+    ['A puerta',  stats.home.shotsOnTarget, stats.away.shotsOnTarget],
+    ['Córners',   stats.home.corners,       stats.away.corners],
+    ['Faltas',    stats.home.fouls,         stats.away.fouls],
+  ];
+
+  container.innerHTML = rows.map(([name, h, a]) => {
+    const [bh, ba] = pct(h, a);
+    return `
+      <div class="stat-row">
+        <span class="stat-h">${h}</span>
+        <span class="stat-name">${name}</span>
+        <span class="stat-a">${a}</span>
+        <div class="stat-bar">
+          <span class="bar-h" style="width:${bh}%"></span>
+          <span class="bar-a" style="width:${ba}%"></span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ── UTILS ────────────────────────────────────────────
