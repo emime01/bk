@@ -975,6 +975,18 @@ async function fetchMatches() {
     // El plan gratuito de api-sports.io NO acepta el parámetro `date` para
     // fechas históricas, así que pedimos toda la temporada y filtramos local.
     const data = await apiGet(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
+
+    // La API devuelve los problemas (cuenta suspendida, plan, rate-limit...)
+    // dentro del campo `errors` con HTTP 200, no como código de error.
+    const errs = data.errors;
+    const hasErrs = Array.isArray(errs) ? errs.length > 0 : (errs && Object.keys(errs).length > 0);
+    if (hasErrs) {
+      const msg = Array.isArray(errs) ? errs.join(' · ') : Object.values(errs).join(' · ');
+      console.error('API errors:', errs);
+      showWaiting('API: ' + msg);
+      return;
+    }
+
     const all = data.response || [];
 
     // Filtrar por la fecha objetivo (la API devuelve la fecha en formato
