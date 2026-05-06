@@ -972,12 +972,17 @@ async function apiGet(path) {
 // ── FETCH PRINCIPAL ──────────────────────────────────
 async function fetchMatches() {
   try {
-    // Pedir directamente los partidos de la fecha y temporada configuradas
-    const data = await apiGet(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}&date=${MATCH_DATE}`);
+    // El plan gratuito de api-sports.io NO acepta el parámetro `date` para
+    // fechas históricas, así que pedimos toda la temporada y filtramos local.
+    const data = await apiGet(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
     const all = data.response || [];
 
+    // Filtrar por la fecha objetivo (la API devuelve la fecha en formato
+    // ISO; comparamos el prefijo YYYY-MM-DD del timestamp UTC).
+    const dateFixtures = all.filter(f => (f.fixture.date || '').startsWith(MATCH_DATE));
+
     // Solo fase de grupos (la API rotula la ronda como "Group Stage - N")
-    const groupFixtures = all.filter(f => /group/i.test(f.league?.round || ''));
+    const groupFixtures = dateFixtures.filter(f => /group/i.test(f.league?.round || ''));
 
     if (groupFixtures.length === 0) {
       showWaiting(`Sin partidos de fase de grupos · ${formatDateEs(MATCH_DATE)}`);
