@@ -943,15 +943,11 @@ body {
 </div>
 
 <script>
-// La API key vive en Vercel como env var (API_FOOTBALL_KEY) y se accede vía
-// el proxy serverless /api/sports. Nada de credenciales en el cliente.
-const API_BASE = '/api/sports';
-const LEAGUE_ID = 13; // Copa Libertadores
-const SEASON   = 2024;
-// Fecha de la fase de grupos a mostrar (YYYY-MM-DD).
-// Cambiar este valor para visualizar otra jornada de la fase de grupos 2024.
-const MATCH_DATE = '2024-04-03';
-const POLL_MS  = 5 * 60 * 1000; // 5 minutos
+// La API key vive en Vercel como env var (FOOTBALL_DATA_TOKEN) y se accede
+// vía el proxy serverless /api/sports. Nada de credenciales en el cliente.
+const API_BASE   = '/api/sports';
+const COMPETITION = 'CL'; // UEFA Champions League en football-data.org
+const POLL_MS    = 60 * 1000; // 1 minuto (eventos en vivo)
 
 let state = {
   currentPlaca: 'waiting',
@@ -964,13 +960,9 @@ let state = {
   rotateTimeout: null,
 };
 
-async function apiGet(path) {
-  // path llega como "/fixtures?league=13&season=2024" o "/fixtures/events?fixture=123".
-  // Lo convertimos a /api/sports?path=fixtures&league=13&season=2024 para el proxy.
-  const [pathOnly, queryStr = ''] = path.replace(/^\//, '').split('?');
-  const params = new URLSearchParams(queryStr);
-  params.set('path', pathOnly);
-  const r = await fetch(`${API_BASE}?${params.toString()}`);
+async function apiGet(qs) {
+  // qs: "competition=CL&date=2026-05-06". Devuelve {response, errors, ...}.
+  const r = await fetch(`${API_BASE}?${qs}`);
   if (!r.ok) throw new Error(`API error ${r.status}`);
   return r.json();
 }
@@ -978,12 +970,11 @@ async function apiGet(path) {
 // ── FETCH PRINCIPAL ──────────────────────────────────
 async function fetchMatches() {
   try {
-    // El plan gratuito de api-sports.io NO acepta el parámetro `date` para
-    // fechas históricas, así que pedimos toda la temporada y filtramos local.
-    const data = await apiGet(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
+    const today = new Date().toISOString().slice(0, 10);
+    const data = await apiGet(`competition=${COMPETITION}&date=${today}`);
 
-    // La API devuelve los problemas (cuenta suspendida, plan, rate-limit...)
-    // dentro del campo `errors` con HTTP 200, no como código de error.
+    // El proxy reporta problemas (token, suspensión, rate-limit) dentro de
+    // `errors` con HTTP 200. Lo mostramos antes que el genérico "sin partidos".
     const errs = data.errors;
     const hasErrs = Array.isArray(errs) ? errs.length > 0 : (errs && Object.keys(errs).length > 0);
     if (hasErrs) {
@@ -995,22 +986,15 @@ async function fetchMatches() {
 
     const all = data.response || [];
 
-    // Filtrar por la fecha objetivo (la API devuelve la fecha en formato
-    // ISO; comparamos el prefijo YYYY-MM-DD del timestamp UTC).
-    const dateFixtures = all.filter(f => (f.fixture.date || '').startsWith(MATCH_DATE));
-
-    // Solo fase de grupos (la API rotula la ronda como "Group Stage - N")
-    const groupFixtures = dateFixtures.filter(f => /group/i.test(f.league?.round || ''));
-
-    if (groupFixtures.length === 0) {
-      showWaiting(`Sin partidos de fase de grupos · ${formatDateEs(MATCH_DATE)}`);
+    if (all.length === 0) {
+      showWaiting(`Sin partidos de Champions hoy · ${formatDateEs(today)}`);
       return;
     }
 
     // Separar por estado del partido
-    const inPlay    = groupFixtures.filter(f => ['1H','2H','HT','ET','P','BT'].includes(f.fixture.status.short));
-    const scheduled = groupFixtures.filter(f => ['NS','TBD'].includes(f.fixture.status.short));
-    const finished  = groupFixtures.filter(f => ['FT','AET','PEN'].includes(f.fixture.status.short));
+    const inPlay    = all.filter(f => ['1H','2H','HT','ET','P','BT'].includes(f.fixture.status.short));
+    const scheduled = all.filter(f => ['NS','TBD'].includes(f.fixture.status.short));
+    const finished  = all.filter(f => ['FT','AET','PEN'].includes(f.fixture.status.short));
 
     if (inPlay.length > 0) {
       state.fixtures = inPlay;
@@ -1023,8 +1007,8 @@ async function fetchMatches() {
       showAllFinished(finished);
     } else {
       // Estados mixtos / desconocidos: mostrar todos como resultados
-      state.fixtures = groupFixtures;
-      showAllFinished(groupFixtures);
+      state.fixtures = all;
+      showAllFinished(all);
     }
   } catch(e) {
     console.error(e);
@@ -1057,11 +1041,10 @@ async function handleLiveRotation() {
 }
 
 async function handleLiveFixture(f) {
-  let events = [];
-  try {
-    const evData = await apiGet(`/fixtures/events?fixture=${f.fixture.id}`);
-    events = evData.response || [];
-  } catch(e) {}
+  // football-data.org no expone eventos (goles/tarjetas/cambios) en el plan
+  // gratuito. Detectamos goles comparando el marcador y dejamos la lista de
+  // eventos vacía.
+  const events = [];
 
   const h = f.goals?.home ?? 0;
   const a = f.goals?.away ?? 0;
@@ -1094,7 +1077,7 @@ async function handleLiveFixture(f) {
   // Indicador de múltiples partidos
   const multiLabel = state.fixtures.length > 1
     ? `Partido ${(state.currentFixtureIdx % state.fixtures.length) + 1} de ${state.fixtures.length}`
-    : f.league?.name || 'Copa Libertadores';
+    : f.league?.name || 'UEFA Champions League';
 
   setText('live-team1',        f.teams.home.name);
   setText('live-team2',        f.teams.away.name);
@@ -1117,7 +1100,7 @@ function showAllPreMatch(fixtures) {
   const date = new Date(f.fixture.date);
   setText('pm-team1', f.teams.home.name);
   setText('pm-team2', f.teams.away.name);
-  setText('pm-date',  `Fase de grupos · ${formatDateEs(MATCH_DATE)}`);
+  setText('pm-date',  `Champions League · ${formatDateEs(new Date().toISOString().slice(0,10))}`);
   setText('pm-time',  date.toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' }) + 'h');
   setText('pm-comp',  `${fixtures.length} partidos programados`);
   setEmoji('pm-crest1', getTeamEmoji(f.teams.home.name));
@@ -1150,7 +1133,7 @@ function showAllFinished(fixtures) {
   setText('final-team1',  f.teams.home.name);
   setText('final-team2',  f.teams.away.name);
   setText('final-score',  `${h} — ${a}`);
-  setText('final-comp',   `Fase de grupos · ${formatDateEs(MATCH_DATE)} · ${fixtures.length} partidos`);
+  setText('final-comp',   `Champions League · ${formatDateEs(new Date().toISOString().slice(0,10))} · ${fixtures.length} partidos`);
   setEmoji('final-crest1', getTeamEmoji(f.teams.home.name));
   setEmoji('final-crest2', getTeamEmoji(f.teams.away.name));
 
