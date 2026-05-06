@@ -336,7 +336,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
   flex: 1;
   max-width: 340px;
 }
@@ -355,6 +355,43 @@ body {
   text-align: center;
   letter-spacing: 1px;
   line-height: 1.1;
+}
+#placa-live .live-scorers {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  line-height: 1.8;
+  min-height: 22px;
+  letter-spacing: 0.3px;
+}
+#placa-live .live-scorers span { display: block; }
+#placa-live .live-scorers span em {
+  font-style: normal;
+  color: var(--bk-yellow);
+  font-size: 13px;
+}
+#placa-live .live-cards-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  min-height: 20px;
+  flex-wrap: wrap;
+}
+.crd-y {
+  display: inline-block;
+  width: 13px; height: 17px;
+  background: var(--bk-yellow);
+  border-radius: 2px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+.crd-r {
+  display: inline-block;
+  width: 13px; height: 17px;
+  background: #cc0000;
+  border-radius: 2px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.5);
 }
 
 #placa-live .score-block {
@@ -895,6 +932,8 @@ body {
       <div class="team-live">
         <div class="crest-live" id="live-crest1">🏟️</div>
         <div class="name-live" id="live-team1">—</div>
+        <div class="live-scorers" id="live-scorers1"></div>
+        <div class="live-cards-row" id="live-cards1"></div>
       </div>
       <div class="score-block">
         <div class="score-nums">
@@ -907,6 +946,8 @@ body {
       <div class="team-live">
         <div class="crest-live" id="live-crest2">🏟️</div>
         <div class="name-live" id="live-team2">—</div>
+        <div class="live-scorers" id="live-scorers2"></div>
+        <div class="live-cards-row" id="live-cards2"></div>
       </div>
     </div>
   </div>
@@ -1143,6 +1184,7 @@ async function handleLiveFixture(f) {
   setText('live-status-label', statusMap[f.fixture.status.short] || 'En juego');
   setCrest('live-crest1',      f.teams.home.logo, getTeamEmoji(f.teams.home.name));
   setCrest('live-crest2',      f.teams.away.logo, getTeamEmoji(f.teams.away.name));
+  renderTeamEvents(events, f.teams.home, f.teams.away);
   renderLiveStats(stats, f.teams.home.id, f.teams.away.id);
   renderLiveEvents(events, f.teams.home, f.teams.away);
 
@@ -1278,6 +1320,39 @@ function renderLiveEvents(events, home, away) {
       <span class="ev-tag ${tagClass[e.type]||''}">${tagLabel[e.type]||''}</span>
     </div>
   `).join('');
+}
+
+// ── GOLES Y TARJETAS BAJO CADA ESCUDO ────────────────
+function renderTeamEvents(events, home, away) {
+  const sameTeam = (id, team) => id && String(id) === String(team.id);
+
+  const goals   = events.filter(e => e.type === 'Goal');
+  const yellows = events.filter(e => e.type === 'Card' && e.detail !== 'Red Card');
+  const reds    = events.filter(e => e.type === 'Card' && e.detail === 'Red Card');
+
+  [home, away].forEach((team, i) => {
+    const suffix = i === 0 ? '1' : '2';
+
+    const tGoals   = goals.filter(e => sameTeam(e.team?.id, team));
+    const tYellows = yellows.filter(e => sameTeam(e.team?.id, team));
+    const tReds    = reds.filter(e => sameTeam(e.team?.id, team));
+
+    const sEl = document.getElementById('live-scorers' + suffix);
+    const cEl = document.getElementById('live-cards'   + suffix);
+
+    if (sEl) {
+      sEl.innerHTML = tGoals.map(g => {
+        const min = g.time?.elapsed ? `<em>${g.time.elapsed}'</em>` : '';
+        return `<span>⚽ ${g.player?.name || '—'} ${min}</span>`;
+      }).join('');
+    }
+
+    if (cEl) {
+      cEl.innerHTML =
+        tYellows.map(() => `<span class="crd-y"></span>`).join('') +
+        tReds.map(()    => `<span class="crd-r"></span>`).join('');
+    }
+  });
 }
 
 // ── STATS ────────────────────────────────────────────
