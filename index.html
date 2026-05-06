@@ -946,6 +946,10 @@ body {
 const API_KEY  = '9d40f931c689a65888bde3f5f8a43953';
 const API_BASE = 'https://v3.football.api-sports.io';
 const LEAGUE_ID = 13; // Copa Libertadores
+const SEASON   = 2024;
+// Fecha de la fase de grupos a mostrar (YYYY-MM-DD).
+// Cambiar este valor para visualizar otra jornada de la fase de grupos 2024.
+const MATCH_DATE = '2024-04-03';
 const POLL_MS  = 5 * 60 * 1000; // 5 minutos
 
 let state = {
@@ -968,59 +972,47 @@ async function apiGet(path) {
 // ── FETCH PRINCIPAL ──────────────────────────────────
 async function fetchMatches() {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    // Pedir directamente los partidos de la fecha y temporada configuradas
+    const data = await apiGet(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}&date=${MATCH_DATE}`);
+    const all = data.response || [];
 
-    // 1. Partidos en vivo de Libertadores
-    const liveData = await apiGet(`/fixtures?live=all&league=${LEAGUE_ID}`);
-    const live = liveData.response || [];
+    // Solo fase de grupos (la API rotula la ronda como "Group Stage - N")
+    const groupFixtures = all.filter(f => /group/i.test(f.league?.round || ''));
 
-    if (live.length > 0) {
-      state.fixtures = live;
+    if (groupFixtures.length === 0) {
+      showWaiting(`Sin partidos de fase de grupos · ${formatDateEs(MATCH_DATE)}`);
+      return;
+    }
+
+    // Separar por estado del partido
+    const inPlay    = groupFixtures.filter(f => ['1H','2H','HT','ET','P','BT'].includes(f.fixture.status.short));
+    const scheduled = groupFixtures.filter(f => ['NS','TBD'].includes(f.fixture.status.short));
+    const finished  = groupFixtures.filter(f => ['FT','AET','PEN'].includes(f.fixture.status.short));
+
+    if (inPlay.length > 0) {
+      state.fixtures = inPlay;
       handleLiveRotation();
-      return;
+    } else if (scheduled.length > 0) {
+      state.fixtures = scheduled;
+      showAllPreMatch(scheduled);
+    } else if (finished.length > 0) {
+      state.fixtures = finished;
+      showAllFinished(finished);
+    } else {
+      // Estados mixtos / desconocidos: mostrar todos como resultados
+      state.fixtures = groupFixtures;
+      showAllFinished(groupFixtures);
     }
-
-    // 2. Todos los partidos de la temporada, filtrar por fecha localmente
-    const todayData = await apiGet(`/fixtures?league=${LEAGUE_ID}&season=2024`);
-    const allFixtures = todayData.response || [];
-    // Filtrar partidos de hoy comparando fecha local
-    const todayFixtures = allFixtures.filter(f => {
-      const d = new Date(f.fixture.date);
-      const local = d.toLocaleDateString("en-CA"); // YYYY-MM-DD
-      return local === today;
-    });
-    // Si no hay de hoy, mostrar el más reciente
-    if (todayFixtures.length === 0 && allFixtures.length > 0) {
-      const sorted = allFixtures.sort((a,b) => new Date(b.fixture.date) - new Date(a.fixture.date));
-      handleFinished(sorted[0]);
-      return;
-    }
-
-    if (todayFixtures.length > 0) {
-      // Separar en vivo, próximos y terminados
-      const inPlay    = todayFixtures.filter(f => ['1H','2H','HT','ET','P'].includes(f.fixture.status.short));
-      const scheduled = todayFixtures.filter(f => ['NS','TBD'].includes(f.fixture.status.short));
-      const finished  = todayFixtures.filter(f => f.fixture.status.short === 'FT');
-
-      if (inPlay.length > 0) {
-        state.fixtures = inPlay;
-        handleLiveRotation();
-      } else if (scheduled.length > 0) {
-        state.fixtures = scheduled;
-        showAllPreMatch(todayFixtures);
-      } else if (finished.length > 0) {
-        state.fixtures = finished;
-        showAllFinished(todayFixtures);
-      }
-      return;
-    }
-
-    showWaiting('Sin partidos de Libertadores hoy');
-
   } catch(e) {
     console.error(e);
     showWaiting('Error de conexión · Reintentando...');
   }
+}
+
+function formatDateEs(dateStr) {
+  const [y, m, d] = dateStr.split('-');
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${parseInt(d,10)} de ${meses[parseInt(m,10)-1]} ${y}`;
 }
 
 // ── ROTACIÓN DE PARTIDOS EN VIVO ─────────────────────
@@ -1102,7 +1094,7 @@ function showAllPreMatch(fixtures) {
   const date = new Date(f.fixture.date);
   setText('pm-team1', f.teams.home.name);
   setText('pm-team2', f.teams.away.name);
-  setText('pm-date',  'Partidos de hoy · Copa Libertadores');
+  setText('pm-date',  `Fase de grupos · ${formatDateEs(MATCH_DATE)}`);
   setText('pm-time',  date.toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' }) + 'h');
   setText('pm-comp',  `${fixtures.length} partidos programados`);
   setEmoji('pm-crest1', getTeamEmoji(f.teams.home.name));
@@ -1135,7 +1127,7 @@ function showAllFinished(fixtures) {
   setText('final-team1',  f.teams.home.name);
   setText('final-team2',  f.teams.away.name);
   setText('final-score',  `${h} — ${a}`);
-  setText('final-comp',   `Copa Libertadores · ${fixtures.length} partidos hoy`);
+  setText('final-comp',   `Fase de grupos · ${formatDateEs(MATCH_DATE)} · ${fixtures.length} partidos`);
   setEmoji('final-crest1', getTeamEmoji(f.teams.home.name));
   setEmoji('final-crest2', getTeamEmoji(f.teams.away.name));
 
