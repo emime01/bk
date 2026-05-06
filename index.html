@@ -943,63 +943,9 @@ body {
 </div>
 
 <script>
-// La API key vive en Vercel como env var (FOOTBALL_DATA_TOKEN) y se accede
-// vía el proxy serverless /api/sports. Nada de credenciales en el cliente.
 const API_BASE    = '/api/sports';
-const COMPETITION = 'CL'; // UEFA Champions League en football-data.org
+const COMPETITION = 'CL'; // UEFA Champions League (ESPN: uefa.champions)
 const POLL_MS     = 60 * 1000; // 1 minuto
-
-// Datos de respaldo: 5 partidos reales de la Champions con escudos de
-// football-data.org/crests (CDN público, sin auth). Se usan cuando el proxy
-// no tiene token configurado o la API no responde, así la pantalla nunca
-// queda vacía.
-const STATIC_MATCHES = [
-  {
-    fixture: { id: 9001, date: '2025-05-06T19:00:00Z', status: { short: 'FT', elapsed: 90 } },
-    league:  { id: 2001, name: 'UEFA Champions League', round: 'SEMI_FINALS' },
-    teams: {
-      home: { id: 86,  name: 'Real Madrid', logo: 'https://crests.football-data.org/86.png' },
-      away: { id: 65,  name: 'Man City',    logo: 'https://crests.football-data.org/65.png' }
-    },
-    goals: { home: 2, away: 1 }
-  },
-  {
-    fixture: { id: 9002, date: '2025-05-06T19:00:00Z', status: { short: 'FT', elapsed: 90 } },
-    league:  { id: 2001, name: 'UEFA Champions League', round: 'SEMI_FINALS' },
-    teams: {
-      home: { id: 524, name: 'PSG',     logo: 'https://crests.football-data.org/524.png' },
-      away: { id: 57,  name: 'Arsenal', logo: 'https://crests.football-data.org/57.png'  }
-    },
-    goals: { home: 1, away: 0 }
-  },
-  {
-    fixture: { id: 9003, date: '2025-05-07T19:00:00Z', status: { short: 'FT', elapsed: 90 } },
-    league:  { id: 2001, name: 'UEFA Champions League', round: 'SEMI_FINALS' },
-    teams: {
-      home: { id: 81,  name: 'Barcelona', logo: 'https://crests.football-data.org/81.png'  },
-      away: { id: 108, name: 'Inter',     logo: 'https://crests.football-data.org/108.png' }
-    },
-    goals: { home: 3, away: 2 }
-  },
-  {
-    fixture: { id: 9004, date: '2025-04-15T19:00:00Z', status: { short: 'FT', elapsed: 90 } },
-    league:  { id: 2001, name: 'UEFA Champions League', round: 'QUARTER_FINALS' },
-    teams: {
-      home: { id: 5,  name: 'Bayern München',    logo: 'https://crests.football-data.org/5.png'  },
-      away: { id: 64, name: 'Liverpool',         logo: 'https://crests.football-data.org/64.png' }
-    },
-    goals: { home: 0, away: 1 }
-  },
-  {
-    fixture: { id: 9005, date: '2025-04-16T19:00:00Z', status: { short: 'FT', elapsed: 90 } },
-    league:  { id: 2001, name: 'UEFA Champions League', round: 'QUARTER_FINALS' },
-    teams: {
-      home: { id: 4,  name: 'Borussia Dortmund', logo: 'https://crests.football-data.org/4.png'  },
-      away: { id: 78, name: 'Atlético Madrid',   logo: 'https://crests.football-data.org/78.png' }
-    },
-    goals: { home: 2, away: 0 }
-  }
-];
 
 let state = {
   currentPlaca: 'waiting',
@@ -1020,33 +966,23 @@ async function apiGet(qs) {
 }
 
 // ── FETCH PRINCIPAL ──────────────────────────────────
-function useStaticFallback(reason) {
-  console.warn('Usando datos estáticos:', reason);
-  state.fixtures = STATIC_MATCHES;
-  showAllFinished(STATIC_MATCHES);
-}
-
 async function fetchMatches() {
   try {
     const today = new Date().toISOString().slice(0, 10);
     const data = await apiGet(`competition=${COMPETITION}&date=${today}`);
 
-    // El proxy reporta problemas (token, suspensión, rate-limit) dentro de
-    // `errors` con HTTP 200. Si hay error, caemos a datos estáticos para que
-    // la pantalla no se quede vacía.
-    const errs = data.errors;
+    const errs    = data.errors;
     const hasErrs = Array.isArray(errs) ? errs.length > 0 : (errs && Object.keys(errs).length > 0);
     if (hasErrs) {
       console.error('API errors:', errs);
-      useStaticFallback('API errors: ' + JSON.stringify(errs));
+      showWaiting('Error al obtener partidos');
       return;
     }
 
     const all = data.response || [];
 
     if (all.length === 0) {
-      // No hay partidos hoy → mostramos los partidos estáticos de ejemplo
-      useStaticFallback('Sin partidos hoy en la API');
+      showWaiting('Sin partidos de Champions League hoy');
       return;
     }
 
@@ -1071,7 +1007,7 @@ async function fetchMatches() {
     }
   } catch(e) {
     console.error(e);
-    useStaticFallback('Error de red: ' + (e?.message || e));
+    showWaiting('Error de conexión · Reintentando...');
   }
 }
 
