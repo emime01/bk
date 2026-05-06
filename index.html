@@ -219,7 +219,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════
-   PLACA 3 — EN VIVO (live score)
+   PLACA 3 — EN VIVO  (mitad izq: partido · mitad der: BK)
 ═══════════════════════════════════════════ */
 #placa-live {
   flex-direction: row;
@@ -227,56 +227,42 @@ body {
   background: var(--bk-dark);
 }
 
-/* Franja diagonal de fondo */
-#placa-live::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background:
-    radial-gradient(ellipse 800px 500px at 0% 50%, rgba(214,35,0,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 800px 500px at 100% 50%, rgba(245,170,28,0.08) 0%, transparent 60%);
-  z-index: 0;
-}
-
-/* Línea diagonal decorativa */
-#placa-live .diag-stripe {
-  position: absolute;
-  top: 0; bottom: 0;
-  left: 50%;
-  transform: translateX(-50%) skewX(-8deg);
-  width: 420px;
-  background: rgba(245,170,28,0.04);
-  border-left: 2px solid rgba(245,170,28,0.08);
-  border-right: 2px solid rgba(245,170,28,0.08);
-  z-index: 0;
-}
-
-#placa-live .live-left {
-  width: 340px;
+/* ── MATCH HALF (izquierda 960px) ─────────── */
+#placa-live .match-half {
+  width: 960px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 50px 40px;
+  padding: 40px 50px 20px;
   position: relative; z-index: 1;
-  border-right: 1px solid rgba(255,255,255,0.06);
+  border-right: 1px solid rgba(255,255,255,0.08);
 }
-#placa-live .bk-wordmark {
-  font-family: 'Anton', sans-serif;
-  font-size: 52px;
-  color: var(--bk-yellow);
-  text-shadow: 3px 3px 0 var(--bk-brown);
-  letter-spacing: -1px;
+#placa-live .match-half::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 800px 600px at 0% 40%, rgba(214,35,0,0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+#placa-live .match-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 #placa-live .live-badge {
   display: flex; align-items: center; gap: 10px;
   background: var(--bk-red);
   border-radius: 6px;
-  padding: 10px 24px;
+  padding: 8px 18px;
   box-shadow: 0 4px 20px rgba(214,35,0,0.4);
+  width: fit-content;
 }
 #placa-live .live-dot {
-  width: 10px; height: 10px;
+  width: 9px; height: 9px;
   background: var(--white);
   border-radius: 50%;
   animation: live-blink 1s infinite;
@@ -284,122 +270,94 @@ body {
 }
 #placa-live .live-text {
   font-family: 'Anton', sans-serif;
-  font-size: 28px;
+  font-size: 22px;
   color: var(--white);
   letter-spacing: 4px;
 }
 #placa-live .competition-name {
-  font-size: 14px;
-  letter-spacing: 3px;
-  color: rgba(255,255,255,0.35);
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.45);
   text-transform: uppercase;
   text-align: center;
-  line-height: 1.6;
 }
 #placa-live .minute-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  display: flex; align-items: baseline; gap: 6px;
 }
 #placa-live .minute-num {
   font-family: 'Anton', sans-serif;
-  font-size: 100px;
+  font-size: 44px;
   color: var(--bk-yellow);
   line-height: 1;
-  text-shadow: 0 0 40px rgba(245,170,28,0.3);
+  text-shadow: 0 0 24px rgba(245,170,28,0.4);
 }
 #placa-live .minute-label {
-  font-size: 16px;
-  letter-spacing: 4px;
-  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.4);
   text-transform: uppercase;
 }
 
-#placa-live .live-center {
-  flex: 1;
+/* Teams + score */
+#placa-live .teams-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 28px;
+}
+#placa-live .team-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  position: relative; z-index: 1;
-  gap: 32px;
+  gap: 10px;
+  min-width: 0;
 }
-#placa-live .teams-live {
-  display: flex;
-  align-items: center;
-  gap: 48px;
-  width: 100%;
-  justify-content: center;
-}
-#placa-live .team-live {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  max-width: 340px;
-}
-#placa-live .crest-live {
-  width: 140px; height: 140px;
+#placa-live .team-crest {
+  width: 120px; height: 120px;
   border-radius: 50%;
   background: rgba(255,255,255,0.04);
   border: 2px solid rgba(255,255,255,0.1);
   display: flex; align-items: center; justify-content: center;
-  font-size: 72px;
+  font-size: 60px;
 }
-#placa-live .name-live {
+#placa-live .team-name {
   font-family: 'Anton', sans-serif;
-  font-size: 42px;
+  font-size: 32px;
   color: var(--white);
   text-align: center;
   letter-spacing: 1px;
-  line-height: 1.1;
+  line-height: 1;
 }
 #placa-live .live-scorers {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: rgba(255,255,255,0.6);
+  color: rgba(255,255,255,0.7);
   text-align: center;
-  line-height: 1.8;
+  line-height: 1.7;
   min-height: 22px;
-  letter-spacing: 0.3px;
 }
 #placa-live .live-scorers span { display: block; }
 #placa-live .live-scorers span em {
   font-style: normal;
   color: var(--bk-yellow);
-  font-size: 13px;
+  font-size: 12px;
+  margin-left: 4px;
 }
 #placa-live .live-cards-row {
-  display: flex;
-  gap: 5px;
+  display: flex; gap: 4px;
   justify-content: center;
-  min-height: 20px;
   flex-wrap: wrap;
+  min-height: 18px;
 }
-.crd-y {
-  display: inline-block;
-  width: 13px; height: 17px;
-  background: var(--bk-yellow);
-  border-radius: 2px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.5);
-}
-.crd-r {
-  display: inline-block;
-  width: 13px; height: 17px;
-  background: #cc0000;
-  border-radius: 2px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.5);
-}
-
 #placa-live .score-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  min-width: 220px;
+  gap: 6px;
+  padding-top: 12px;
+  min-width: 200px;
 }
 #placa-live .score-nums {
   display: flex;
@@ -408,57 +366,60 @@ body {
 }
 #placa-live .score-n {
   font-family: 'Anton', sans-serif;
-  font-size: 160px;
+  font-size: 110px;
   color: var(--white);
   line-height: 1;
   transition: color 0.3s, text-shadow 0.3s;
 }
-#placa-live .score-n.flash {
-  animation: score-flash 0.6s ease;
-}
+#placa-live .score-n.flash { animation: score-flash 0.6s ease; }
 #placa-live .score-dash {
   font-family: 'Anton', sans-serif;
-  font-size: 80px;
+  font-size: 56px;
   color: rgba(255,255,255,0.2);
   line-height: 1;
-  margin-top: -20px;
+  margin-top: -12px;
 }
 #placa-live .halftime-label {
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 4px;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.4);
   text-transform: uppercase;
 }
 
-#placa-live .live-right {
-  width: 380px;
-  border-left: 1px solid rgba(255,255,255,0.06);
+/* Info row (stats + events) */
+#placa-live .info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  flex: 1;
+  min-height: 0;
+}
+#placa-live .info-col {
   display: flex;
   flex-direction: column;
-  padding: 50px 36px;
-  position: relative; z-index: 1;
-  gap: 0;
+  min-width: 0;
+  overflow: hidden;
 }
-#placa-live .events-title {
+#placa-live .section-title {
   font-size: 11px;
   letter-spacing: 5px;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.3);
   text-transform: uppercase;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-#placa-live .events-title.spaced { margin-top: 20px; }
+
+/* Stats */
 #placa-live .stat-row {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 7px 0;
+  padding: 6px 0;
 }
 #placa-live .stat-h, #placa-live .stat-a {
   font-family: 'Anton', sans-serif;
-  font-size: 22px;
-  color: var(--white);
+  font-size: 20px;
   line-height: 1;
 }
 #placa-live .stat-h { text-align: left;  color: var(--bk-yellow); }
@@ -469,7 +430,7 @@ body {
   text-transform: uppercase;
   color: rgba(255,255,255,0.4);
   text-align: center;
-  padding: 0 14px;
+  padding: 0 12px;
 }
 #placa-live .stat-bar {
   grid-column: 1 / -1;
@@ -480,65 +441,136 @@ body {
   margin-top: 4px;
   display: flex;
 }
-#placa-live .stat-bar > span {
-  height: 100%;
-  display: block;
-}
+#placa-live .stat-bar > span { height: 100%; display: block; }
 #placa-live .stat-bar .bar-h { background: var(--bk-yellow); }
-#placa-live .stat-bar .bar-a { background: var(--bk-cream);  opacity: 0.5; }
+#placa-live .stat-bar .bar-a { background: var(--bk-cream); opacity: 0.5; }
+
+/* Events */
 #placa-live .event-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 0;
+  gap: 10px;
+  padding: 9px 0;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   animation: slide-right 0.4s ease;
 }
 #placa-live .ev-min {
   font-family: 'Anton', sans-serif;
-  font-size: 22px;
+  font-size: 18px;
   color: var(--bk-yellow);
-  min-width: 40px;
+  min-width: 36px;
   text-align: right;
 }
-#placa-live .ev-icon { font-size: 18px; min-width: 24px; text-align: center; }
-#placa-live .ev-info { flex: 1; }
-#placa-live .ev-player { font-size: 15px; font-weight: 600; color: var(--white); }
-#placa-live .ev-team { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
-#placa-live .ev-tag {
-  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-  padding: 3px 10px; border-radius: 4px; font-weight: 700;
+#placa-live .ev-icon { font-size: 14px; min-width: 20px; text-align: center; }
+#placa-live .ev-info { flex: 1; min-width: 0; }
+#placa-live .ev-player {
+  font-size: 13px; font-weight: 600;
+  color: var(--white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.tag-g { background: rgba(214,35,0,0.2); color: var(--bk-red); border: 1px solid rgba(214,35,0,0.4); }
+#placa-live .ev-team {
+  font-size: 11px; color: rgba(255,255,255,0.35);
+  margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#placa-live .ev-tag {
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 4px; font-weight: 700;
+}
+.tag-g { background: rgba(214,35,0,0.2);   color: var(--bk-red);    border: 1px solid rgba(214,35,0,0.4); }
 .tag-y { background: rgba(245,170,28,0.15); color: var(--bk-yellow); border: 1px solid rgba(245,170,28,0.3); }
-.tag-r { background: rgba(180,0,0,0.2); color: #ff6060; border: 1px solid rgba(180,0,0,0.4); }
-.tag-s { background: rgba(80,200,80,0.1); color: #80e080; border: 1px solid rgba(80,200,80,0.2); }
+.tag-r { background: rgba(180,0,0,0.2);    color: #ff6060;           border: 1px solid rgba(180,0,0,0.4); }
+.tag-s { background: rgba(80,200,80,0.1);  color: #80e080;           border: 1px solid rgba(80,200,80,0.2); }
 
-/* Footer live */
-#placa-live .live-footer {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 60px;
-  background: rgba(245,170,28,0.06);
-  border-top: 1px solid rgba(245,170,28,0.1);
+#placa-live .match-footer {
+  height: 36px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 50px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 14px;
 }
 #placa-live .footer-update {
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 2px;
   color: rgba(255,255,255,0.25);
   text-transform: uppercase;
 }
 #placa-live .footer-update span { color: var(--bk-yellow); }
-#placa-live .footer-slogan {
+
+/* ── BK HALF (derecha 960px) ─────────────── */
+#placa-live .bk-half {
+  width: 960px;
+  background: var(--bk-red);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  gap: 22px;
+}
+#placa-live .bk-half::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 1100px 750px at 50% 115%, rgba(245,170,28,0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 700px 500px at 50% 30%, rgba(245,170,28,0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 300px at 100% 0%, rgba(0,0,0,0.3) 0%, transparent 70%);
+  pointer-events: none;
+}
+#placa-live .bk-half::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: 0; right: 0;
+  height: 320px;
+  background: linear-gradient(to top,
+    rgba(245,170,28,0.5) 0%,
+    rgba(245,170,28,0.18) 40%,
+    transparent 100%);
+  pointer-events: none;
+}
+#placa-live .bk-mega-logo {
   font-family: 'Anton', sans-serif;
-  font-size: 20px;
+  font-size: 138px;
   color: var(--bk-yellow);
-  letter-spacing: 3px;
-  opacity: 0.6;
+  text-shadow: 8px 8px 0 var(--bk-brown), 0 0 100px rgba(245,170,28,0.4);
+  letter-spacing: -3px;
+  line-height: 1;
+  position: relative; z-index: 2;
+  text-align: center;
+}
+#placa-live .bk-tagline {
+  font-family: 'Anton', sans-serif;
+  font-size: 32px;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 10px;
+  text-transform: uppercase;
+  position: relative; z-index: 2;
+}
+#placa-live .bk-divider {
+  width: 110px; height: 4px;
+  background: var(--bk-yellow);
+  margin: 14px 0;
+  position: relative; z-index: 2;
+  box-shadow: 0 0 24px rgba(245,170,28,0.6);
+}
+#placa-live .bk-burger-icon {
+  font-size: 110px;
+  position: relative; z-index: 2;
+  margin: 8px 0;
+  filter: drop-shadow(0 6px 28px rgba(0,0,0,0.45));
+}
+#placa-live .bk-slogan {
+  font-family: 'Anton', sans-serif;
+  font-size: 92px;
+  color: var(--bk-yellow);
+  letter-spacing: 10px;
+  text-shadow: 6px 6px 0 var(--bk-brown);
+  position: relative; z-index: 2;
+  text-align: center;
+  line-height: 0.95;
 }
 
 /* ═══════════════════════════════════════════
@@ -912,26 +944,25 @@ body {
 
 <!-- PLACA 3: En vivo -->
 <div class="placa" id="placa-live">
-  <div class="diag-stripe"></div>
 
-  <div class="live-left">
-    <div class="bk-wordmark">BURGER KING®</div>
-    <div class="live-badge">
-      <div class="live-dot"></div>
-      <div class="live-text">EN VIVO</div>
+  <!-- IZQUIERDA: PARTIDO -->
+  <div class="match-half">
+    <div class="match-header">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        <div class="live-text">EN VIVO</div>
+      </div>
+      <div class="competition-name" id="live-comp">—</div>
+      <div class="minute-display">
+        <div class="minute-num" id="live-min">0</div>
+        <div class="minute-label">MIN</div>
+      </div>
     </div>
-    <div class="competition-name" id="live-comp">—</div>
-    <div class="minute-display">
-      <div class="minute-num" id="live-min">0</div>
-      <div class="minute-label">Minuto</div>
-    </div>
-  </div>
 
-  <div class="live-center">
-    <div class="teams-live">
-      <div class="team-live">
-        <div class="crest-live" id="live-crest1">🏟️</div>
-        <div class="name-live" id="live-team1">—</div>
+    <div class="teams-row">
+      <div class="team-block">
+        <div class="team-crest" id="live-crest1">🏟️</div>
+        <div class="team-name" id="live-team1">—</div>
         <div class="live-scorers" id="live-scorers1"></div>
         <div class="live-cards-row" id="live-cards1"></div>
       </div>
@@ -943,25 +974,37 @@ body {
         </div>
         <div class="halftime-label" id="live-status-label">Primer tiempo</div>
       </div>
-      <div class="team-live">
-        <div class="crest-live" id="live-crest2">🏟️</div>
-        <div class="name-live" id="live-team2">—</div>
+      <div class="team-block">
+        <div class="team-crest" id="live-crest2">🏟️</div>
+        <div class="team-name" id="live-team2">—</div>
         <div class="live-scorers" id="live-scorers2"></div>
         <div class="live-cards-row" id="live-cards2"></div>
       </div>
     </div>
+
+    <div class="info-row">
+      <div class="info-col">
+        <div class="section-title">Estadísticas</div>
+        <div id="live-stats"></div>
+      </div>
+      <div class="info-col">
+        <div class="section-title">Eventos del partido</div>
+        <div id="live-events"></div>
+      </div>
+    </div>
+
+    <div class="match-footer">
+      <div class="footer-update">Actualizado <span id="live-update">--:--:--</span></div>
+    </div>
   </div>
 
-  <div class="live-right">
-    <div class="events-title">Estadísticas</div>
-    <div id="live-stats"></div>
-    <div class="events-title spaced">Eventos del partido</div>
-    <div id="live-events"></div>
-  </div>
-
-  <div class="live-footer">
-    <div class="footer-update">Actualizado <span id="live-update">--:--:--</span></div>
-    <div class="footer-slogan">HAVE IT YOUR WAY</div>
+  <!-- DERECHA: BK -->
+  <div class="bk-half">
+    <div class="bk-mega-logo">BURGER KING®</div>
+    <div class="bk-tagline">Fútbol en vivo</div>
+    <div class="bk-divider"></div>
+    <div class="bk-burger-icon">🍔</div>
+    <div class="bk-slogan">HAVE IT<br>YOUR WAY</div>
   </div>
 </div>
 
