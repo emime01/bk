@@ -943,8 +943,9 @@ body {
 </div>
 
 <script>
-const API_KEY  = '9d40f931c689a65888bde3f5f8a43953';
-const API_BASE = 'https://v3.football.api-sports.io';
+// La API key vive en Vercel como env var (API_FOOTBALL_KEY) y se accede vía
+// el proxy serverless /api/sports. Nada de credenciales en el cliente.
+const API_BASE = '/api/sports';
 const LEAGUE_ID = 13; // Copa Libertadores
 const SEASON   = 2024;
 // Fecha de la fase de grupos a mostrar (YYYY-MM-DD).
@@ -964,7 +965,12 @@ let state = {
 };
 
 async function apiGet(path) {
-  const r = await fetch(`${API_BASE}${path}`, { headers: { 'x-apisports-key': API_KEY } });
+  // path llega como "/fixtures?league=13&season=2024" o "/fixtures/events?fixture=123".
+  // Lo convertimos a /api/sports?path=fixtures&league=13&season=2024 para el proxy.
+  const [pathOnly, queryStr = ''] = path.replace(/^\//, '').split('?');
+  const params = new URLSearchParams(queryStr);
+  params.set('path', pathOnly);
+  const r = await fetch(`${API_BASE}?${params.toString()}`);
   if (!r.ok) throw new Error(`API error ${r.status}`);
   return r.json();
 }
