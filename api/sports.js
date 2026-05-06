@@ -21,19 +21,31 @@ function mapStatus(comp) {
   const st = comp.status?.type;
   if (!st) return { short: 'NS', long: 'Not Started', elapsed: null };
 
-  const name   = st.name || '';
-  const detail = (st.shortDetail || '').toLowerCase();
+  const name      = st.name  || '';
+  const stateCode = st.state || '';          // ESPN: 'pre' | 'in' | 'post'
+  const detail    = (st.shortDetail || '').toLowerCase();
 
-  if (st.completed || name === 'STATUS_FINAL' || name === 'STATUS_FULL_TIME') {
+  // Finished
+  if (stateCode === 'post' || st.completed ||
+      name === 'STATUS_FINAL' || name === 'STATUS_FULL_TIME') {
     return { short: 'FT', long: 'Match Finished', elapsed: 90 };
   }
-  if (name === 'STATUS_HALFTIME' || detail === 'ht' || detail === 'half time') {
+  // Half time (check before generic 'in' so it wins)
+  if (name === 'STATUS_HALFTIME' || detail.includes('ht') || detail.includes('half time') || detail.includes('halftime')) {
     return { short: 'HT', long: 'Half Time', elapsed: 45 };
   }
-  if (name === 'STATUS_IN_PROGRESS') {
+  // In play — covers STATUS_IN_PROGRESS, STATUS_FIRST_HALF, STATUS_SECOND_HALF, etc.
+  if (stateCode === 'in' || name === 'STATUS_IN_PROGRESS' ||
+      name === 'STATUS_FIRST_HALF' || name === 'STATUS_SECOND_HALF' ||
+      name === 'STATUS_EXTRA_TIME' || name === 'STATUS_OVERTIME') {
     const period  = comp.status?.period || 1;
-    const elapsed = parseInt(comp.status?.displayClock) || null;
-    return { short: period <= 1 ? '1H' : '2H', long: 'In Play', elapsed };
+    // displayClock is "40:00" or "40'" — parseInt handles both
+    const elapsed = parseInt(comp.status?.displayClock) ||
+                    Math.round((comp.status?.clock || 0) / 60) || null;
+    let short = '2H';
+    if (name === 'STATUS_EXTRA_TIME' || name === 'STATUS_OVERTIME') short = 'ET';
+    else short = period <= 1 ? '1H' : '2H';
+    return { short, long: 'In Play', elapsed };
   }
   if (name === 'STATUS_POSTPONED')  return { short: 'PST',  long: 'Postponed',  elapsed: null };
   if (name === 'STATUS_CANCELED' || name === 'STATUS_CANCELLED') {
@@ -41,7 +53,7 @@ function mapStatus(comp) {
   }
   if (name === 'STATUS_SUSPENDED') return { short: 'PST',  long: 'Suspended',  elapsed: null };
 
-  return { short: 'NS', long: st.description || 'Not Started', elapsed: null };
+  return { short: 'NS', long: st.description || name || 'Not Started', elapsed: null };
 }
 
 function mapMatch(event) {

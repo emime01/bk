@@ -996,6 +996,7 @@ let state = {
   golTimeout: null,
   rojaTimeout: null,
   rotateTimeout: null,
+  quickPollTimeout: null,
 };
 
 async function apiGet(qs) {
@@ -1037,6 +1038,13 @@ async function fetchMatches() {
     } else if (scheduled.length > 0) {
       state.fixtures = scheduled;
       showAllPreMatch(scheduled);
+      // Si hay partido próximo en las próximas 3 h, poll cada 15 s para
+      // detectar el inicio lo antes posible.
+      const kickoff = new Date(scheduled[0].fixture.date).getTime();
+      if (kickoff - Date.now() < 3 * 60 * 60 * 1000) {
+        clearTimeout(state.quickPollTimeout);
+        state.quickPollTimeout = setTimeout(fetchMatches, 15000);
+      }
     } else if (finished.length > 0) {
       state.fixtures = finished;
       showAllFinished(finished);
