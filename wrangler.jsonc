@@ -12,15 +12,5 @@
   },
   "compatibility_flags": [
     "nodejs_compat"
-  ],
-  // KV namespace for cross-device config sync.
-  // Run once: npx wrangler kv namespace create CONFIG
-  // Then replace both id values below with the IDs from the output.
-  "kv_namespaces": [
-    {
-      "binding": "CONFIG_KV",
-      "id": "REPLACE_WITH_KV_NAMESPACE_ID",
-      "preview_id": "REPLACE_WITH_KV_PREVIEW_ID"
-    }
   ]
 }

@@ -1,5 +1,12 @@
 // Cloudflare Worker — BK Billboard
-// Routes: /api/sports (ESPN proxy) · /api/config (KV store) · everything else → assets
+// Routes: /api/sports (ESPN proxy) · /api/config (KV store, optional) · everything else → assets
+//
+// To enable cross-device config sync, create a KV namespace and add to wrangler.jsonc:
+//   npx wrangler kv namespace create CONFIG   → copy the id
+//   npx wrangler kv namespace create CONFIG --preview → copy the preview_id
+// Then add to wrangler.jsonc:
+//   "kv_namespaces": [{ "binding": "CONFIG_KV", "id": "...", "preview_id": "..." }]
+// Without KV, /api/config returns {} and the display falls back to localStorage defaults.
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 
