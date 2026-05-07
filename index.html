@@ -1104,7 +1104,16 @@ async function fetchMatches() {
       return;
     }
 
-    const all = data.response || [];
+    let all = data.response || [];
+
+    // Filtro opcional desde el panel admin (/admin.html). Si la lista está
+    // vacía o no existe, no filtra y mantiene el comportamiento por defecto.
+    try {
+      const selected = JSON.parse(localStorage.getItem('bk_selected_matches') || '[]');
+      if (Array.isArray(selected) && selected.length > 0) {
+        all = all.filter(m => selected.includes(String(m.fixture.id)));
+      }
+    } catch (e) { /* ignore corrupt storage */ }
 
     if (all.length === 0) {
       showWaiting('Sin partidos de Champions League hoy');

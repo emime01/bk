@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BK · Panel de control</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bk-red:    #D62300;
+  --bk-yellow: #F5AA1C;
+  --bk-brown:  #502314;
+  --bk-cream:  #FFF4DC;
+  --bk-dark:   #1A0A00;
+  --gray-100:  #F5F5F5;
+  --gray-300:  #D0D0D0;
+  --gray-600:  #555;
+  --gray-900:  #1A1A1A;
+}
+
+* { margin:0; padding:0; box-sizing: border-box; }
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--bk-cream);
+  color: var(--gray-900);
+  min-height: 100vh;
+}
+
+header {
+  background: var(--bk-red);
+  color: var(--bk-yellow);
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+header .brand {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+header h1 {
+  font-family: 'Anton', sans-serif;
+  font-size: 36px;
+  letter-spacing: -1px;
+  text-shadow: 2px 2px 0 var(--bk-brown);
+}
+
+header .subtitle {
+  font-family: 'Anton', sans-serif;
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+}
+
+header .display-link {
+  font-size: 13px;
+  color: var(--bk-yellow);
+  text-decoration: none;
+  border: 1px solid rgba(245,170,28,0.5);
+  padding: 8px 16px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+header .display-link:hover { background: rgba(245,170,28,0.15); }
+
+main {
+  max-width: 980px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+
+.panel {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  margin-bottom: 24px;
+}
+
+.panel h2 {
+  font-family: 'Anton', sans-serif;
+  font-size: 24px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--bk-brown);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel h2 .count {
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: var(--gray-600);
+  background: var(--gray-100);
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+.match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.match {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--gray-100);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.match:hover { background: #ECECEC; }
+.match.selected {
+  background: rgba(245,170,28,0.12);
+  border-color: var(--bk-yellow);
+}
+
+.match input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--bk-red);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.match-time {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  color: var(--bk-red);
+  min-width: 70px;
+}
+
+.match-teams {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.match-teams img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.match-teams .team-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--gray-900);
+}
+
+.match-teams .vs {
+  color: var(--gray-600);
+  font-size: 14px;
+  letter-spacing: 1px;
+  margin: 0 4px;
+}
+
+.match-status {
+  font-family: 'Anton', sans-serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.status-NS  { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-300); }
+.status-LIVE{ background: rgba(214,35,0,0.1); color: var(--bk-red); border: 1px solid rgba(214,35,0,0.3); }
+.status-FT  { background: rgba(80,35,20,0.08); color: var(--bk-brown); border: 1px solid rgba(80,35,20,0.2); }
+
+.match-score {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  color: var(--bk-brown);
+  letter-spacing: 2px;
+  min-width: 48px;
+  text-align: right;
+}
+
+.empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--gray-600);
+  font-size: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-secondary {
+  background: var(--gray-100);
+  color: var(--gray-900);
+  border: 1px solid var(--gray-300);
+}
+.btn-secondary:hover { background: #ECECEC; }
+.btn-primary {
+  background: var(--bk-red);
+  color: white;
+  box-shadow: 0 4px 12px rgba(214,35,0,0.3);
+  margin-left: auto;
+}
+.btn-primary:hover { background: #B61D00; }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  background: var(--bk-brown);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 100;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.help {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.6;
+  background: rgba(245,170,28,0.08);
+  border-left: 3px solid var(--bk-yellow);
+  padding: 14px 18px;
+  border-radius: 4px;
+}
+
+.competition-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--gray-300);
+  padding-bottom: 12px;
+  flex-wrap: wrap;
+}
+.tab {
+  padding: 8px 16px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--gray-600);
+}
+.tab:hover { background: #ECECEC; }
+.tab.active {
+  background: var(--bk-red);
+  color: white;
+  border-color: var(--bk-red);
+}
+
+@media (max-width: 600px) {
+  header { flex-direction: column; gap: 12px; align-items: flex-start; padding: 20px; }
+  header h1 { font-size: 28px; }
+  .match { flex-wrap: wrap; }
+  .match-teams { width: 100%; order: 3; }
+  .btn-primary { margin-left: 0; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>BURGER KING®</h1>
+    <span class="subtitle">Panel de control</span>
+  </div>
+  <a class="display-link" href="/" target="_blank">Ver placa →</a>
+</header>
+
+<main>
+  <div class="panel">
+    <div class="competition-tabs" id="competition-tabs">
+      <button class="tab active" data-comp="CL">Champions</button>
+      <button class="tab" data-comp="UEL">Europa League</button>
+      <button class="tab" data-comp="PL">Premier</button>
+      <button class="tab" data-comp="LL">LaLiga</button>
+      <button class="tab" data-comp="BL">Bundesliga</button>
+      <button class="tab" data-comp="SA">Serie A</button>
+    </div>
+
+    <h2>
+      <span>Partidos del día</span>
+      <span class="count" id="count">— de —</span>
+    </h2>
+
+    <div class="match-list" id="match-list">
+      <div class="empty">Cargando partidos…</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" id="btn-all">Seleccionar todos</button>
+      <button class="btn btn-secondary" id="btn-none">Limpiar</button>
+      <button class="btn btn-primary" id="btn-save">Guardar selección</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="help">
+      <strong>Cómo funciona:</strong><br>
+      Marcá los partidos que querés ver en la placa principal y tocá <em>Guardar selección</em>.
+      La placa se actualiza en su próximo refresco automático (máx. 60 s) y solo mostrará esos
+      partidos. Si no marcás ninguno, la placa muestra todos los partidos del día por defecto.
+      <br><br>
+      <strong>Importante:</strong> la selección se guarda en este navegador. Para controlar la
+      placa desde otro dispositivo, abrí esta página en el mismo navegador donde corre la placa.
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast">Selección guardada</div>
+
+<script>
+const STORAGE_KEY = 'bk_selected_matches';
+let currentCompetition = 'CL';
+let currentMatches = [];
+
+function loadSelection() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveSelection(ids) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+}
+
+async function fetchMatches(competition) {
+  const today = new Date().toISOString().slice(0, 10);
+  const r = await fetch(`/api/sports?competition=${competition}&date=${today}`);
+  if (!r.ok) throw new Error('API ' + r.status);
+  const data = await r.json();
+  return data.response || [];
+}
+
+function fmtTime(iso) {
+  return new Date(iso).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+}
+
+function statusBadge(status) {
+  if (['1H','2H','HT','ET','P','BT'].includes(status.short)) {
+    return `<span class="match-status status-LIVE">EN VIVO ${status.elapsed ? status.elapsed + "'" : ''}</span>`;
+  }
+  if (['FT','AET','PEN'].includes(status.short)) {
+    return `<span class="match-status status-FT">Final</span>`;
+  }
+  return `<span class="match-status status-NS">Programado</span>`;
+}
+
+function renderMatches() {
+  const list = document.getElementById('match-list');
+  const selected = loadSelection();
+
+  if (currentMatches.length === 0) {
+    list.innerHTML = '<div class="empty">No hay partidos hoy en esta competición.</div>';
+    document.getElementById('count').textContent = '0 de 0';
+    return;
+  }
+
+  list.innerHTML = currentMatches.map(m => {
+    const id = String(m.fixture.id);
+    const isSel = selected.includes(id);
+    const score = (m.fixture.status.short !== 'NS')
+      ? `<div class="match-score">${m.goals.home}-${m.goals.away}</div>`
+      : '';
+    return `
+      <label class="match ${isSel ? 'selected' : ''}" data-id="${id}">
+        <input type="checkbox" value="${id}" ${isSel ? 'checked' : ''}>
+        <div class="match-time">${fmtTime(m.fixture.date)}</div>
+        <div class="match-teams">
+          ${m.teams.home.logo ? `<img src="${m.teams.home.logo}" alt="">` : ''}
+          <span class="team-name">${m.teams.home.name}</span>
+          <span class="vs">vs</span>
+          ${m.teams.away.logo ? `<img src="${m.teams.away.logo}" alt="">` : ''}
+          <span class="team-name">${m.teams.away.name}</span>
+        </div>
+        ${score}
+        ${statusBadge(m.fixture.status)}
+      </label>
+    `;
+  }).join('');
+
+  // Sync visual state when checkbox toggles
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('.match').classList.toggle('selected', cb.checked);
+      updateCount();
+    });
+  });
+
+  updateCount();
+}
+
+function updateCount() {
+  const total = currentMatches.length;
+  const sel = document.querySelectorAll('input[type="checkbox"]:checked').length;
+  document.getElementById('count').textContent = `${sel} de ${total}`;
+}
+
+async function loadAndRender(competition) {
+  currentCompetition = competition;
+  document.getElementById('match-list').innerHTML = '<div class="empty">Cargando partidos…</div>';
+  try {
+    currentMatches = await fetchMatches(competition);
+  } catch (e) {
+    currentMatches = [];
+    document.getElementById('match-list').innerHTML =
+      `<div class="empty">Error al cargar: ${e.message}</div>`;
+    return;
+  }
+  renderMatches();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.getElementById('btn-all').addEventListener('click', () => {
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = true;
+    cb.closest('.match').classList.add('selected');
+  });
+  updateCount();
+});
+
+document.getElementById('btn-none').addEventListener('click', () => {
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.match').classList.remove('selected');
+  });
+  updateCount();
+});
+
+document.getElementById('btn-save').addEventListener('click', () => {
+  const ids = [...document.querySelectorAll('input[type="checkbox"]:checked')]
+    .map(cb => cb.value);
+  saveSelection(ids);
+  showToast(ids.length === 0
+    ? 'Sin filtro: la placa mostrará todos los partidos'
+    : `${ids.length} partido${ids.length===1?'':'s'} guardado${ids.length===1?'':'s'}`);
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    loadAndRender(tab.dataset.comp);
+  });
+});
+
+loadAndRender('CL');
+</script>
+</body>
+</html>
