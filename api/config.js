@@ -21,7 +21,14 @@ async function kvGet() {
   if (!r.ok) return null;
   const data = await r.json();
   if (!data.result) return {};
-  try { return JSON.parse(data.result); } catch { return {}; }
+  try {
+    let parsed = JSON.parse(data.result);
+    // Handle legacy double-encoded values: parse again if it's still a string.
+    if (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed); } catch {}
+    }
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch { return {}; }
 }
 
 async function kvSet(value) {
@@ -66,7 +73,7 @@ module.exports = async function handler(req, res) {
           }
         }
       }
-      const ok = await kvSet(JSON.stringify(body));
+      const ok = await kvSet(body);
       return res.status(ok ? 200 : 500).json({ ok });
     } catch (e) {
       return res.status(500).json({ ok: false, error: e.message });
