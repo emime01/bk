@@ -984,10 +984,11 @@ body.has-mode-bg #placa-waiting .wait-status {
   font-size: 46px;
   color: var(--white);
   letter-spacing: 0.5px;
-  line-height: 1;
-  white-space: nowrap;
+  line-height: 0.95;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
   flex: 1;
   min-width: 0;
 }
@@ -1052,6 +1053,31 @@ body.has-mode-bg #placa-waiting .wait-status {
   text-align: center;
   padding: 100px 0;
   text-transform: uppercase;
+}
+#placa-day .day-pages {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 4px 0 18px;
+  flex-shrink: 0;
+}
+#placa-day .day-pages .dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  transition: all 0.4s ease;
+}
+#placa-day .day-pages .dot.active {
+  background: var(--bk-yellow);
+  box-shadow: 0 0 12px rgba(245,170,28,0.6);
+  width: 28px;
+  border-radius: 5px;
+}
+body.has-mode-bg #placa-day .day-pages .dot {
+  background: rgba(255,255,255,0.4);
+}
+body.has-mode-bg #placa-day .day-pages .dot.active {
+  background: var(--bk-yellow);
 }
 
 /* Modo denso (6+ partidos): se achica la tipografía */
@@ -1701,6 +1727,7 @@ body.has-mode-bg #placa-waiting .wait-status {
     <div class="day-comp" id="day-comp">—</div>
   </div>
   <div class="day-list" id="day-grid"></div>
+  <div class="day-pages" id="day-pages"></div>
 </div>
 
 <!-- PLACA 8: Multi-live (varios partidos en vivo simultáneos) -->
@@ -1856,6 +1883,8 @@ let state = {
   rojaTimeout: null,
   rotateTimeout: null,
   quickPollTimeout: null,
+  dayPageIdx: 0,
+  dayRotateTimeout: null,
 };
 
 async function apiGet(qs) {
@@ -1874,6 +1903,7 @@ async function fetchMatches() {
     if (mode === 'off') {
       clearTimeout(state.rotateTimeout);
       clearTimeout(state.quickPollTimeout);
+      clearTimeout(state.dayRotateTimeout);
       showWaiting('Fuera de horario de transmisión');
       return;
     }
@@ -1926,12 +1956,14 @@ async function fetchMatches() {
       // Varios partidos en vivo simultáneos → grilla multi-live.
       clearTimeout(state.rotateTimeout);
       clearTimeout(state.quickPollTimeout);
+      clearTimeout(state.dayRotateTimeout);
       state.fixtures = inPlay;
       renderMultiLive(inPlay, cfg.competition);
       return;
     }
 
     // Un solo partido en vivo → vista detallada con stats y eventos.
+    clearTimeout(state.dayRotateTimeout);
     state.fixtures = inPlay;
     handleLiveRotation();
   } catch(e) {
@@ -2252,6 +2284,9 @@ const COMP_LABELS = {
   'SUD': 'Copa Sudamericana',
 };
 
+const DAY_PAGE_SIZE = 4;
+const DAY_PAGE_MS   = 10 * 1000;
+
 function renderDayGrid(fixtures, competition) {
   const today = new Date();
   setText('day-date', formatDateEs(today.toISOString().slice(0,10)));
@@ -2271,19 +2306,25 @@ function renderDayGrid(fixtures, competition) {
   });
 
   const grid = document.getElementById('day-grid');
-  grid.classList.toggle('dense', sorted.length >= 6);
 
   if (sorted.length === 0) {
     grid.innerHTML = '<div class="day-empty">Sin partidos hoy</div>';
+    document.getElementById('day-pages').innerHTML = '';
     showPlaca('day');
     return;
   }
+
+  // Paginación de 4 partidos. Si hay más, rota cada DAY_PAGE_MS.
+  const totalPages = Math.max(1, Math.ceil(sorted.length / DAY_PAGE_SIZE));
+  const idx        = ((state.dayPageIdx % totalPages) + totalPages) % totalPages;
+  const pageStart  = idx * DAY_PAGE_SIZE;
+  const page       = sorted.slice(pageStart, pageStart + DAY_PAGE_SIZE);
 
   const crestHtml = (t) => t.logo
     ? `<img src="${t.logo}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'⚽'}))">`
     : `<span>${getTeamEmoji(t.name)}</span>`;
 
-  grid.innerHTML = sorted.map(f => {
+  grid.innerHTML = page.map(f => {
     const s = f.fixture.status.short;
     const isLive = ['1H','2H','HT','ET','P','BT'].includes(s);
     const isFt   = ['FT','AET','PEN'].includes(s);
@@ -2297,7 +2338,7 @@ function renderDayGrid(fixtures, competition) {
       ? `<div class="day-score-big">${f.goals.home} — ${f.goals.away}</div>`
       : `<div class="day-vs">VS</div>`;
 
-    let badge;
+    let badge = '<div class="day-status"></div>';
     if (isLive) {
       badge = `
         <div class="day-status">
@@ -2306,8 +2347,6 @@ function renderDayGrid(fixtures, competition) {
         </div>`;
     } else if (isFt) {
       badge = `<div class="day-status"><div class="day-status-badge day-stat-FT">FINAL</div></div>`;
-    } else {
-      badge = `<div class="day-status"><div class="day-status-badge day-stat-NS">PROGRAMADO</div></div>`;
     }
 
     return `
@@ -2325,6 +2364,24 @@ function renderDayGrid(fixtures, competition) {
         ${badge}
       </div>`;
   }).join('');
+
+  // Indicador de página (puntitos al pie)
+  const pagesEl = document.getElementById('day-pages');
+  if (totalPages > 1) {
+    pagesEl.innerHTML = Array.from({length: totalPages}).map((_, i) =>
+      `<span class="dot${i === idx ? ' active' : ''}"></span>`).join('');
+  } else {
+    pagesEl.innerHTML = '';
+  }
+
+  // Programar próxima rotación
+  clearTimeout(state.dayRotateTimeout);
+  if (totalPages > 1) {
+    state.dayRotateTimeout = setTimeout(() => {
+      state.dayPageIdx++;
+      renderDayGrid(fixtures, competition);
+    }, DAY_PAGE_MS);
+  }
 
   showPlaca('day');
 }
