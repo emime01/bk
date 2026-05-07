@@ -27,6 +27,58 @@ body {
   position: relative;
 }
 
+/* Imagen de fondo configurable desde /admin (por modo día/vivo/off).
+   Se renderiza en una capa fija con un overlay oscuro encima para
+   que el contenido siga siendo legible sobre cualquier imagen. */
+body.has-mode-bg::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: var(--mode-bg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+body.has-mode-bg::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.7) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+.placa { z-index: 1; }
+/* Cuando hay imagen, las placas neutras se vuelven transparentes para
+   que la imagen se vea de fondo. Las placas con color de marca fuerte
+   (gol/roja/prematch/final/headers) mantienen su color. */
+body.has-mode-bg #placa-waiting,
+body.has-mode-bg #placa-day,
+body.has-mode-bg #placa-multilive,
+body.has-mode-bg #placa-live {
+  background-color: transparent;
+}
+body.has-mode-bg #placa-day .day-row {
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+}
+body.has-mode-bg #placa-day .day-row.live {
+  background: linear-gradient(90deg, rgba(214,35,0,0.55) 0%, rgba(214,35,0,0.2) 100%);
+}
+body.has-mode-bg #placa-day .day-row.ft {
+  background: rgba(80,35,20,0.5);
+}
+body.has-mode-bg #placa-multilive .ml-card {
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+}
+body.has-mode-bg #placa-live .match-half,
+body.has-mode-bg #placa-live .bk-half {
+  backdrop-filter: blur(2px);
+}
+body.has-mode-bg #placa-live .match-half {
+  background: rgba(0,0,0,0.4);
+}
+
 /* ═══════════════════════════════════════════
    PLACA BASE — oculta por defecto
 ═══════════════════════════════════════════ */
@@ -1561,6 +1613,26 @@ function getCurrentMode() {
   return 'off';
 }
 
+// Imagen de fondo por modo (configurable desde /admin).
+function loadBackgrounds() {
+  try {
+    const raw = localStorage.getItem('bk_backgrounds');
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+function applyModeBackground() {
+  const mode = getCurrentMode();
+  const bgs  = loadBackgrounds();
+  const url  = bgs[mode];
+  if (url) {
+    document.documentElement.style.setProperty('--mode-bg', `url("${url.replace(/"/g,'\\"')}")`);
+    document.body.classList.add('has-mode-bg');
+  } else {
+    document.documentElement.style.removeProperty('--mode-bg');
+    document.body.classList.remove('has-mode-bg');
+  }
+}
+
 // Configuración del panel /admin: { competition: 'CL'|'LIB'|..., ids: [...] }.
 // Si no hay nada guardado, el default es Champions con todos los partidos.
 function loadDisplayConfig() {
@@ -1599,6 +1671,7 @@ async function apiGet(qs) {
 async function fetchMatches() {
   try {
     const mode = getCurrentMode();
+    applyModeBackground();
 
     if (mode === 'off') {
       clearTimeout(state.rotateTimeout);
@@ -2165,6 +2238,10 @@ setInterval(fetchMatches, POLL_MS);
 // del mismo navegador, este evento dispara un refetch inmediato para que la
 // placa se actualice al instante sin esperar al próximo poll.
 window.addEventListener('storage', (e) => {
+  if (e.key === 'bk_backgrounds') {
+    applyModeBackground();
+    return;
+  }
   if (e.key === 'bk_selected_matches' || e.key === 'bk_schedule') {
     clearTimeout(state.rotateTimeout);
     clearTimeout(state.quickPollTimeout);

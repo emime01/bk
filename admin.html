@@ -313,6 +313,71 @@ main {
   letter-spacing: 1px;
 }
 
+.bg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+.bg-card {
+  background: var(--gray-100);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bg-card h3 {
+  font-family: 'Anton', sans-serif;
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: var(--bk-brown);
+  text-transform: uppercase;
+}
+.bg-preview {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #2a2a2a center / cover no-repeat;
+  border: 1px dashed var(--gray-300);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+.bg-preview.has-image { border-style: solid; border-color: var(--bk-yellow); }
+.bg-preview .placeholder {
+  text-align: center;
+  padding: 16px;
+}
+.bg-card .file-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bg-card input[type="file"] { font-size: 12px; }
+.bg-card input[type="url"] {
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  width: 100%;
+}
+.bg-card input[type="url"]:focus { outline: none; border-color: var(--bk-red); }
+.bg-card .small {
+  font-size: 12px;
+  color: var(--gray-600);
+}
+.bg-card .row-actions {
+  display: flex;
+  gap: 8px;
+}
+.bg-card .row-actions .btn { flex: 1; padding: 8px 12px; font-size: 12px; }
+
 .competition-tabs {
   display: flex;
   gap: 6px;
@@ -399,6 +464,57 @@ main {
     <div class="actions">
       <button class="btn btn-secondary" id="btn-reset-schedule">Restaurar predeterminados</button>
       <button class="btn btn-primary" id="btn-save-schedule">Guardar horarios</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>
+      <span>Imagen de fondo por horario</span>
+    </h2>
+    <div class="bg-grid">
+      <div class="bg-card" data-mode="day">
+        <h3>Modo día</h3>
+        <div class="bg-preview" id="prev-day"><div class="placeholder">Sin imagen</div></div>
+        <div class="file-row">
+          <input type="file" accept="image/*" id="file-day">
+          <input type="url" placeholder="o pegá una URL https://…" id="url-day">
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-secondary" data-clear="day">Quitar</button>
+          <button class="btn btn-primary"   data-save-bg="day">Guardar</button>
+        </div>
+      </div>
+
+      <div class="bg-card" data-mode="live">
+        <h3>Modo en vivo</h3>
+        <div class="bg-preview" id="prev-live"><div class="placeholder">Sin imagen</div></div>
+        <div class="file-row">
+          <input type="file" accept="image/*" id="file-live">
+          <input type="url" placeholder="o pegá una URL https://…" id="url-live">
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-secondary" data-clear="live">Quitar</button>
+          <button class="btn btn-primary"   data-save-bg="live">Guardar</button>
+        </div>
+      </div>
+
+      <div class="bg-card" data-mode="off">
+        <h3>Fuera de horario</h3>
+        <div class="bg-preview" id="prev-off"><div class="placeholder">Sin imagen</div></div>
+        <div class="file-row">
+          <input type="file" accept="image/*" id="file-off">
+          <input type="url" placeholder="o pegá una URL https://…" id="url-off">
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-secondary" data-clear="off">Quitar</button>
+          <button class="btn btn-primary"   data-save-bg="off">Guardar</button>
+        </div>
+      </div>
+    </div>
+    <div class="help" style="margin-top:14px">
+      Subí un archivo (recomendado &lt; 1.5 MB c/u, formato 16:9) o pegá una URL pública.
+      La imagen se aplica automáticamente cuando entra ese modo. Si no ponés nada,
+      se usa el fondo oscuro por defecto.
     </div>
   </div>
 
@@ -497,6 +613,99 @@ function refreshScheduleStatus() {
   document.getElementById('schedule-status').textContent =
     'Ahora: ' + getCurrentScheduleMode(s);
 }
+
+// ── Imágenes de fondo por modo ───────────────────────
+const BG_KEY = 'bk_backgrounds';
+function loadBackgrounds() {
+  try {
+    const raw = localStorage.getItem(BG_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+function saveBackgrounds(bgs) {
+  try {
+    localStorage.setItem(BG_KEY, JSON.stringify(bgs));
+    return true;
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || /quota/i.test(e.message)) {
+      showToast('Imagen muy pesada · usá un archivo más chico o una URL externa');
+    } else {
+      showToast('Error al guardar la imagen');
+    }
+    return false;
+  }
+}
+function refreshBgPreviews() {
+  const bgs = loadBackgrounds();
+  ['day','live','off'].forEach(mode => {
+    const prev = document.getElementById('prev-' + mode);
+    const url  = bgs[mode];
+    if (url) {
+      prev.classList.add('has-image');
+      prev.style.backgroundImage = `url("${url}")`;
+      prev.innerHTML = '';
+    } else {
+      prev.classList.remove('has-image');
+      prev.style.backgroundImage = '';
+      prev.innerHTML = '<div class="placeholder">Sin imagen</div>';
+    }
+    // Reflejar URL en el input si es una URL (no data URL)
+    const urlInput = document.getElementById('url-' + mode);
+    if (url && !url.startsWith('data:')) urlInput.value = url;
+    else urlInput.value = '';
+  });
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+document.querySelectorAll('[data-save-bg]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const mode = btn.dataset.saveBg;
+    const file = document.getElementById('file-' + mode).files?.[0];
+    const url  = document.getElementById('url-'  + mode).value.trim();
+    let value = null;
+    if (file) {
+      if (file.size > 3 * 1024 * 1024) {
+        showToast('Archivo muy grande (máx 3 MB)');
+        return;
+      }
+      try { value = await readFileAsDataURL(file); }
+      catch { showToast('No se pudo leer el archivo'); return; }
+    } else if (url) {
+      value = url;
+    } else {
+      showToast('Elegí un archivo o pegá una URL');
+      return;
+    }
+    const bgs = loadBackgrounds();
+    bgs[mode] = value;
+    if (saveBackgrounds(bgs)) {
+      refreshBgPreviews();
+      showToast('Fondo de "' + mode + '" guardado');
+    }
+  });
+});
+
+document.querySelectorAll('[data-clear]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.clear;
+    const bgs = loadBackgrounds();
+    delete bgs[mode];
+    if (saveBackgrounds(bgs)) {
+      document.getElementById('file-' + mode).value = '';
+      document.getElementById('url-'  + mode).value = '';
+      refreshBgPreviews();
+      showToast('Fondo de "' + mode + '" eliminado');
+    }
+  });
+});
 
 // Storage shape: { competition: 'CL', ids: ['123', ...] }
 // Backwards compat: a plain array is treated as CL ids.
@@ -689,6 +898,7 @@ loadAndRender(savedCfg.competition || 'CL');
 refreshOnAirIndicator();
 applyScheduleToInputs(loadSchedule());
 refreshScheduleStatus();
+refreshBgPreviews();
 setInterval(refreshScheduleStatus, 30000);
 </script>
 </body>
