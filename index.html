@@ -1068,8 +1068,22 @@ body {
 
 <script>
 const API_BASE    = '/api/sports';
-const COMPETITION = 'CL'; // UEFA Champions League (ESPN: uefa.champions)
 const POLL_MS     = 60 * 1000; // 1 minuto
+
+// Configuración del panel /admin: { competition: 'CL'|'LIB'|..., ids: [...] }.
+// Si no hay nada guardado, el default es Champions con todos los partidos.
+function loadDisplayConfig() {
+  try {
+    const raw = localStorage.getItem('bk_selected_matches');
+    if (!raw) return { competition: 'CL', ids: [] };
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return { competition: 'CL', ids: parsed };
+    return {
+      competition: parsed.competition || 'CL',
+      ids: Array.isArray(parsed.ids) ? parsed.ids : [],
+    };
+  } catch { return { competition: 'CL', ids: [] }; }
+}
 
 let state = {
   currentPlaca: 'waiting',
@@ -1094,7 +1108,8 @@ async function apiGet(qs) {
 async function fetchMatches() {
   try {
     const today = new Date().toISOString().slice(0, 10);
-    const data = await apiGet(`competition=${COMPETITION}&date=${today}`);
+    const cfg   = loadDisplayConfig();
+    const data  = await apiGet(`competition=${cfg.competition}&date=${today}`);
 
     const errs    = data.errors;
     const hasErrs = Array.isArray(errs) ? errs.length > 0 : (errs && Object.keys(errs).length > 0);
@@ -1106,17 +1121,13 @@ async function fetchMatches() {
 
     let all = data.response || [];
 
-    // Filtro opcional desde el panel admin (/admin.html). Si la lista está
-    // vacía o no existe, no filtra y mantiene el comportamiento por defecto.
-    try {
-      const selected = JSON.parse(localStorage.getItem('bk_selected_matches') || '[]');
-      if (Array.isArray(selected) && selected.length > 0) {
-        all = all.filter(m => selected.includes(String(m.fixture.id)));
-      }
-    } catch (e) { /* ignore corrupt storage */ }
+    // Filtro opcional: si el panel admin guardó IDs, mostrar solo esos.
+    if (cfg.ids.length > 0) {
+      all = all.filter(m => cfg.ids.includes(String(m.fixture.id)));
+    }
 
     if (all.length === 0) {
-      showWaiting('Sin partidos de Champions League hoy');
+      showWaiting('Sin partidos hoy');
       return;
     }
 
@@ -1509,6 +1520,18 @@ function getTeamEmoji(name) {
 setInterval(() => setText('live-update', new Date().toLocaleTimeString('es-UY')), 1000);
 fetchMatches();
 setInterval(fetchMatches, POLL_MS);
+
+// El panel /admin guarda en localStorage. Cuando se guarda en otra pestaña
+// del mismo navegador, este evento dispara un refetch inmediato para que la
+// placa se actualice al instante sin esperar al próximo poll.
+window.addEventListener('storage', (e) => {
+  if (e.key === 'bk_selected_matches') {
+    clearTimeout(state.rotateTimeout);
+    clearTimeout(state.quickPollTimeout);
+    state.currentFixtureIdx = 0;
+    fetchMatches();
+  }
+});
 </script>
 </body>
 </html>

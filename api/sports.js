@@ -15,6 +15,19 @@ const LEAGUE_MAP = {
   'LL':  'esp.1',
   'BL':  'ger.1',
   'SA':  'ita.1',
+  'LIB': 'conmebol.libertadores',
+  'SUD': 'conmebol.sudamericana',
+};
+
+const LEAGUE_NAMES = {
+  'CL':  'UEFA Champions League',
+  'UEL': 'UEFA Europa League',
+  'PL':  'Premier League',
+  'LL':  'LaLiga',
+  'BL':  'Bundesliga',
+  'SA':  'Serie A',
+  'LIB': 'Copa Libertadores',
+  'SUD': 'Copa Sudamericana',
 };
 
 function mapStatus(comp) {
@@ -56,7 +69,7 @@ function mapStatus(comp) {
   return { short: 'NS', long: st.description || name || 'Not Started', elapsed: null };
 }
 
-function mapMatch(event) {
+function mapMatch(event, leagueName) {
   const comp     = event.competitions?.[0];
   if (!comp) return null;
 
@@ -72,8 +85,7 @@ function mapMatch(event) {
     },
     league: {
       id:    event.season?.year,
-      name:  event.season?.slug?.includes('champions') ? 'UEFA Champions League'
-             : (event.name || 'Soccer'),
+      name:  leagueName || event.name || 'Soccer',
       round: comp.series?.summary || event.seasonType?.name || '',
     },
     teams: {
@@ -212,7 +224,9 @@ module.exports = async function handler(req, res) {
 
   try {
     const data    = await fetchJson(url);
-    const matches = (data.events || []).map(mapMatch).filter(Boolean);
+    const matches = (data.events || [])
+      .map(e => mapMatch(e, LEAGUE_NAMES[competition]))
+      .filter(Boolean);
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
     return res.status(200).json({ response: matches, errors: {}, results: matches.length });
   } catch (e) {

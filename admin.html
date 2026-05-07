@@ -288,6 +288,14 @@ main {
   color: white;
   border-color: var(--bk-red);
 }
+.tab.live-on-air::after {
+  content: '●';
+  color: var(--bk-yellow);
+  margin-left: 6px;
+  font-size: 10px;
+  vertical-align: middle;
+  text-shadow: 0 0 6px var(--bk-yellow);
+}
 
 @media (max-width: 600px) {
   header { flex-direction: column; gap: 12px; align-items: flex-start; padding: 20px; }
@@ -313,6 +321,8 @@ main {
     <div class="competition-tabs" id="competition-tabs">
       <button class="tab active" data-comp="CL">Champions</button>
       <button class="tab" data-comp="UEL">Europa League</button>
+      <button class="tab" data-comp="LIB">Libertadores</button>
+      <button class="tab" data-comp="SUD">Sudamericana</button>
       <button class="tab" data-comp="PL">Premier</button>
       <button class="tab" data-comp="LL">LaLiga</button>
       <button class="tab" data-comp="BL">Bundesliga</button>
@@ -338,12 +348,15 @@ main {
   <div class="panel">
     <div class="help">
       <strong>Cómo funciona:</strong><br>
-      Marcá los partidos que querés ver en la placa principal y tocá <em>Guardar selección</em>.
-      La placa se actualiza en su próximo refresco automático (máx. 60 s) y solo mostrará esos
-      partidos. Si no marcás ninguno, la placa muestra todos los partidos del día por defecto.
+      Elegí una competición arriba, marcá los partidos que querés en la placa y tocá
+      <em>Guardar selección</em>. La placa se actualiza al instante (si está abierta en
+      otra pestaña del mismo navegador) o en el próximo poll automático.
+      Si no marcás ninguno, la placa muestra todos los partidos del día de esa competición.
+      El punto amarillo <span style="color:var(--bk-yellow)">●</span> indica qué competición
+      está saliendo al aire ahora.
       <br><br>
-      <strong>Importante:</strong> la selección se guarda en este navegador. Para controlar la
-      placa desde otro dispositivo, abrí esta página en el mismo navegador donde corre la placa.
+      <strong>Importante:</strong> solo una competición a la vez. Guardar en otra pestaña
+      reemplaza la selección anterior. La configuración se almacena en este navegador.
     </div>
   </div>
 </main>
@@ -355,13 +368,38 @@ const STORAGE_KEY = 'bk_selected_matches';
 let currentCompetition = 'CL';
 let currentMatches = [];
 
+// Storage shape: { competition: 'CL', ids: ['123', ...] }
+// Backwards compat: a plain array is treated as CL ids.
+function loadConfig() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { competition: 'CL', ids: [] };
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return { competition: 'CL', ids: parsed };
+    return {
+      competition: parsed.competition || 'CL',
+      ids: Array.isArray(parsed.ids) ? parsed.ids : [],
+    };
+  } catch { return { competition: 'CL', ids: [] }; }
+}
+
 function loadSelection() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-  catch { return []; }
+  // Only return saved IDs when looking at the same competition that was saved.
+  const cfg = loadConfig();
+  return cfg.competition === currentCompetition ? cfg.ids : [];
 }
 
 function saveSelection(ids) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  const payload = { competition: currentCompetition, ids };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  refreshOnAirIndicator();
+}
+
+function refreshOnAirIndicator() {
+  const cfg = loadConfig();
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('live-on-air', t.dataset.comp === cfg.competition);
+  });
 }
 
 async function fetchMatches(competition) {
@@ -490,7 +528,16 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-loadAndRender('CL');
+// Open the tab matching whatever is currently saved (so reopening the panel
+// shows the active configuration).
+const savedCfg = loadConfig();
+const savedTab = document.querySelector(`.tab[data-comp="${savedCfg.competition}"]`);
+if (savedTab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  savedTab.classList.add('active');
+}
+loadAndRender(savedCfg.competition || 'CL');
+refreshOnAirIndicator();
 </script>
 </body>
 </html>
