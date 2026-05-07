@@ -263,6 +263,56 @@ main {
   border-radius: 4px;
 }
 
+.schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.schedule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+.schedule-label { display: flex; flex-direction: column; gap: 2px; }
+.schedule-label strong {
+  font-size: 15px;
+  color: var(--gray-900);
+  letter-spacing: 0.3px;
+}
+.schedule-label span {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+.time-pair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.time-pair input[type="time"] {
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--bk-brown);
+  background: white;
+}
+.time-pair input[type="time"]:focus {
+  outline: none;
+  border-color: var(--bk-red);
+}
+.time-pair .dash {
+  color: var(--gray-600);
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
 .competition-tabs {
   display: flex;
   gap: 6px;
@@ -318,6 +368,41 @@ main {
 
 <main>
   <div class="panel">
+    <h2>
+      <span>Horarios automáticos</span>
+      <span class="count" id="schedule-status">—</span>
+    </h2>
+    <div class="schedule">
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Modo día</strong>
+          <span>Todos los partidos del día en una placa</span>
+        </div>
+        <div class="time-pair">
+          <input type="time" id="day-start" value="07:00">
+          <span class="dash">a</span>
+          <input type="time" id="day-end" value="18:00">
+        </div>
+      </div>
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Modo en vivo</strong>
+          <span>Resultados en tiempo real con marcador y minuto</span>
+        </div>
+        <div class="time-pair">
+          <input type="time" id="live-start" value="18:00">
+          <span class="dash">a</span>
+          <input type="time" id="live-end" value="23:00">
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" id="btn-reset-schedule">Restaurar predeterminados</button>
+      <button class="btn btn-primary" id="btn-save-schedule">Guardar horarios</button>
+    </div>
+  </div>
+
+  <div class="panel">
     <div class="competition-tabs" id="competition-tabs">
       <button class="tab active" data-comp="CL">Champions</button>
       <button class="tab" data-comp="UEL">Europa League</button>
@@ -365,8 +450,53 @@ main {
 
 <script>
 const STORAGE_KEY = 'bk_selected_matches';
+const SCHEDULE_KEY = 'bk_schedule';
+const DEFAULT_SCHEDULE = {
+  dayStart:  '07:00',
+  dayEnd:    '18:00',
+  liveStart: '18:00',
+  liveEnd:   '23:00',
+};
 let currentCompetition = 'CL';
 let currentMatches = [];
+
+function loadSchedule() {
+  try {
+    const raw = localStorage.getItem(SCHEDULE_KEY);
+    if (!raw) return { ...DEFAULT_SCHEDULE };
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SCHEDULE, ...parsed };
+  } catch { return { ...DEFAULT_SCHEDULE }; }
+}
+
+function saveSchedule(s) {
+  localStorage.setItem(SCHEDULE_KEY, JSON.stringify(s));
+}
+
+function applyScheduleToInputs(s) {
+  document.getElementById('day-start').value  = s.dayStart;
+  document.getElementById('day-end').value    = s.dayEnd;
+  document.getElementById('live-start').value = s.liveStart;
+  document.getElementById('live-end').value   = s.liveEnd;
+}
+
+function getCurrentScheduleMode(s) {
+  const now = new Date();
+  const m = now.getHours() * 60 + now.getMinutes();
+  const toMin = (hhmm) => {
+    const [h, mm] = hhmm.split(':').map(Number);
+    return h * 60 + mm;
+  };
+  if (m >= toMin(s.dayStart)  && m < toMin(s.dayEnd))  return 'día';
+  if (m >= toMin(s.liveStart) && m < toMin(s.liveEnd)) return 'en vivo';
+  return 'fuera de horario';
+}
+
+function refreshScheduleStatus() {
+  const s = loadSchedule();
+  document.getElementById('schedule-status').textContent =
+    'Ahora: ' + getCurrentScheduleMode(s);
+}
 
 // Storage shape: { competition: 'CL', ids: ['123', ...] }
 // Backwards compat: a plain array is treated as CL ids.
@@ -511,6 +641,25 @@ document.getElementById('btn-none').addEventListener('click', () => {
   updateCount();
 });
 
+document.getElementById('btn-save-schedule').addEventListener('click', () => {
+  const s = {
+    dayStart:  document.getElementById('day-start').value  || DEFAULT_SCHEDULE.dayStart,
+    dayEnd:    document.getElementById('day-end').value    || DEFAULT_SCHEDULE.dayEnd,
+    liveStart: document.getElementById('live-start').value || DEFAULT_SCHEDULE.liveStart,
+    liveEnd:   document.getElementById('live-end').value   || DEFAULT_SCHEDULE.liveEnd,
+  };
+  saveSchedule(s);
+  refreshScheduleStatus();
+  showToast('Horarios guardados');
+});
+
+document.getElementById('btn-reset-schedule').addEventListener('click', () => {
+  applyScheduleToInputs(DEFAULT_SCHEDULE);
+  saveSchedule(DEFAULT_SCHEDULE);
+  refreshScheduleStatus();
+  showToast('Horarios restaurados');
+});
+
 document.getElementById('btn-save').addEventListener('click', () => {
   const ids = [...document.querySelectorAll('input[type="checkbox"]:checked')]
     .map(cb => cb.value);
@@ -538,6 +687,9 @@ if (savedTab) {
 }
 loadAndRender(savedCfg.competition || 'CL');
 refreshOnAirIndicator();
+applyScheduleToInputs(loadSchedule());
+refreshScheduleStatus();
+setInterval(refreshScheduleStatus, 30000);
 </script>
 </body>
 </html>

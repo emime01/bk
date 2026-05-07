@@ -574,6 +574,381 @@ body {
 }
 
 /* ═══════════════════════════════════════════
+   PLACA 7 — DÍA  (todos los partidos del día)
+═══════════════════════════════════════════ */
+#placa-day {
+  flex-direction: row;
+  align-items: stretch;
+  background: var(--bk-dark);
+}
+#placa-day .day-left {
+  width: 520px;
+  background: var(--bk-red);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  position: relative;
+  overflow: hidden;
+  gap: 18px;
+}
+#placa-day .day-left::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 900px 700px at 50% 110%, rgba(245,170,28,0.45) 0%, transparent 65%),
+    radial-gradient(ellipse 500px 400px at 50% 30%, rgba(245,170,28,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+#placa-day .day-bk-logo {
+  font-family: 'Anton', sans-serif;
+  font-size: 90px;
+  color: var(--bk-yellow);
+  text-shadow: 5px 5px 0 var(--bk-brown);
+  letter-spacing: -2px;
+  position: relative; z-index: 2;
+  text-align: center;
+  line-height: 1;
+}
+#placa-day .day-divider {
+  width: 80px; height: 4px;
+  background: var(--bk-yellow);
+  position: relative; z-index: 2;
+  box-shadow: 0 0 20px rgba(245,170,28,0.5);
+  margin: 6px 0;
+}
+#placa-day .day-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 38px;
+  color: var(--white);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  position: relative; z-index: 2;
+  text-align: center;
+}
+#placa-day .day-date {
+  font-size: 18px;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 3px;
+  position: relative; z-index: 2;
+  text-align: center;
+}
+#placa-day .day-comp {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  color: var(--bk-yellow);
+  letter-spacing: 4px;
+  margin-top: 14px;
+  position: relative; z-index: 2;
+  text-align: center;
+  text-transform: uppercase;
+}
+#placa-day .day-slogan {
+  position: absolute;
+  bottom: 36px;
+  font-family: 'Anton', sans-serif;
+  font-size: 24px;
+  color: var(--bk-yellow);
+  letter-spacing: 5px;
+  opacity: 0.7;
+  z-index: 2;
+}
+#placa-day .day-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 50px 56px;
+  gap: 18px;
+  overflow: hidden;
+}
+#placa-day .day-right-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  letter-spacing: 5px;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+#placa-day .day-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  flex: 1;
+  align-content: start;
+  overflow: hidden;
+}
+#placa-day .day-grid.single { grid-template-columns: 1fr; }
+#placa-day .day-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  min-height: 88px;
+}
+#placa-day .day-card.live {
+  border-color: rgba(214,35,0,0.6);
+  background: rgba(214,35,0,0.08);
+  box-shadow: 0 0 20px rgba(214,35,0,0.15);
+}
+#placa-day .day-card.ft { opacity: 0.65; }
+#placa-day .day-time {
+  font-family: 'Anton', sans-serif;
+  font-size: 30px;
+  color: var(--bk-yellow);
+  line-height: 1;
+  min-width: 78px;
+}
+#placa-day .day-time.live-now {
+  font-size: 22px;
+  color: var(--bk-red);
+}
+#placa-day .day-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+#placa-day .day-team-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--bk-cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#placa-day .day-team-row img {
+  width: 24px; height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+#placa-day .day-right-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+#placa-day .day-status {
+  font-family: 'Anton', sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.day-stat-NS  { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
+.day-stat-LIVE{ background: var(--bk-red); color: white; box-shadow: 0 0 10px rgba(214,35,0,0.4); }
+.day-stat-FT  { background: rgba(245,170,28,0.15); color: var(--bk-yellow); border: 1px solid rgba(245,170,28,0.3); }
+#placa-day .day-score {
+  font-family: 'Anton', sans-serif;
+  font-size: 26px;
+  color: var(--white);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+#placa-day .day-empty {
+  color: rgba(255,255,255,0.3);
+  font-size: 18px;
+  text-align: center;
+  padding: 60px 0;
+}
+
+/* ═══════════════════════════════════════════
+   PLACA 8 — MULTI-LIVE (varios partidos en vivo)
+═══════════════════════════════════════════ */
+#placa-multilive {
+  flex-direction: column;
+  background: var(--bk-dark);
+  position: relative;
+}
+#placa-multilive .ml-header {
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 60px;
+  background: var(--bk-red);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+#placa-multilive .ml-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 700px 200px at 50% 100%, rgba(245,170,28,0.3) 0%, transparent 70%);
+  pointer-events: none;
+}
+#placa-multilive .ml-bk-logo {
+  font-family: 'Anton', sans-serif;
+  font-size: 56px;
+  color: var(--bk-yellow);
+  text-shadow: 4px 4px 0 var(--bk-brown);
+  letter-spacing: -1px;
+  position: relative; z-index: 2;
+}
+#placa-multilive .ml-title-block {
+  display: flex; align-items: center; gap: 20px;
+  position: relative; z-index: 2;
+}
+#placa-multilive .ml-live-pill {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 6px;
+  padding: 8px 18px;
+}
+#placa-multilive .ml-live-pill .dot {
+  width: 9px; height: 9px;
+  background: var(--white);
+  border-radius: 50%;
+  animation: live-blink 1s infinite;
+}
+#placa-multilive .ml-live-pill .text {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  color: var(--white);
+  letter-spacing: 4px;
+}
+#placa-multilive .ml-comp {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 4px;
+}
+#placa-multilive .ml-grid {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+  position: relative;
+  z-index: 1;
+}
+#placa-multilive .ml-grid.count-1 { grid-template-columns: 1fr; }
+#placa-multilive .ml-grid.count-2 { grid-template-columns: 1fr 1fr; }
+#placa-multilive .ml-grid.count-3 { grid-template-columns: 1fr 1fr 1fr; }
+#placa-multilive .ml-grid.count-4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+#placa-multilive .ml-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 26px 36px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 28px;
+  position: relative;
+  overflow: hidden;
+}
+#placa-multilive .ml-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 600px 300px at 50% 100%, rgba(214,35,0,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+#placa-multilive .ml-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative; z-index: 1;
+}
+#placa-multilive .ml-crest {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 50px;
+}
+#placa-multilive .ml-crest img { width: 80%; height: 80%; object-fit: contain; }
+#placa-multilive .ml-team-name {
+  font-family: 'Anton', sans-serif;
+  font-size: 30px;
+  color: var(--white);
+  text-align: center;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+#placa-multilive .ml-score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative; z-index: 1;
+}
+#placa-multilive .ml-score-nums {
+  display: flex; align-items: center; gap: 4px;
+}
+#placa-multilive .ml-score-num {
+  font-family: 'Anton', sans-serif;
+  font-size: 96px;
+  color: var(--bk-yellow);
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(245,170,28,0.3);
+}
+#placa-multilive .ml-score-dash {
+  font-family: 'Anton', sans-serif;
+  font-size: 50px;
+  color: rgba(255,255,255,0.25);
+  margin-top: -10px;
+}
+#placa-multilive .ml-min-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bk-red);
+  padding: 5px 14px;
+  border-radius: 100px;
+  box-shadow: 0 4px 16px rgba(214,35,0,0.4);
+}
+#placa-multilive .ml-min-pill .dot {
+  width: 7px; height: 7px;
+  background: white;
+  border-radius: 50%;
+  animation: live-blink 1s infinite;
+}
+#placa-multilive .ml-min-pill .min {
+  font-family: 'Anton', sans-serif;
+  font-size: 18px;
+  color: white;
+  letter-spacing: 1px;
+}
+#placa-multilive .ml-status-text {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* En grids 3 y 4, los cards se achican: ajustar tipografías */
+#placa-multilive .ml-grid.count-3 .ml-crest,
+#placa-multilive .ml-grid.count-4 .ml-crest {
+  width: 80px; height: 80px;
+}
+#placa-multilive .ml-grid.count-3 .ml-team-name,
+#placa-multilive .ml-grid.count-4 .ml-team-name {
+  font-size: 22px;
+}
+#placa-multilive .ml-grid.count-3 .ml-score-num,
+#placa-multilive .ml-grid.count-4 .ml-score-num {
+  font-size: 70px;
+}
+#placa-multilive .ml-grid.count-3 .ml-card,
+#placa-multilive .ml-grid.count-4 .ml-card {
+  padding: 18px 24px;
+  gap: 16px;
+}
+
+/* ═══════════════════════════════════════════
    PLACA 4 — GOL 🔥
 ═══════════════════════════════════════════ */
 #placa-gol {
@@ -1008,6 +1383,37 @@ body {
   </div>
 </div>
 
+<!-- PLACA 7: Día (todos los partidos del día) -->
+<div class="placa" id="placa-day">
+  <div class="day-left">
+    <div class="day-bk-logo">BURGER KING®</div>
+    <div class="day-divider"></div>
+    <div class="day-title">Partidos<br>del día</div>
+    <div class="day-date" id="day-date">—</div>
+    <div class="day-comp" id="day-comp">—</div>
+    <div class="day-slogan">HAVE IT YOUR WAY</div>
+  </div>
+  <div class="day-right">
+    <div class="day-right-title" id="day-right-title">Agenda · 0 partidos</div>
+    <div class="day-grid" id="day-grid"></div>
+  </div>
+</div>
+
+<!-- PLACA 8: Multi-live (varios partidos en vivo simultáneos) -->
+<div class="placa" id="placa-multilive">
+  <div class="ml-header">
+    <div class="ml-bk-logo">BURGER KING®</div>
+    <div class="ml-title-block">
+      <div class="ml-live-pill">
+        <div class="dot"></div>
+        <div class="text">EN VIVO</div>
+      </div>
+      <div class="ml-comp" id="ml-comp">—</div>
+    </div>
+  </div>
+  <div class="ml-grid" id="ml-grid"></div>
+</div>
+
 <!-- PLACA 4: GOL -->
 <div class="placa" id="placa-gol">
   <div class="gol-bg-text">GOL</div>
@@ -1070,6 +1476,37 @@ body {
 const API_BASE    = '/api/sports';
 const POLL_MS     = 60 * 1000; // 1 minuto
 
+// Horarios automáticos (configurables desde /admin):
+//   - "day"  : muestra todos los partidos del día en una placa
+//   - "live" : muestra los partidos en vivo (resultado + minuto)
+//   - "off"  : fuera de horario, pantalla de espera
+const DEFAULT_SCHEDULE = {
+  dayStart:  '07:00',
+  dayEnd:    '18:00',
+  liveStart: '18:00',
+  liveEnd:   '23:00',
+};
+function loadSchedule() {
+  try {
+    const raw = localStorage.getItem('bk_schedule');
+    if (!raw) return { ...DEFAULT_SCHEDULE };
+    const parsed = JSON.parse(raw);
+    return { ...DEFAULT_SCHEDULE, ...parsed };
+  } catch { return { ...DEFAULT_SCHEDULE }; }
+}
+function getCurrentMode() {
+  const s = loadSchedule();
+  const now = new Date();
+  const m = now.getHours() * 60 + now.getMinutes();
+  const toMin = (hhmm) => {
+    const [h, mm] = hhmm.split(':').map(Number);
+    return (h || 0) * 60 + (mm || 0);
+  };
+  if (m >= toMin(s.dayStart)  && m < toMin(s.dayEnd))  return 'day';
+  if (m >= toMin(s.liveStart) && m < toMin(s.liveEnd)) return 'live';
+  return 'off';
+}
+
 // Configuración del panel /admin: { competition: 'CL'|'LIB'|..., ids: [...] }.
 // Si no hay nada guardado, el default es Champions con todos los partidos.
 function loadDisplayConfig() {
@@ -1107,6 +1544,15 @@ async function apiGet(qs) {
 // ── FETCH PRINCIPAL ──────────────────────────────────
 async function fetchMatches() {
   try {
+    const mode = getCurrentMode();
+
+    if (mode === 'off') {
+      clearTimeout(state.rotateTimeout);
+      clearTimeout(state.quickPollTimeout);
+      showWaiting('Fuera de horario de transmisión');
+      return;
+    }
+
     const today = new Date().toISOString().slice(0, 10);
     const cfg   = loadDisplayConfig();
     const data  = await apiGet(`competition=${cfg.competition}&date=${today}`);
@@ -1131,32 +1577,38 @@ async function fetchMatches() {
       return;
     }
 
-    // Separar por estado del partido
-    const inPlay    = all.filter(f => ['1H','2H','HT','ET','P','BT'].includes(f.fixture.status.short));
-    const scheduled = all.filter(f => ['NS','TBD'].includes(f.fixture.status.short));
-    const finished  = all.filter(f => ['FT','AET','PEN'].includes(f.fixture.status.short));
-
-    if (inPlay.length > 0) {
-      state.fixtures = inPlay;
-      handleLiveRotation();
-    } else if (scheduled.length > 0) {
-      state.fixtures = scheduled;
-      showAllPreMatch(scheduled);
-      // Si hay partido próximo en las próximas 3 h, poll cada 15 s para
-      // detectar el inicio lo antes posible.
-      const kickoff = new Date(scheduled[0].fixture.date).getTime();
-      if (kickoff - Date.now() < 3 * 60 * 60 * 1000) {
-        clearTimeout(state.quickPollTimeout);
-        state.quickPollTimeout = setTimeout(fetchMatches, 15000);
-      }
-    } else if (finished.length > 0) {
-      state.fixtures = finished;
-      showAllFinished(finished);
-    } else {
-      // Estados mixtos / desconocidos: mostrar todos como resultados
+    // Modo DÍA: grilla con todos los partidos del día.
+    if (mode === 'day') {
+      clearTimeout(state.rotateTimeout);
+      clearTimeout(state.quickPollTimeout);
       state.fixtures = all;
-      showAllFinished(all);
+      renderDayGrid(all, cfg.competition);
+      return;
     }
+
+    // Modo VIVO
+    const inPlay = all.filter(f => ['1H','2H','HT','ET','P','BT'].includes(f.fixture.status.short));
+
+    if (inPlay.length === 0) {
+      // Sin partidos en vivo en horario en vivo → mostrar grilla del día.
+      clearTimeout(state.rotateTimeout);
+      state.fixtures = all;
+      renderDayGrid(all, cfg.competition);
+      return;
+    }
+
+    if (inPlay.length >= 2) {
+      // Varios partidos en vivo simultáneos → grilla multi-live.
+      clearTimeout(state.rotateTimeout);
+      clearTimeout(state.quickPollTimeout);
+      state.fixtures = inPlay;
+      renderMultiLive(inPlay, cfg.competition);
+      return;
+    }
+
+    // Un solo partido en vivo → vista detallada con stats y eventos.
+    state.fixtures = inPlay;
+    handleLiveRotation();
   } catch(e) {
     console.error(e);
     showWaiting('Error de conexión · Reintentando...');
@@ -1463,6 +1915,142 @@ function renderLiveStats(stats) {
   }).join('');
 }
 
+// ── PLACA DÍA: grilla con todos los partidos del día ─────
+const COMP_LABELS = {
+  'CL':  'UEFA Champions League',
+  'UEL': 'UEFA Europa League',
+  'PL':  'Premier League',
+  'LL':  'LaLiga',
+  'BL':  'Bundesliga',
+  'SA':  'Serie A',
+  'LIB': 'Copa Libertadores',
+  'SUD': 'Copa Sudamericana',
+};
+
+function renderDayGrid(fixtures, competition) {
+  const today = new Date();
+  setText('day-date', formatDateEs(today.toISOString().slice(0,10)));
+  setText('day-comp', COMP_LABELS[competition] || competition);
+  setText('day-right-title', `Agenda · ${fixtures.length} partido${fixtures.length===1?'':'s'}`);
+
+  // Orden: en vivo primero, luego programados por hora, luego finales.
+  const order = (f) => {
+    const s = f.fixture.status.short;
+    if (['1H','2H','HT','ET','P','BT'].includes(s)) return 0;
+    if (['NS','TBD'].includes(s)) return 1;
+    return 2;
+  };
+  const sorted = [...fixtures].sort((a, b) => {
+    const oa = order(a), ob = order(b);
+    if (oa !== ob) return oa - ob;
+    return new Date(a.fixture.date) - new Date(b.fixture.date);
+  });
+
+  const grid = document.getElementById('day-grid');
+  grid.classList.toggle('single', sorted.length === 1);
+
+  if (sorted.length === 0) {
+    grid.innerHTML = '<div class="day-empty">Sin partidos hoy</div>';
+    showPlaca('day');
+    return;
+  }
+
+  grid.innerHTML = sorted.map(f => {
+    const s = f.fixture.status.short;
+    const isLive = ['1H','2H','HT','ET','P','BT'].includes(s);
+    const isFt   = ['FT','AET','PEN'].includes(s);
+    const cls = isLive ? 'day-card live' : (isFt ? 'day-card ft' : 'day-card');
+
+    const time = isLive
+      ? `<div class="day-time live-now">${f.fixture.status.elapsed != null ? f.fixture.status.elapsed + "'" : 'EN VIVO'}</div>`
+      : `<div class="day-time">${new Date(f.fixture.date).toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})}</div>`;
+
+    const team = (t) => `
+      <div class="day-team-row">
+        ${t.logo ? `<img src="${t.logo}" alt="">` : '<span style="width:24px;display:inline-block">⚽</span>'}
+        <span>${t.name}</span>
+      </div>`;
+
+    const right = (() => {
+      if (isLive) {
+        return `
+          <div class="day-right-side">
+            <div class="day-status day-stat-LIVE">EN VIVO</div>
+            <div class="day-score">${f.goals.home} — ${f.goals.away}</div>
+          </div>`;
+      }
+      if (isFt) {
+        return `
+          <div class="day-right-side">
+            <div class="day-status day-stat-FT">Final</div>
+            <div class="day-score">${f.goals.home} — ${f.goals.away}</div>
+          </div>`;
+      }
+      return `
+        <div class="day-right-side">
+          <div class="day-status day-stat-NS">Programado</div>
+        </div>`;
+    })();
+
+    return `
+      <div class="${cls}">
+        ${time}
+        <div class="day-teams">
+          ${team(f.teams.home)}
+          ${team(f.teams.away)}
+        </div>
+        ${right}
+      </div>`;
+  }).join('');
+
+  showPlaca('day');
+}
+
+// ── PLACA MULTI-LIVE: varios partidos simultáneos ────────
+function renderMultiLive(fixtures, competition) {
+  setText('ml-comp', COMP_LABELS[competition] || competition);
+
+  const grid = document.getElementById('ml-grid');
+  // Limitar a 4 partidos. Si hay más, los 4 primeros (mayoría queda fuera).
+  const list = fixtures.slice(0, 4);
+  grid.className = 'ml-grid count-' + list.length;
+
+  const statusMap = { '1H':'Primer tiempo','HT':'Medio tiempo','2H':'Segundo tiempo','ET':'Prórroga','P':'Penales' };
+
+  grid.innerHTML = list.map(f => {
+    const min = f.fixture.status.elapsed != null ? f.fixture.status.elapsed + "'" : '—';
+    const statusTxt = statusMap[f.fixture.status.short] || 'En juego';
+    const crest = (t) => t.logo
+      ? `<div class="ml-crest"><img src="${t.logo}" alt=""></div>`
+      : `<div class="ml-crest">${getTeamEmoji(t.name)}</div>`;
+    return `
+      <div class="ml-card">
+        <div class="ml-team">
+          ${crest(f.teams.home)}
+          <div class="ml-team-name">${f.teams.home.name}</div>
+        </div>
+        <div class="ml-score-block">
+          <div class="ml-score-nums">
+            <div class="ml-score-num">${f.goals.home}</div>
+            <div class="ml-score-dash">—</div>
+            <div class="ml-score-num">${f.goals.away}</div>
+          </div>
+          <div class="ml-min-pill">
+            <div class="dot"></div>
+            <div class="min">${min}</div>
+          </div>
+          <div class="ml-status-text">${statusTxt}</div>
+        </div>
+        <div class="ml-team">
+          ${crest(f.teams.away)}
+          <div class="ml-team-name">${f.teams.away.name}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  showPlaca('multilive');
+}
+
 // ── UTILS ────────────────────────────────────────────
 function showPlaca(name) {
   document.querySelectorAll('.placa').forEach(p => p.classList.remove('active'));
@@ -1525,7 +2113,7 @@ setInterval(fetchMatches, POLL_MS);
 // del mismo navegador, este evento dispara un refetch inmediato para que la
 // placa se actualice al instante sin esperar al próximo poll.
 window.addEventListener('storage', (e) => {
-  if (e.key === 'bk_selected_matches') {
+  if (e.key === 'bk_selected_matches' || e.key === 'bk_schedule') {
     clearTimeout(state.rotateTimeout);
     clearTimeout(state.quickPollTimeout);
     state.currentFixtureIdx = 0;
