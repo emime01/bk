@@ -1893,15 +1893,22 @@ let state = {
 // Prioridad: servidor → localStorage → defaults.
 async function syncFromServer() {
   try {
+    console.log('[sync] fetching /api/config…');
     const r = await fetch('/api/config', { signal: AbortSignal.timeout(4000) });
+    console.log('[sync] response status:', r.status);
     if (!r.ok) return false;
     const cfg = await r.json();
-    if (!cfg || typeof cfg !== 'object' || Object.keys(cfg).length === 0) return false;
+    console.log('[sync] cfg:', cfg);
+    if (!cfg || typeof cfg !== 'object' || Object.keys(cfg).length === 0) {
+      console.log('[sync] cfg empty, returning false');
+      return false;
+    }
 
     let changed = false;
 
     if (cfg.competition != null || cfg.ids != null) {
       const next = JSON.stringify({ competition: cfg.competition || 'CL', ids: cfg.ids || [] });
+      console.log('[sync] saving bk_selected_matches:', next);
       if (next !== localStorage.getItem('bk_selected_matches')) {
         localStorage.setItem('bk_selected_matches', next);
         changed = true;
@@ -1927,8 +1934,9 @@ async function syncFromServer() {
       }
       if (changed) localStorage.setItem('bk_backgrounds', JSON.stringify(bgs));
     }
+    console.log('[sync] done, changed:', changed);
     return changed;
-  } catch { return false; }
+  } catch (e) { console.error('[sync] error:', e); return false; }
 }
 
 async function pollConfig() {
@@ -1955,6 +1963,7 @@ async function apiGet(qs) {
 async function fetchMatches() {
   try {
     const mode = getCurrentMode();
+    console.log('[fetch] mode:', mode);
     applyModeBackground();
 
     if (mode === 'off') {
@@ -1967,8 +1976,10 @@ async function fetchMatches() {
 
     const today = new Date().toISOString().slice(0, 10);
     const cfg   = loadDisplayConfig();
+    console.log('[fetch] cfg:', cfg, 'today:', today);
     state.competition = cfg.competition || 'CL';
     const data  = await apiGet(`competition=${cfg.competition}&date=${today}`);
+    console.log('[fetch] espn response count:', (data.response || []).length, 'first:', data.response?.[0]?.fixture?.id);
 
     const errs    = data.errors;
     const hasErrs = Array.isArray(errs) ? errs.length > 0 : (errs && Object.keys(errs).length > 0);
@@ -1982,8 +1993,10 @@ async function fetchMatches() {
 
     // Filtro opcional: si el panel admin guardó IDs, mostrar solo esos.
     if (cfg.ids.length > 0) {
+      console.log('[fetch] filtering by ids:', cfg.ids, 'against:', all.map(m => String(m.fixture.id)));
       all = all.filter(m => cfg.ids.includes(String(m.fixture.id)));
     }
+    console.log('[fetch] after filter count:', all.length);
 
     if (all.length === 0) {
       showWaiting('Sin partidos hoy');
