@@ -28,8 +28,9 @@ body {
 }
 
 /* Imagen de fondo configurable desde /admin (por modo día/vivo/off).
-   Se renderiza en una capa fija con un overlay oscuro encima para
-   que el contenido siga siendo legible sobre cualquier imagen. */
+   Se renderiza en una capa fija. La imagen ya trae la marca/diseño de
+   campaña, así que NO ponemos overlay oscuro: los datos del partido
+   se insertan como un panel blanco al lado derecho del diseño. */
 body.has-mode-bg::before {
   content: '';
   position: fixed; inset: 0;
@@ -40,43 +41,237 @@ body.has-mode-bg::before {
   z-index: 0;
   pointer-events: none;
 }
-body.has-mode-bg::after {
-  content: '';
-  position: fixed; inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.7) 100%);
-  z-index: 0;
-  pointer-events: none;
-}
 .placa { z-index: 1; }
-/* Cuando hay imagen, las placas neutras se vuelven transparentes para
-   que la imagen se vea de fondo. Las placas con color de marca fuerte
-   (gol/roja/prematch/final/headers) mantienen su color. */
+
+/* Placas neutras → transparentes (solo el panel derecho lleva fondo blanco) */
 body.has-mode-bg #placa-waiting,
 body.has-mode-bg #placa-day,
 body.has-mode-bg #placa-multilive,
 body.has-mode-bg #placa-live {
   background-color: transparent;
 }
-body.has-mode-bg #placa-day .day-row {
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(4px);
+
+/* Esconder elementos full-bleed que la imagen ya trae (headers rojos, BK half) */
+body.has-mode-bg #placa-day .day-header { display: none; }
+body.has-mode-bg #placa-multilive .ml-header { display: none; }
+body.has-mode-bg #placa-live .bk-half { display: none; }
+body.has-mode-bg #placa-waiting .bg-flame,
+body.has-mode-bg #placa-waiting .bk-logo-big,
+body.has-mode-bg #placa-waiting .tagline { display: none; }
+
+/* ── DAY: panel blanco a la derecha ────────────────── */
+body.has-mode-bg #placa-day {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: stretch;
 }
+body.has-mode-bg #placa-day .day-list {
+  width: 800px;
+  margin-right: 60px;
+  padding: 50px 0;
+  gap: 14px;
+  background: transparent;
+}
+body.has-mode-bg #placa-day .day-row {
+  background: white;
+  border: none;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+  backdrop-filter: none;
+  grid-template-columns: 105px 1fr auto 1fr 130px;
+  gap: 14px;
+  padding: 0 22px;
+  border-radius: 14px;
+}
+body.has-mode-bg #placa-day .day-row::after { display: none; }
 body.has-mode-bg #placa-day .day-row.live {
-  background: linear-gradient(90deg, rgba(214,35,0,0.55) 0%, rgba(214,35,0,0.2) 100%);
+  background: white;
+  border: 3px solid var(--bk-red);
+  box-shadow: 0 8px 32px rgba(214,35,0,0.4);
 }
 body.has-mode-bg #placa-day .day-row.ft {
-  background: rgba(80,35,20,0.5);
+  background: var(--bk-cream);
+  opacity: 1;
+}
+body.has-mode-bg #placa-day .day-time {
+  color: var(--bk-red);
+  font-size: 50px;
+  text-shadow: none;
+}
+body.has-mode-bg #placa-day .day-row.live .day-time {
+  font-size: 38px;
+  text-shadow: none;
+}
+body.has-mode-bg #placa-day .day-row.ft .day-time {
+  color: var(--bk-brown);
+  font-size: 40px;
+  opacity: 0.7;
+}
+body.has-mode-bg #placa-day .day-team-name {
+  color: var(--bk-brown);
+  font-size: 30px;
+}
+body.has-mode-bg #placa-day .day-team-crest {
+  width: 66px; height: 66px;
+  background: rgba(80,35,20,0.06);
+  border: 1px solid rgba(80,35,20,0.15);
+  font-size: 32px;
+}
+body.has-mode-bg #placa-day .day-vs {
+  color: rgba(80,35,20,0.35);
+  font-size: 28px;
+  min-width: 70px;
+}
+body.has-mode-bg #placa-day .day-score-big {
+  color: var(--bk-red);
+  font-size: 54px;
+  min-width: 90px;
+  text-shadow: none;
+}
+body.has-mode-bg #placa-day .day-row.ft .day-score-big {
+  color: var(--bk-brown);
+}
+body.has-mode-bg #placa-day .day-status-badge {
+  font-size: 15px;
+  padding: 6px 12px;
+}
+body.has-mode-bg #placa-day .day-stat-NS {
+  background: rgba(80,35,20,0.08);
+  color: var(--bk-brown);
+  border-color: rgba(80,35,20,0.15);
+}
+body.has-mode-bg #placa-day .day-stat-FT {
+  background: var(--bk-yellow);
+  color: var(--bk-brown);
+  border: none;
+}
+body.has-mode-bg #placa-day .day-min-text { color: var(--bk-red); }
+
+/* Modo denso adaptado al ancho de 800px */
+body.has-mode-bg #placa-day .day-list.dense .day-row {
+  grid-template-columns: 80px 1fr auto 1fr 100px;
+  padding: 0 16px;
+  gap: 10px;
+}
+body.has-mode-bg #placa-day .day-list.dense .day-time { font-size: 36px; }
+body.has-mode-bg #placa-day .day-list.dense .day-row.live .day-time { font-size: 28px; }
+body.has-mode-bg #placa-day .day-list.dense .day-team-name { font-size: 22px; }
+body.has-mode-bg #placa-day .day-list.dense .day-team-crest { width: 48px; height: 48px; }
+body.has-mode-bg #placa-day .day-list.dense .day-score-big { font-size: 38px; min-width: 70px; }
+body.has-mode-bg #placa-day .day-list.dense .day-vs { font-size: 22px; min-width: 50px; }
+body.has-mode-bg #placa-day .day-list.dense .day-status-badge { font-size: 12px; padding: 4px 9px; }
+
+/* ── MULTILIVE: cards blancos apilados a la derecha ── */
+body.has-mode-bg #placa-multilive {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+body.has-mode-bg #placa-multilive .ml-grid {
+  width: 800px;
+  margin-right: 60px;
+  padding: 50px 0;
+  gap: 14px;
+  background: transparent;
+  /* siempre vertical en modo billboard */
+  grid-template-columns: 1fr !important;
+  grid-template-rows: none !important;
 }
 body.has-mode-bg #placa-multilive .ml-card {
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(4px);
+  background: white;
+  border: none;
+  backdrop-filter: none;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+  padding: 18px 24px;
+  gap: 18px;
 }
-body.has-mode-bg #placa-live .match-half,
-body.has-mode-bg #placa-live .bk-half {
-  backdrop-filter: blur(2px);
+body.has-mode-bg #placa-multilive .ml-card::before { display: none; }
+body.has-mode-bg #placa-multilive .ml-team-name {
+  color: var(--bk-brown);
+  font-size: 24px;
+}
+body.has-mode-bg #placa-multilive .ml-crest {
+  background: rgba(80,35,20,0.06);
+  border-color: rgba(80,35,20,0.15);
+  width: 60px; height: 60px;
+}
+body.has-mode-bg #placa-multilive .ml-score-num {
+  color: var(--bk-red);
+  font-size: 60px;
+  text-shadow: none;
+}
+body.has-mode-bg #placa-multilive .ml-score-dash { color: rgba(80,35,20,0.3); }
+body.has-mode-bg #placa-multilive .ml-status-text { color: rgba(80,35,20,0.5); }
+
+/* ── LIVE single: panel blanco a la derecha ────────── */
+body.has-mode-bg #placa-live {
+  flex-direction: row;
+  justify-content: flex-end;
 }
 body.has-mode-bg #placa-live .match-half {
-  background: rgba(0,0,0,0.4);
+  width: 800px;
+  margin-right: 60px;
+  margin-top: 50px;
+  margin-bottom: 50px;
+  height: auto;
+  background: white;
+  border-radius: 16px;
+  border-right: none;
+  padding: 28px 32px 20px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+  backdrop-filter: none;
+}
+body.has-mode-bg #placa-live .match-half::before { display: none; }
+body.has-mode-bg #placa-live .match-header { border-bottom-color: rgba(80,35,20,0.15); }
+body.has-mode-bg #placa-live .competition-name { color: rgba(80,35,20,0.5); }
+body.has-mode-bg #placa-live .minute-num { color: var(--bk-red); text-shadow: none; }
+body.has-mode-bg #placa-live .minute-label { color: rgba(80,35,20,0.5); }
+body.has-mode-bg #placa-live .team-name { color: var(--bk-brown); font-size: 26px; }
+body.has-mode-bg #placa-live .team-crest {
+  width: 90px; height: 90px;
+  background: rgba(80,35,20,0.06);
+  border-color: rgba(80,35,20,0.15);
+}
+body.has-mode-bg #placa-live .live-scorers { color: rgba(80,35,20,0.65); }
+body.has-mode-bg #placa-live .live-scorers em { color: var(--bk-red); }
+body.has-mode-bg #placa-live .score-n {
+  color: var(--bk-red);
+  font-size: 88px;
+}
+body.has-mode-bg #placa-live .score-dash { color: rgba(80,35,20,0.25); }
+body.has-mode-bg #placa-live .halftime-label { color: rgba(80,35,20,0.5); }
+body.has-mode-bg #placa-live .section-title {
+  color: rgba(80,35,20,0.5);
+  border-bottom-color: rgba(80,35,20,0.15);
+}
+body.has-mode-bg #placa-live .stat-h { color: var(--bk-red); }
+body.has-mode-bg #placa-live .stat-a { color: var(--bk-brown); }
+body.has-mode-bg #placa-live .stat-name { color: rgba(80,35,20,0.5); }
+body.has-mode-bg #placa-live .stat-bar { background: rgba(80,35,20,0.08); }
+body.has-mode-bg #placa-live .stat-bar .bar-h { background: var(--bk-red); }
+body.has-mode-bg #placa-live .stat-bar .bar-a { background: var(--bk-brown); opacity: 0.5; }
+body.has-mode-bg #placa-live .ev-min { color: var(--bk-red); }
+body.has-mode-bg #placa-live .ev-player { color: var(--bk-brown); }
+body.has-mode-bg #placa-live .ev-team { color: rgba(80,35,20,0.5); }
+body.has-mode-bg #placa-live .event-row { border-bottom-color: rgba(80,35,20,0.08); }
+body.has-mode-bg #placa-live .footer-update { color: rgba(80,35,20,0.4); }
+body.has-mode-bg #placa-live .match-footer { border-top-color: rgba(80,35,20,0.08); }
+
+/* ── WAITING en modo imagen: tarjeta chica a la derecha */
+body.has-mode-bg #placa-waiting {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+}
+body.has-mode-bg #placa-waiting .loading-bar,
+body.has-mode-bg #placa-waiting .wait-status {
+  margin-right: 80px;
+}
+body.has-mode-bg #placa-waiting .wait-status {
+  color: white;
+  background: rgba(0,0,0,0.6);
+  padding: 8px 16px;
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
 }
 
 /* ═══════════════════════════════════════════
