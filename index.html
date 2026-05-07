@@ -1877,6 +1877,7 @@ let state = {
   currentPlaca: 'waiting',
   currentFixtureIdx: 0,
   fixtures: [],
+  competition: 'CL',
   prevScore: {},
   prevEvents: {},
   golTimeout: null,
@@ -1886,6 +1887,62 @@ let state = {
   dayPageIdx: 0,
   dayRotateTimeout: null,
 };
+
+// ── Config sync cross-device (/api/config) ────────────
+// La placa lee la config del servidor cada 30s; el admin la escribe.
+// Prioridad: servidor → localStorage → defaults.
+async function syncFromServer() {
+  try {
+    const r = await fetch('/api/config', { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return false;
+    const cfg = await r.json();
+    if (!cfg || typeof cfg !== 'object' || Object.keys(cfg).length === 0) return false;
+
+    let changed = false;
+
+    if (cfg.competition != null || cfg.ids != null) {
+      const next = JSON.stringify({ competition: cfg.competition || 'CL', ids: cfg.ids || [] });
+      if (next !== localStorage.getItem('bk_selected_matches')) {
+        localStorage.setItem('bk_selected_matches', next);
+        changed = true;
+      }
+    }
+    if (cfg.schedule && typeof cfg.schedule === 'object') {
+      const next = JSON.stringify(cfg.schedule);
+      if (next !== localStorage.getItem('bk_schedule')) {
+        localStorage.setItem('bk_schedule', next);
+        changed = true;
+      }
+    }
+    if (cfg.backgrounds && typeof cfg.backgrounds === 'object') {
+      let bgs;
+      try { bgs = JSON.parse(localStorage.getItem('bk_backgrounds') || '{}'); } catch { bgs = {}; }
+      for (const [mode, url] of Object.entries(cfg.backgrounds)) {
+        const isBase64Local = typeof bgs[mode] === 'string' && bgs[mode].startsWith('data:');
+        if (url && typeof url === 'string' && !url.startsWith('data:')) {
+          if (bgs[mode] !== url) { bgs[mode] = url; changed = true; }
+        } else if (!url && bgs[mode] && !isBase64Local) {
+          delete bgs[mode]; changed = true;
+        }
+      }
+      if (changed) localStorage.setItem('bk_backgrounds', JSON.stringify(bgs));
+    }
+    return changed;
+  } catch { return false; }
+}
+
+async function pollConfig() {
+  const changed = await syncFromServer();
+  if (changed) {
+    applyModeBackground();
+    clearTimeout(state.rotateTimeout);
+    clearTimeout(state.quickPollTimeout);
+    clearTimeout(state.dayRotateTimeout);
+    state.currentFixtureIdx = 0;
+    state.dayPageIdx = 0;
+    fetchMatches();
+  }
+}
 
 async function apiGet(qs) {
   // qs: "competition=CL&date=2026-05-06". Devuelve {response, errors, ...}.
@@ -1910,6 +1967,7 @@ async function fetchMatches() {
 
     const today = new Date().toISOString().slice(0, 10);
     const cfg   = loadDisplayConfig();
+    state.competition = cfg.competition || 'CL';
     const data  = await apiGet(`competition=${cfg.competition}&date=${today}`);
 
     const errs    = data.errors;
@@ -2001,7 +2059,7 @@ async function handleLiveFixture(f) {
   let events = [];
   let stats  = null;
   try {
-    const sum = await apiGet(`competition=${COMPETITION}&event=${encodeURIComponent(f.fixture.id)}`);
+    const sum = await apiGet(`competition=${state.competition}&event=${encodeURIComponent(f.fixture.id)}`);
     events = sum.events || [];
     stats  = sum.stats  || null;
   } catch (e) {
@@ -2486,12 +2544,19 @@ function getTeamEmoji(name) {
 }
 
 setInterval(() => setText('live-update', new Date().toLocaleTimeString('es-UY')), 1000);
-fetchMatches();
+
+// Sync desde el servidor al cargar, luego arranca el ciclo principal.
+syncFromServer().then(() => {
+  applyModeBackground();
+  fetchMatches();
+});
 setInterval(fetchMatches, POLL_MS);
 
-// El panel /admin guarda en localStorage. Cuando se guarda en otra pestaña
-// del mismo navegador, este evento dispara un refetch inmediato para que la
-// placa se actualice al instante sin esperar al próximo poll.
+// Polling de config del servidor: recoge cambios hechos desde cualquier dispositivo.
+setInterval(pollConfig, 30 * 1000);
+
+// Fast path para el mismo navegador: si /admin guarda en otra pestaña,
+// el storage event dispara un refetch inmediato sin esperar el poll de 30s.
 window.addEventListener('storage', (e) => {
   if (e.key === 'bk_backgrounds') {
     applyModeBackground();
@@ -2501,6 +2566,7 @@ window.addEventListener('storage', (e) => {
     clearTimeout(state.rotateTimeout);
     clearTimeout(state.quickPollTimeout);
     state.currentFixtureIdx = 0;
+    state.dayPageIdx = 0;
     fetchMatches();
   }
 });

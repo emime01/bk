@@ -550,14 +550,16 @@ main {
     <div class="help">
       <strong>Cómo funciona:</strong><br>
       Elegí una competición arriba, marcá los partidos que querés en la placa y tocá
-      <em>Guardar selección</em>. La placa se actualiza al instante (si está abierta en
-      otra pestaña del mismo navegador) o en el próximo poll automático.
+      <em>Guardar selección</em>. La configuración se sube al servidor y la placa la
+      aplica en el próximo ciclo (máx. 30 segundos). Funciona desde cualquier dispositivo:
+      podés controlar desde el celular mientras la placa corre en la TV.
       Si no marcás ninguno, la placa muestra todos los partidos del día de esa competición.
       El punto amarillo <span style="color:var(--bk-yellow)">●</span> indica qué competición
       está saliendo al aire ahora.
       <br><br>
-      <strong>Importante:</strong> solo una competición a la vez. Guardar en otra pestaña
-      reemplaza la selección anterior. La configuración se almacena en este navegador.
+      <strong>Imágenes de fondo:</strong> las URLs se sincronizan entre dispositivos.
+      Los archivos subidos solo se guardan en este navegador — usá una URL pública para
+      que la imagen aparezca en la placa de otra pantalla.
     </div>
   </div>
 </main>
@@ -575,6 +577,56 @@ const DEFAULT_SCHEDULE = {
 };
 let currentCompetition = 'CL';
 let currentMatches = [];
+
+// ── Config cross-device (/api/config) ─────────────────
+async function syncFromServer() {
+  try {
+    const r = await fetch('/api/config', { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return;
+    const cfg = await r.json();
+    if (!cfg || typeof cfg !== 'object' || Object.keys(cfg).length === 0) return;
+
+    if (cfg.competition != null || cfg.ids != null) {
+      const payload = { competition: cfg.competition || 'CL', ids: Array.isArray(cfg.ids) ? cfg.ids : [] };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+    if (cfg.schedule && typeof cfg.schedule === 'object') {
+      localStorage.setItem(SCHEDULE_KEY, JSON.stringify(cfg.schedule));
+    }
+    if (cfg.backgrounds && typeof cfg.backgrounds === 'object') {
+      let bgs;
+      try { bgs = JSON.parse(localStorage.getItem(BG_KEY) || '{}'); } catch { bgs = {}; }
+      for (const [mode, url] of Object.entries(cfg.backgrounds)) {
+        const isBase64 = typeof bgs[mode] === 'string' && bgs[mode].startsWith('data:');
+        if (url && typeof url === 'string' && !url.startsWith('data:')) {
+          bgs[mode] = url;
+        } else if (!url && bgs[mode] && !isBase64) {
+          delete bgs[mode];
+        }
+      }
+      localStorage.setItem(BG_KEY, JSON.stringify(bgs));
+    }
+  } catch { /* network error, ignore */ }
+}
+
+async function pushToServer() {
+  try {
+    const cfg = loadConfig();
+    const schedule = loadSchedule();
+    const bgs = loadBackgrounds();
+    const urlBgs = {};
+    for (const [k, v] of Object.entries(bgs)) {
+      urlBgs[k] = (v && !v.startsWith('data:')) ? v : null;
+    }
+    const payload = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs };
+    const r = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) console.warn('Config push failed:', r.status);
+  } catch (e) { console.warn('Config push error:', e.message); }
+}
 
 function loadSchedule() {
   try {
@@ -688,7 +740,9 @@ document.querySelectorAll('[data-save-bg]').forEach(btn => {
     bgs[mode] = value;
     if (saveBackgrounds(bgs)) {
       refreshBgPreviews();
-      showToast('Fondo de "' + mode + '" guardado');
+      pushToServer();
+      const extra = value.startsWith('data:') ? ' (solo este dispositivo)' : ' · sincronizando…';
+      showToast('Fondo de "' + mode + '" guardado' + extra);
     }
   });
 });
@@ -702,7 +756,8 @@ document.querySelectorAll('[data-clear]').forEach(btn => {
       document.getElementById('file-' + mode).value = '';
       document.getElementById('url-'  + mode).value = '';
       refreshBgPreviews();
-      showToast('Fondo de "' + mode + '" eliminado');
+      pushToServer();
+      showToast('Fondo de "' + mode + '" eliminado · sincronizando…');
     }
   });
 });
@@ -859,13 +914,15 @@ document.getElementById('btn-save-schedule').addEventListener('click', () => {
   };
   saveSchedule(s);
   refreshScheduleStatus();
-  showToast('Horarios guardados');
+  pushToServer();
+  showToast('Horarios guardados · sincronizando…');
 });
 
 document.getElementById('btn-reset-schedule').addEventListener('click', () => {
   applyScheduleToInputs(DEFAULT_SCHEDULE);
   saveSchedule(DEFAULT_SCHEDULE);
   refreshScheduleStatus();
+  pushToServer();
   showToast('Horarios restaurados');
 });
 
@@ -873,9 +930,10 @@ document.getElementById('btn-save').addEventListener('click', () => {
   const ids = [...document.querySelectorAll('input[type="checkbox"]:checked')]
     .map(cb => cb.value);
   saveSelection(ids);
+  pushToServer();
   showToast(ids.length === 0
-    ? 'Sin filtro: la placa mostrará todos los partidos'
-    : `${ids.length} partido${ids.length===1?'':'s'} guardado${ids.length===1?'':'s'}`);
+    ? 'Sin filtro · sincronizando…'
+    : `${ids.length} partido${ids.length===1?'':'s'} guardado${ids.length===1?'':'s'} · sincronizando…`);
 });
 
 document.querySelectorAll('.tab').forEach(tab => {
@@ -886,20 +944,24 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-// Open the tab matching whatever is currently saved (so reopening the panel
-// shows the active configuration).
-const savedCfg = loadConfig();
-const savedTab = document.querySelector(`.tab[data-comp="${savedCfg.competition}"]`);
-if (savedTab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  savedTab.classList.add('active');
+// Iniciar: sincronizar con el servidor, luego renderizar con los valores actualizados.
+async function init() {
+  await syncFromServer();
+
+  const savedCfg = loadConfig();
+  const savedTab = document.querySelector(`.tab[data-comp="${savedCfg.competition}"]`);
+  if (savedTab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    savedTab.classList.add('active');
+  }
+  loadAndRender(savedCfg.competition || 'CL');
+  refreshOnAirIndicator();
+  applyScheduleToInputs(loadSchedule());
+  refreshScheduleStatus();
+  refreshBgPreviews();
+  setInterval(refreshScheduleStatus, 30000);
 }
-loadAndRender(savedCfg.competition || 'CL');
-refreshOnAirIndicator();
-applyScheduleToInputs(loadSchedule());
-refreshScheduleStatus();
-refreshBgPreviews();
-setInterval(refreshScheduleStatus, 30000);
+init();
 </script>
 </body>
 </html>
