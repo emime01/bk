@@ -14,14 +14,21 @@
   --bk-dark:   #1A0A00;
   --white:     #FFFFFF;
 
-  /* Zona de marcadores: 800px a la derecha con margen de 60px */
-  --markers-width: 800px;
+  /*
+   * Layout 1920px:
+   *   Anunciante : 0 → 1000px  (1000px)
+   *   Marcadores : 1000px → 1920px (920px = 60px margen + 800px contenido + 60px margen)
+   *   Total      : 1000 + 920 = 1920px ✓
+   */
+  --advertiser-w: 1000px;
+  --markers-total-w: 920px;   /* 800 contenido + 60 margen cada lado */
+  --markers-content-w: 800px;
   --markers-margin: 60px;
-  /* Zona anunciante: todo lo que queda a la izquierda */
-  --advertiser-width: calc(1920px - var(--markers-width) - var(--markers-margin) - var(--markers-margin));
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { overflow: hidden; }
 
 body {
   width: 1920px;
@@ -104,7 +111,7 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: var(--advertiser-width);   /* ~1000px */
+  width: var(--advertiser-w);   /* 1000px */
   height: 1080px;
   background: rgba(214, 35, 0, 0.08);
   border-right: 3px solid rgba(214,35,0,0.5);
@@ -169,8 +176,8 @@ body {
 .zone-markers {
   position: absolute;
   top: 0;
-  right: 0;
-  width: calc(var(--markers-width) + var(--markers-margin) * 2); /* 920px total */
+  left: var(--advertiser-w);   /* 1000px — anclado al borde del anunciante */
+  width: var(--markers-total-w); /* 920px exacto, termina en 1920px */
   height: 1080px;
   background: rgba(245,170,28,0.07);
   border-left: 3px solid rgba(245,170,28,0.5);
@@ -214,7 +221,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: var(--markers-width);
+  width: var(--markers-content-w); /* 800px, centrado dentro de los 920px */
 }
 
 .marker-row {
@@ -254,27 +261,6 @@ body {
   font-size: 36px;
   color: rgba(245,170,28,0.3);
   letter-spacing: 4px;
-}
-
-/* ── Divisor central entre zonas ────────────────────────── */
-.center-divider {
-  position: absolute;
-  top: 0;
-  /* borde izquierdo de la zona marcadores */
-  left: var(--advertiser-width);
-  width: calc(var(--markers-margin) * 2); /* 120px de separación */
-  height: 1080px;
-  background: repeating-linear-gradient(
-    -45deg,
-    rgba(255,255,255,0.015),
-    rgba(255,255,255,0.015) 10px,
-    transparent 10px,
-    transparent 20px
-  );
-  border-left:  1px solid rgba(255,255,255,0.08);
-  border-right: 1px solid rgba(255,255,255,0.08);
-  z-index: 2;
-  pointer-events: none;
 }
 
 /* ── Medidas de referencia horizontales ─────────────────── */
@@ -423,11 +409,8 @@ body {
     Fondo de campaña · Billboard · Logo<br>
     La imagen cubre toda esta zona
   </div>
-  <div class="zone-dims">~1000 × 1080 px</div>
+  <div class="zone-dims">1000 × 1080 px</div>
 </div>
-
-<!-- Divisor entre zonas -->
-<div class="center-divider"></div>
 
 <!-- ══ ZONA MARCADORES ══════════════════════════════════════ -->
 <div class="zone-markers">
@@ -526,5 +509,16 @@ body {
   </div>
 </div>
 
+<script>
+(function () {
+  function fit() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    document.body.style.transform = 'scale(' + s + ')';
+    document.body.style.transformOrigin = 'top left';
+  }
+  fit();
+  window.addEventListener('resize', fit);
+})();
+</script>
 </body>
 </html>
