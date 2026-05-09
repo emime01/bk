@@ -18,6 +18,8 @@
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
+html { overflow: hidden; }
+
 body {
   width: 1920px;
   height: 1080px;
@@ -147,6 +149,17 @@ body.has-mode-bg #placa-day .day-stat-FT {
 }
 body.has-mode-bg #placa-day .day-min-text { color: var(--bk-red); }
 
+/* Gap interno del equipo reducido para que el nombre quepa en el 1fr */
+body.has-mode-bg #placa-day .day-team-side { gap: 10px; }
+/* Nombre del equipo: una sola línea con ellipsis en modo billboard */
+body.has-mode-bg #placa-day .day-team-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: unset;
+  display: block;
+}
+
 /* Modo denso adaptado al ancho de 800px */
 body.has-mode-bg #placa-day .day-list.dense .day-row {
   grid-template-columns: 80px 1fr auto 1fr 100px;
@@ -156,6 +169,7 @@ body.has-mode-bg #placa-day .day-list.dense .day-row {
 body.has-mode-bg #placa-day .day-list.dense .day-time { font-size: 36px; }
 body.has-mode-bg #placa-day .day-list.dense .day-row.live .day-time { font-size: 28px; }
 body.has-mode-bg #placa-day .day-list.dense .day-team-name { font-size: 22px; }
+body.has-mode-bg #placa-day .day-list.dense .day-team-side { gap: 8px; }
 body.has-mode-bg #placa-day .day-list.dense .day-team-crest { width: 48px; height: 48px; }
 body.has-mode-bg #placa-day .day-list.dense .day-score-big { font-size: 38px; min-width: 70px; }
 body.has-mode-bg #placa-day .day-list.dense .day-vs { font-size: 22px; min-width: 50px; }
@@ -2583,6 +2597,17 @@ window.addEventListener('storage', (e) => {
     fetchMatches();
   }
 });
+
+/* Escala el canvas de 1920×1080 para caber en cualquier pantalla */
+(function () {
+  function fit() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    document.body.style.transform = 'scale(' + s + ')';
+    document.body.style.transformOrigin = 'top left';
+  }
+  fit();
+  window.addEventListener('resize', fit);
+})();
 </script>
 </body>
 </html>
