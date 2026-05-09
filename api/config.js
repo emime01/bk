@@ -54,7 +54,8 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(204).end();
 
-  const slug = req.query?.client || null;
+  // Vercel populates req.query from URL query string
+  const slug = (req.query && req.query.client) ? String(req.query.client) : null;
   const key  = slug ? clientKey(slug) : LEGACY_KEY;
 
   if (req.method === 'GET') {

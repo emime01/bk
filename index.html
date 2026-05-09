@@ -2070,7 +2070,8 @@ function loadSchedule() {
 }
 function getCurrentMode() {
   const s = loadSchedule();
-  if (loadCountdownConfig().active) return 'countdown';
+  const cd = loadCountdownConfig();
+  if (cd.active && (cd.mundialDate || cd.uruguayDate)) return 'countdown';
   const now = new Date();
   const m = now.getHours() * 60 + now.getMinutes();
   const toMin = (hhmm) => {
@@ -2230,6 +2231,20 @@ async function syncFromServer() {
     console.log('[sync] cfg:', cfg);
     if (!cfg || typeof cfg !== 'object' || Object.keys(cfg).length === 0) {
       console.log('[sync] cfg empty, returning false');
+      // Si hay un cliente específico y el servidor no tiene config,
+      // asegurarse de que el countdown quede inactivo (evita datos viejos en localStorage)
+      if (CLIENT_SLUG) {
+        const cdKey = LS('countdown');
+        const local = localStorage.getItem(cdKey);
+        if (local) {
+          try {
+            const parsed = JSON.parse(local);
+            if (parsed.active) {
+              localStorage.setItem(cdKey, JSON.stringify({ ...parsed, active: false }));
+            }
+          } catch {}
+        }
+      }
       return false;
     }
 
