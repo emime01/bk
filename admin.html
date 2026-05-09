@@ -1701,7 +1701,8 @@ document.getElementById('btn-confirm-new').addEventListener('click', async () =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ slug, name }),
   });
-  const res = await r.json();
+  let res = {};
+  try { res = await r.json(); } catch {}
   if (!r.ok) { showToast('Error: ' + (res.error || r.status)); return; }
   document.getElementById('modal-new-client').classList.remove('open');
   allClients = await fetchClientList();
