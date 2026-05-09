@@ -820,6 +820,23 @@ main {
           <input type="text"  id="color-card-text-text" value="#1A1A1A" maxlength="7">
         </div>
       </div>
+      <div class="color-field">
+        <label>Fondo del contador (con imagen)</label>
+        <div class="color-row">
+          <input type="color" id="color-cd-panel-bg" value="#000000">
+          <input type="text"  id="color-cd-panel-bg-text" value="#000000" maxlength="7">
+          <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+          <input type="range" id="color-cd-opacity" min="0" max="100" value="60" style="width:80px;">
+          <span id="color-cd-opacity-val" style="font-size:12px;min-width:32px;">60%</span>
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Texto del contador</label>
+        <div class="color-row">
+          <input type="color" id="color-cd-text" value="#FFFFFF">
+          <input type="text"  id="color-cd-text-text" value="#FFFFFF" maxlength="7">
+        </div>
+      </div>
     </div>
     <div class="actions">
       <button class="btn btn-primary" id="btn-save-colors">Guardar colores</button>
@@ -830,15 +847,15 @@ main {
   <div class="panel">
     <h2><span>Formato de pantalla</span></h2>
     <div class="layout-options">
-      <label class="layout-option selected" id="layout-opt-full">
-        <input type="radio" name="layout-half" value="full" checked>
-        <strong>Panel completo</strong>
-        <span>Los marcadores y contadores ocupan toda la altura del panel derecho (1080px)</span>
+      <label class="layout-option selected" id="layout-opt-side">
+        <input type="radio" name="layout-pos" value="side" checked>
+        <strong>A un lado (lateral)</strong>
+        <span>Los marcadores y el contador se muestran en un panel a la derecha. La imagen de fondo llena toda la pantalla detrás.</span>
       </label>
-      <label class="layout-option" id="layout-opt-half">
-        <input type="radio" name="layout-half" value="half">
+      <label class="layout-option" id="layout-opt-top">
+        <input type="radio" name="layout-pos" value="top">
         <strong>Mitad superior</strong>
-        <span>Los marcadores y contadores se muestran solo en la mitad superior (540px), dejando libre la parte de abajo</span>
+        <span>Los marcadores y el contador aparecen en la franja superior. La imagen de fondo es visible en toda la pantalla.</span>
       </label>
     </div>
     <div class="actions">
@@ -1472,7 +1489,11 @@ function saveCountdownConfig(cd) {
 }
 
 // ── Colores ───────────────────────────────────────────────
-const DEFAULT_COLORS = { accent: '#FF6B35', accentAlt: '#FFB347', cardBg: '#FFFFFF', cardText: '#1A1A1A' };
+const DEFAULT_COLORS = {
+  accent: '#FF6B35', accentAlt: '#FFB347',
+  cardBg: '#FFFFFF', cardText: '#1A1A1A',
+  cdPanelBg: 'rgba(0,0,0,0.60)', cdText: '#FFFFFF',
+};
 
 function loadColorsConfig() {
   try {
@@ -1483,6 +1504,27 @@ function loadColorsConfig() {
 
 function saveColorsConfig(c) { localStorage.setItem(COLORS_KEY(), JSON.stringify(c)); }
 
+function parseCdPanelBg(rgba) {
+  // Extrae el color hex y la opacidad de un rgba() o color hex
+  if (!rgba) return { hex: '#000000', opacity: 60 };
+  const m = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+  if (m) {
+    const r = parseInt(m[1]).toString(16).padStart(2,'0');
+    const g = parseInt(m[2]).toString(16).padStart(2,'0');
+    const b = parseInt(m[3]).toString(16).padStart(2,'0');
+    const a = m[4] != null ? Math.round(parseFloat(m[4]) * 100) : 60;
+    return { hex: '#' + r + g + b, opacity: a };
+  }
+  return { hex: rgba.startsWith('#') ? rgba : '#000000', opacity: 60 };
+}
+
+function buildCdPanelBg(hex, opacity) {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  return `rgba(${r},${g},${b},${(opacity/100).toFixed(2)})`;
+}
+
 function applyColorsToInputs(c) {
   const set = (id, val) => {
     const col = document.getElementById(id);
@@ -1490,14 +1532,25 @@ function applyColorsToInputs(c) {
     if (col) col.value = val;
     if (txt) txt.value = val;
   };
-  set('color-accent', c.accent || DEFAULT_COLORS.accent);
+  set('color-accent',    c.accent    || DEFAULT_COLORS.accent);
   set('color-accent-alt', c.accentAlt || DEFAULT_COLORS.accentAlt);
-  set('color-card-bg', c.cardBg || DEFAULT_COLORS.cardBg);
-  set('color-card-text', c.cardText || DEFAULT_COLORS.cardText);
+  set('color-card-bg',   c.cardBg    || DEFAULT_COLORS.cardBg);
+  set('color-card-text', c.cardText  || DEFAULT_COLORS.cardText);
+  set('color-cd-text',   c.cdText    || DEFAULT_COLORS.cdText);
+
+  const { hex, opacity } = parseCdPanelBg(c.cdPanelBg || DEFAULT_COLORS.cdPanelBg);
+  const colPnl = document.getElementById('color-cd-panel-bg');
+  const txtPnl = document.getElementById('color-cd-panel-bg-text');
+  const sldPnl = document.getElementById('color-cd-opacity');
+  const valPnl = document.getElementById('color-cd-opacity-val');
+  if (colPnl) colPnl.value = hex;
+  if (txtPnl) txtPnl.value = hex;
+  if (sldPnl) sldPnl.value = opacity;
+  if (valPnl) valPnl.textContent = opacity + '%';
 }
 
 // Sincroniza color picker ↔ text input
-['accent','accent-alt','card-bg','card-text'].forEach(id => {
+['accent','accent-alt','card-bg','card-text','cd-text'].forEach(id => {
   const col = document.getElementById('color-' + id);
   const txt = document.getElementById('color-' + id + '-text');
   if (col && txt) {
@@ -1508,12 +1561,25 @@ function applyColorsToInputs(c) {
   }
 });
 
+// Slider de opacidad del contador
+const cdOpacitySlider = document.getElementById('color-cd-opacity');
+const cdOpacityVal    = document.getElementById('color-cd-opacity-val');
+if (cdOpacitySlider) {
+  cdOpacitySlider.addEventListener('input', () => {
+    if (cdOpacityVal) cdOpacityVal.textContent = cdOpacitySlider.value + '%';
+  });
+}
+
 document.getElementById('btn-save-colors').addEventListener('click', () => {
+  const hex     = document.getElementById('color-cd-panel-bg-text')?.value || '#000000';
+  const opacity = parseInt(document.getElementById('color-cd-opacity')?.value || '60');
   const c = {
-    accent:    document.getElementById('color-accent-text').value,
-    accentAlt: document.getElementById('color-accent-alt-text').value,
-    cardBg:    document.getElementById('color-card-bg-text').value,
-    cardText:  document.getElementById('color-card-text-text').value,
+    accent:     document.getElementById('color-accent-text').value,
+    accentAlt:  document.getElementById('color-accent-alt-text').value,
+    cardBg:     document.getElementById('color-card-bg-text').value,
+    cardText:   document.getElementById('color-card-text-text').value,
+    cdPanelBg:  buildCdPanelBg(hex, opacity),
+    cdText:     document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
   };
   saveColorsConfig(c);
   pushToServer();
@@ -1533,17 +1599,15 @@ function loadLayoutConfig() {
 function saveLayoutConfig(l) { localStorage.setItem(LAYOUT_KEY(), JSON.stringify(l)); }
 
 function applyLayoutToInputs(l) {
-  const half = !!l.half;
-  const optFull = document.getElementById('layout-opt-full');
-  const optHalf = document.getElementById('layout-opt-half');
-  if (optFull) optFull.classList.toggle('selected', !half);
-  if (optHalf) optHalf.classList.toggle('selected', half);
-  document.querySelectorAll('input[name="layout-half"]').forEach(r => {
-    r.checked = (r.value === (half ? 'half' : 'full'));
+  const top = !!l.top;
+  document.getElementById('layout-opt-side')?.classList.toggle('selected', !top);
+  document.getElementById('layout-opt-top')?.classList.toggle('selected', top);
+  document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
+    r.checked = (r.value === (top ? 'top' : 'side'));
   });
 }
 
-document.querySelectorAll('input[name="layout-half"]').forEach(r => {
+document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
   r.addEventListener('change', () => {
     document.querySelectorAll('.layout-option').forEach(o => o.classList.remove('selected'));
     r.closest('.layout-option')?.classList.add('selected');
@@ -1551,8 +1615,8 @@ document.querySelectorAll('input[name="layout-half"]').forEach(r => {
 });
 
 document.getElementById('btn-save-layout').addEventListener('click', () => {
-  const selected = document.querySelector('input[name="layout-half"]:checked');
-  const l = { half: selected?.value === 'half' };
+  const selected = document.querySelector('input[name="layout-pos"]:checked');
+  const l = { top: selected?.value === 'top' };
   saveLayoutConfig(l);
   pushToServer();
   showToast('Formato guardado · sincronizando…');

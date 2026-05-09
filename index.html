@@ -20,6 +20,10 @@
   --card-bg:     #FFFFFF;
   --card-text:   #1A1A1A;
   --card-text-muted: rgba(26,26,26,0.45);
+
+  /* Colores del contador/cuenta atrás */
+  --cd-panel-bg: rgba(0,0,0,0.60);
+  --cd-text:     #FFFFFF;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -1634,7 +1638,8 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 
 /* ── PLACA CUENTA ATRÁS ───────────────────────────────── */
 #placa-countdown {
-  display: flex;
+  /* SIN display:flex aquí — lo controla .placa.active para que
+     el countdown no "filtre" visualmente cuando está oculto */
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -1738,13 +1743,23 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 }
 
 /* En modo billboard: apila los eventos en panel derecho */
-body.has-mode-bg #placa-countdown {
+/* ─────────────────────────────────────────────────────── */
+/* LAYOUT CON IMAGEN DE FONDO                              */
+/* La imagen llena 1920×1080. El contenido se superpone    */
+/* en dos formatos configurables:                          */
+/*  · lateral   (sin clase extra): panel a la DERECHA      */
+/*  · layout-top: franja en la MITAD SUPERIOR              */
+/* ─────────────────────────────────────────────────────── */
+
+/* == LAYOUT LATERAL (por defecto) ======================= */
+/* Countdown en el panel derecho — SOLO cuando es activo   */
+body.has-mode-bg #placa-countdown.active {
   flex-direction: row;
   justify-content: flex-end;
   align-items: stretch;
   background: transparent;
 }
-body.has-mode-bg #placa-countdown .cd-panel {
+body.has-mode-bg #placa-countdown.active .cd-panel {
   flex: 0 0 860px;
   margin-right: 30px;
   display: flex;
@@ -1752,68 +1767,106 @@ body.has-mode-bg #placa-countdown .cd-panel {
   align-items: center;
   justify-content: center;
   gap: 40px;
+  background: var(--cd-panel-bg, rgba(0,0,0,0.6));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 20px 0 0 20px;
+  border-left: 3px solid rgba(255,255,255,0.12);
 }
-body.has-mode-bg #placa-countdown .cd-header { display: none; }
-body.has-mode-bg #placa-countdown .cd-events {
+body.has-mode-bg #placa-countdown.active .cd-header { display: none; }
+body.has-mode-bg #placa-countdown.active .cd-events {
   flex-direction: column;
   gap: 36px;
 }
-body.has-mode-bg #placa-countdown .cd-num {
+body.has-mode-bg #placa-countdown.active .cd-num {
   font-size: 80px;
   min-width: 110px;
 }
-body.has-mode-bg #placa-countdown .cd-sep { font-size: 56px; }
-body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
+body.has-mode-bg #placa-countdown.active .cd-sep { font-size: 56px; }
+body.has-mode-bg #placa-countdown.active .cd-event-label { font-size: 22px; }
 
-/* ── Layout: mitad superior (layout-half) ─────────────── */
-/* Los marcadores y contadores flotan en la mitad superior  */
-body.layout-half.has-mode-bg #placa-day .day-list,
-body.layout-half.has-mode-bg #placa-multilive .ml-grid,
-body.layout-half.has-mode-bg #placa-live .match-half {
-  margin-top: 30px;
-  margin-bottom: auto;
-  max-height: 500px;
-  overflow: hidden;
-}
-body.layout-half.has-mode-bg #placa-countdown .cd-panel {
-  margin-top: 60px;
-  margin-bottom: auto;
+/* Tarjetas de marcadores con colores de cliente */
+body.has-mode-bg #placa-day .day-row { background: var(--card-bg) !important; }
+body.has-mode-bg #placa-multilive .ml-card { background: var(--card-bg) !important; }
+body.has-mode-bg #placa-live .match-half { background: var(--card-bg) !important; }
+
+/* == LAYOUT MITAD SUPERIOR (layout-top) ================= */
+/* El contenido ocupa la franja superior (~460 px).         */
+/* La imagen es visible en TODA la pantalla.                */
+
+body.has-mode-bg.layout-top #placa-day,
+body.has-mode-bg.layout-top #placa-multilive,
+body.has-mode-bg.layout-top #placa-live,
+body.has-mode-bg.layout-top #placa-countdown.active {
+  flex-direction: column;
   justify-content: flex-start;
+  align-items: stretch;
 }
-body.layout-half.has-mode-bg #placa-day,
-body.layout-half.has-mode-bg #placa-multilive,
-body.layout-half.has-mode-bg #placa-live,
-body.layout-half.has-mode-bg #placa-countdown {
+
+/* Day — tarjetas en fila horizontal */
+body.has-mode-bg.layout-top #placa-day .day-list {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  flex: none !important;
+  width: 100% !important;
+  max-height: 460px;
+  gap: 16px 20px;
+  padding: 20px 40px;
   align-items: flex-start;
+  align-content: flex-start;
+}
+body.has-mode-bg.layout-top #placa-day .day-row {
+  flex: 0 1 560px;
+  min-width: 420px;
 }
 
-/* ── Countdown overlay (superpuesto sobre imagen) ────── */
-/* Cuando hay imagen de fondo, el contador flota sobre    */
-/* la mitad derecha con panel semitransparente.           */
-body.has-mode-bg #placa-countdown .cd-panel {
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border-radius: 20px 0 0 20px;
-  padding: 50px 40px;
-  border-left: 3px solid rgba(255,255,255,0.12);
+/* Multilive — grid horizontal */
+body.has-mode-bg.layout-top #placa-multilive .ml-grid {
+  width: 100% !important;
+  flex: none !important;
+  margin: 0 !important;
+  padding: 20px 40px;
+  max-height: 460px;
+  grid-template-columns: repeat(3, 1fr) !important;
 }
 
-/* Tarjetas de marcadores: usar variables de cliente */
-body.has-mode-bg #placa-day .day-row,
-body.has-mode-bg #placa-multilive .ml-card,
-body.has-mode-bg #placa-live .match-half {
-  background: var(--card-bg) !important;
-  color: var(--card-text) !important;
+/* Live — tarjeta centrada en la parte superior */
+body.has-mode-bg.layout-top #placa-live {
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 30px;
 }
-body.has-mode-bg #placa-day .day-team-name,
-body.has-mode-bg #placa-multilive .ml-team-name,
-body.has-mode-bg #placa-live .team-name { color: var(--card-text) !important; }
-body.has-mode-bg #placa-day .day-time,
-body.has-mode-bg #placa-day .day-score-big,
-body.has-mode-bg #placa-live .score-n { color: var(--accent) !important; text-shadow: none; }
-body.has-mode-bg #placa-day .day-row.live { border-color: var(--accent) !important; }
-body.has-mode-bg #placa-day .day-stat-FT { background: var(--accent-alt) !important; }
+body.has-mode-bg.layout-top #placa-live .match-half {
+  margin: 0;
+  width: 700px;
+  flex: 0 0 700px;
+}
+
+/* Countdown — panel superior horizontal */
+body.has-mode-bg.layout-top #placa-countdown.active .cd-header {
+  display: flex; /* visible en mitad superior */
+}
+body.has-mode-bg.layout-top #placa-countdown.active .cd-panel {
+  flex: none;
+  flex-direction: row;
+  width: 100%;
+  gap: 60px;
+  justify-content: center;
+  border-radius: 0;
+  border-left: none;
+  border-bottom: 2px solid rgba(255,255,255,0.12);
+  padding: 28px 80px;
+  margin-right: 0;
+}
+body.has-mode-bg.layout-top #placa-countdown.active .cd-events {
+  flex-direction: row;
+  gap: 60px;
+}
+body.has-mode-bg.layout-top #placa-countdown.active .cd-num {
+  font-size: 64px;
+  min-width: 90px;
+}
+body.has-mode-bg.layout-top #placa-countdown.active .cd-sep { font-size: 44px; }
 </style>
 </head>
 <body>
@@ -2037,17 +2090,19 @@ const LS = key => CLIENT_SLUG ? `mv_${CLIENT_SLUG}_${key}` : `bk_${key}`;
 function applyClientColors(colors) {
   if (!colors || typeof colors !== 'object') return;
   const root = document.documentElement;
-  if (colors.accent)    root.style.setProperty('--accent',    colors.accent);
-  if (colors.accentAlt) root.style.setProperty('--accent-alt', colors.accentAlt);
-  if (colors.cardBg)    root.style.setProperty('--card-bg',   colors.cardBg);
-  if (colors.cardText)  root.style.setProperty('--card-text', colors.cardText);
-  if (colors.cardText)  root.style.setProperty('--card-text-muted', colors.cardText + '80');
+  if (colors.accent)      root.style.setProperty('--accent',       colors.accent);
+  if (colors.accentAlt)   root.style.setProperty('--accent-alt',   colors.accentAlt);
+  if (colors.cardBg)      root.style.setProperty('--card-bg',      colors.cardBg);
+  if (colors.cardText)    root.style.setProperty('--card-text',     colors.cardText);
+  if (colors.cardText)    root.style.setProperty('--card-text-muted', colors.cardText + '80');
+  if (colors.cdPanelBg)   root.style.setProperty('--cd-panel-bg',  colors.cdPanelBg);
+  if (colors.cdText)      root.style.setProperty('--cd-text',       colors.cdText);
 }
 
 function applyLayoutConfig(layout) {
   if (!layout) return;
-  // half: marcadores/contadores solo en mitad superior (top 540px)
-  document.body.classList.toggle('layout-half', !!layout.half);
+  // top: contenido en la mitad superior; por defecto (sin clase): lateral
+  document.body.classList.toggle('layout-top', !!layout.top);
 }
 
 // Horarios automáticos (configurables desde /admin):
@@ -2299,13 +2354,9 @@ async function syncFromServer() {
 async function pollConfig() {
   const changed = await syncFromServer();
   if (changed) {
-    applyModeBackground();
-    clearTimeout(state.rotateTimeout);
-    clearTimeout(state.quickPollTimeout);
-    clearTimeout(state.dayRotateTimeout);
-    state.currentFixtureIdx = 0;
-    state.dayPageIdx = 0;
-    fetchMatches();
+    // Recarga completa para que colores, layout y config queden aplicados
+    setTimeout(() => location.reload(), 400);
+    return;
   }
 }
 
