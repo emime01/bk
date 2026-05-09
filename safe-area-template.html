@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>BK · Plantilla Área Segura</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bk-red:    #D62300;
+  --bk-yellow: #F5AA1C;
+  --bk-brown:  #502314;
+  --bk-cream:  #FFF4DC;
+  --bk-dark:   #1A0A00;
+  --white:     #FFFFFF;
+
+  /*
+   * Layout 1920px:
+   *   Anunciante : 0 → 1000px  (1000px)
+   *   Marcadores : 1000px → 1920px (920px = 60px margen + 800px contenido + 60px margen)
+   *   Total      : 1000 + 920 = 1920px ✓
+   */
+  --advertiser-w: 1000px;
+  --markers-total-w: 920px;   /* 800 contenido + 60 margen cada lado */
+  --markers-content-w: 800px;
+  --markers-margin: 60px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { overflow: hidden; }
+
+body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  font-family: 'Barlow Condensed', sans-serif;
+  background: #111;
+  position: relative;
+}
+
+/* ── Cuadrícula de referencia ───────────────────────────── */
+.grid-ref {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Marco del frame completo ───────────────────────────── */
+.frame-full {
+  position: absolute;
+  inset: 0;
+  border: 2px dashed rgba(255,255,255,0.2);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ── Área acción segura (90% · 1728×972) ────────────────── */
+.action-safe {
+  position: absolute;
+  top:    54px;   /* (1080 - 972) / 2 */
+  left:   96px;   /* (1920 - 1728) / 2 */
+  width:  1728px;
+  height: 972px;
+  border: 1.5px dashed rgba(255, 200, 0, 0.45);
+  z-index: 2;
+  pointer-events: none;
+}
+.action-safe::before {
+  content: 'ACCIÓN SEGURA · 90% · 1728×972';
+  position: absolute;
+  top: -22px; left: 0;
+  font-size: 13px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: rgba(255,200,0,0.55);
+  text-transform: uppercase;
+}
+
+/* ── Área título seguro (80% · 1536×864) ────────────────── */
+.title-safe {
+  position: absolute;
+  top:    108px;  /* (1080 - 864) / 2 */
+  left:   192px;  /* (1920 - 1536) / 2 */
+  width:  1536px;
+  height: 864px;
+  border: 1.5px dashed rgba(100, 200, 255, 0.4);
+  z-index: 2;
+  pointer-events: none;
+}
+.title-safe::before {
+  content: 'TÍTULO SEGURO · 80% · 1536×864';
+  position: absolute;
+  top: -22px; left: 0;
+  font-size: 13px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: rgba(100,200,255,0.5);
+  text-transform: uppercase;
+}
+
+/* ── ZONA ANUNCIANTE ─────────────────────────────────────── */
+.zone-advertiser {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--advertiser-w);   /* 1000px */
+  height: 1080px;
+  background: rgba(214, 35, 0, 0.08);
+  border-right: 3px solid rgba(214,35,0,0.5);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.zone-advertiser .zone-label {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  letter-spacing: 6px;
+  color: rgba(214,35,0,0.7);
+  text-transform: uppercase;
+}
+
+.zone-advertiser .zone-desc {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.zone-advertiser .zone-dims {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(214,35,0,0.5);
+  letter-spacing: 3px;
+  margin-top: 8px;
+}
+
+/* Ícono placeholder para el logo del anunciante */
+.advertiser-placeholder {
+  width: 320px;
+  height: 200px;
+  border: 2px dashed rgba(214,35,0,0.4);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.advertiser-placeholder svg {
+  opacity: 0.3;
+}
+.advertiser-placeholder span {
+  font-size: 14px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── ZONA MARCADORES ─────────────────────────────────────── */
+.zone-markers {
+  position: absolute;
+  top: 0;
+  left: var(--advertiser-w);   /* 1000px — anclado al borde del anunciante */
+  width: var(--markers-total-w); /* 920px exacto, termina en 1920px */
+  height: 1080px;
+  background: rgba(245,170,28,0.07);
+  border-left: 3px solid rgba(245,170,28,0.5);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.zone-markers .zone-label {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  letter-spacing: 6px;
+  color: rgba(245,170,28,0.8);
+  text-transform: uppercase;
+}
+
+.zone-markers .zone-desc {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.zone-markers .zone-dims {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(245,170,28,0.6);
+  letter-spacing: 3px;
+  margin-top: 8px;
+}
+
+/* Marcadores de ejemplo */
+.markers-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: var(--markers-content-w); /* 800px, centrado dentro de los 920px */
+}
+
+.marker-row {
+  height: 84px;
+  border-radius: 12px;
+  border: 2px dashed rgba(245,170,28,0.35);
+  background: rgba(245,170,28,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.marker-row .mr-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.marker-row .mr-crest {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+}
+
+.marker-row .mr-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.marker-row .mr-score {
+  font-family: 'Anton', sans-serif;
+  font-size: 36px;
+  color: rgba(245,170,28,0.3);
+  letter-spacing: 4px;
+}
+
+/* ── Medidas de referencia horizontales ─────────────────── */
+.ruler-h {
+  position: absolute;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  z-index: 4;
+  pointer-events: none;
+}
+.ruler-h::after {
+  content: attr(data-label);
+  position: absolute;
+  right: 4px;
+  top: -18px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  font-family: 'Barlow', sans-serif;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.ruler-top    { top: 0;      left: 0; right: 0; }
+.ruler-bottom { bottom: 0;   left: 0; right: 0; }
+.ruler-mid    { top: 540px;  left: 0; right: 0; }
+
+/* ── Medidas verticales ─────────────────────────────────── */
+.ruler-v {
+  position: absolute;
+  width: 1px;
+  background: rgba(255,255,255,0.1);
+  top: 0; bottom: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.ruler-v::after {
+  content: attr(data-label);
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  font-family: 'Barlow', sans-serif;
+  letter-spacing: 1px;
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+}
+
+/* ── Leyenda ─────────────────────────────────────────────── */
+.legend {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 32px;
+  z-index: 10;
+  background: rgba(0,0,0,0.6);
+  padding: 12px 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+}
+
+.legend-swatch {
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+/* ── Título superior de la plantilla ────────────────────── */
+.template-title {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.template-title h1 {
+  font-family: 'Anton', sans-serif;
+  font-size: 20px;
+  letter-spacing: 8px;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+}
+
+.template-title p {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<!-- Cuadrícula de fondo -->
+<div class="grid-ref"></div>
+
+<!-- Marco completo del frame -->
+<div class="frame-full"></div>
+
+<!-- Reglas de referencia -->
+<div class="ruler-h ruler-top"    data-label="Y: 0"></div>
+<div class="ruler-h ruler-mid"    data-label="Y: 540 (centro)"></div>
+<div class="ruler-h ruler-bottom" data-label="Y: 1080"></div>
+<div class="ruler-v" style="left:0"      data-label="X: 0"></div>
+<div class="ruler-v" style="left:960px"  data-label="X: 960 (centro)"></div>
+<div class="ruler-v" style="left:1920px" data-label="X: 1920"></div>
+
+<!-- Áreas de broadcast safe -->
+<div class="action-safe"></div>
+<div class="title-safe"></div>
+
+<!-- ══ ZONA ANUNCIANTE ══════════════════════════════════════ -->
+<div class="zone-advertiser">
+  <div class="zone-label">Zona Anunciante</div>
+
+  <div class="advertiser-placeholder">
+    <!-- Ícono de imagen placeholder -->
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(214,35,0,0.6)" stroke-width="1.5">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <path d="m21 15-5-5L5 21"/>
+    </svg>
+    <span>Imagen / Logo</span>
+  </div>
+
+  <div class="zone-desc">
+    Fondo de campaña · Billboard · Logo<br>
+    La imagen cubre toda esta zona
+  </div>
+  <div class="zone-dims">1000 × 1080 px</div>
+</div>
+
+<!-- ══ ZONA MARCADORES ══════════════════════════════════════ -->
+<div class="zone-markers">
+  <div class="zone-label">Zona Marcadores</div>
+
+  <!-- Marcadores placeholder -->
+  <div class="markers-stack">
+    <!-- Marcador 1: partido en vivo -->
+    <div class="marker-row">
+      <div class="mr-team">
+        <div class="mr-crest"></div>
+        <div class="mr-name">Equipo A</div>
+      </div>
+      <div class="mr-score">1 · 0</div>
+      <div class="mr-team">
+        <div class="mr-name">Equipo B</div>
+        <div class="mr-crest"></div>
+      </div>
+    </div>
+    <!-- Marcador 2 -->
+    <div class="marker-row">
+      <div class="mr-team">
+        <div class="mr-crest"></div>
+        <div class="mr-name">Equipo C</div>
+      </div>
+      <div class="mr-score">0 · 0</div>
+      <div class="mr-team">
+        <div class="mr-name">Equipo D</div>
+        <div class="mr-crest"></div>
+      </div>
+    </div>
+    <!-- Marcador 3 -->
+    <div class="marker-row">
+      <div class="mr-team">
+        <div class="mr-crest"></div>
+        <div class="mr-name">Equipo E</div>
+      </div>
+      <div class="mr-score">2 · 1</div>
+      <div class="mr-team">
+        <div class="mr-name">Equipo F</div>
+        <div class="mr-crest"></div>
+      </div>
+    </div>
+    <!-- Marcador 4 -->
+    <div class="marker-row">
+      <div class="mr-team">
+        <div class="mr-crest"></div>
+        <div class="mr-name">Equipo G</div>
+      </div>
+      <div class="mr-score">— · —</div>
+      <div class="mr-team">
+        <div class="mr-name">Equipo H</div>
+        <div class="mr-crest"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="zone-desc">
+    Marcadores de partidos en vivo<br>
+    Ancho fijo · 800 px · margen 60 px
+  </div>
+  <div class="zone-dims">800 × auto · margen 60 px</div>
+</div>
+
+<!-- Áreas de safe encima de todo -->
+<div class="action-safe" style="pointer-events:none; z-index:5;"></div>
+<div class="title-safe"  style="pointer-events:none; z-index:5;"></div>
+
+<!-- Título de la plantilla -->
+<div class="template-title">
+  <h1>Burger King · Plantilla Área Segura</h1>
+  <p>1920 × 1080 px · broadcast safe · solo referencia visual</p>
+</div>
+
+<!-- Leyenda -->
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(255,255,255,0.25); border: 1px dashed rgba(255,255,255,0.4);"></div>
+    Frame completo · 1920×1080
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(255,200,0,0.6);"></div>
+    Acción segura · 90%
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(100,200,255,0.6);"></div>
+    Título seguro · 80%
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(214,35,0,0.6);"></div>
+    Zona anunciante
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(245,170,28,0.7);"></div>
+    Zona marcadores
+  </div>
+</div>
+
+<script>
+(function () {
+  function fit() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    document.body.style.transform = 'scale(' + s + ')';
+    document.body.style.transformOrigin = 'top left';
+  }
+  fit();
+  window.addEventListener('resize', fit);
+})();
+</script>
+</body>
+</html>
