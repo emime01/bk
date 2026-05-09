@@ -3,17 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920">
-<title>Burger King · Fútbol en Vivo</title>
+<title>Movimagen · Fútbol en Vivo</title>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bk-red:    #D62300;
-  --bk-yellow: #F5AA1C;
-  --bk-brown:  #502314;
-  --bk-cream:  #FFF4DC;
-  --bk-dark:   #1A0A00;
-  --white:     #FFFFFF;
-  --black:     #000000;
+  /* Colores base — sobrescritos por cada cliente vía JS */
+  --accent:      #FF6B35;   /* naranja Movimagen por defecto */
+  --accent-alt:  #FFB347;
+  --text-dark:   #1A1A1A;
+  --surface:     #FFF8F3;
+  --bg-dark:     #111111;
+  --white:       #FFFFFF;
+  --black:       #000000;
+
+  /* Colores de tarjeta (marcadores) */
+  --card-bg:     #FFFFFF;
+  --card-text:   #1A1A1A;
+  --card-text-muted: rgba(26,26,26,0.45);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -25,7 +31,7 @@ body {
   height: 1080px;
   overflow: hidden;
   font-family: 'Barlow Condensed', sans-serif;
-  background: var(--bk-dark);
+  background: var(--bg-dark);
   position: relative;
 }
 
@@ -88,15 +94,15 @@ body.has-mode-bg #placa-day .day-row {
 body.has-mode-bg #placa-day .day-row::after { display: none; }
 body.has-mode-bg #placa-day .day-row.live {
   background: white;
-  border: 3px solid var(--bk-red);
+  border: 3px solid var(--accent);
   box-shadow: 0 8px 32px rgba(214,35,0,0.4);
 }
 body.has-mode-bg #placa-day .day-row.ft {
-  background: var(--bk-cream);
+  background: var(--surface);
   opacity: 1;
 }
 body.has-mode-bg #placa-day .day-time {
-  color: var(--bk-red);
+  color: var(--accent);
   font-size: 50px;
   text-shadow: none;
 }
@@ -105,12 +111,12 @@ body.has-mode-bg #placa-day .day-row.live .day-time {
   text-shadow: none;
 }
 body.has-mode-bg #placa-day .day-row.ft .day-time {
-  color: var(--bk-brown);
+  color: var(--text-dark);
   font-size: 40px;
   opacity: 0.7;
 }
 body.has-mode-bg #placa-day .day-team-name {
-  color: var(--bk-brown);
+  color: var(--text-dark);
   font-size: 30px;
 }
 body.has-mode-bg #placa-day .day-team-crest {
@@ -125,13 +131,13 @@ body.has-mode-bg #placa-day .day-vs {
   min-width: 70px;
 }
 body.has-mode-bg #placa-day .day-score-big {
-  color: var(--bk-red);
+  color: var(--accent);
   font-size: 54px;
   min-width: 90px;
   text-shadow: none;
 }
 body.has-mode-bg #placa-day .day-row.ft .day-score-big {
-  color: var(--bk-brown);
+  color: var(--text-dark);
 }
 body.has-mode-bg #placa-day .day-status-badge {
   font-size: 15px;
@@ -139,15 +145,15 @@ body.has-mode-bg #placa-day .day-status-badge {
 }
 body.has-mode-bg #placa-day .day-stat-NS {
   background: rgba(80,35,20,0.08);
-  color: var(--bk-brown);
+  color: var(--text-dark);
   border-color: rgba(80,35,20,0.15);
 }
 body.has-mode-bg #placa-day .day-stat-FT {
-  background: var(--bk-yellow);
-  color: var(--bk-brown);
+  background: var(--accent-alt);
+  color: var(--text-dark);
   border: none;
 }
-body.has-mode-bg #placa-day .day-min-text { color: var(--bk-red); }
+body.has-mode-bg #placa-day .day-min-text { color: var(--accent); }
 
 /* Gap interno del equipo reducido para que el nombre quepa en el 1fr */
 body.has-mode-bg #placa-day .day-team-side { gap: 10px; }
@@ -202,7 +208,7 @@ body.has-mode-bg #placa-multilive .ml-card {
 }
 body.has-mode-bg #placa-multilive .ml-card::before { display: none; }
 body.has-mode-bg #placa-multilive .ml-team-name {
-  color: var(--bk-brown);
+  color: var(--text-dark);
   font-size: 24px;
 }
 body.has-mode-bg #placa-multilive .ml-crest {
@@ -211,7 +217,7 @@ body.has-mode-bg #placa-multilive .ml-crest {
   width: 60px; height: 60px;
 }
 body.has-mode-bg #placa-multilive .ml-score-num {
-  color: var(--bk-red);
+  color: var(--accent);
   font-size: 60px;
   text-shadow: none;
 }
@@ -240,18 +246,18 @@ body.has-mode-bg #placa-live .match-half {
 body.has-mode-bg #placa-live .match-half::before { display: none; }
 body.has-mode-bg #placa-live .match-header { border-bottom-color: rgba(80,35,20,0.15); }
 body.has-mode-bg #placa-live .competition-name { color: rgba(80,35,20,0.5); }
-body.has-mode-bg #placa-live .minute-num { color: var(--bk-red); text-shadow: none; }
+body.has-mode-bg #placa-live .minute-num { color: var(--accent); text-shadow: none; }
 body.has-mode-bg #placa-live .minute-label { color: rgba(80,35,20,0.5); }
-body.has-mode-bg #placa-live .team-name { color: var(--bk-brown); font-size: 26px; }
+body.has-mode-bg #placa-live .team-name { color: var(--text-dark); font-size: 26px; }
 body.has-mode-bg #placa-live .team-crest {
   width: 90px; height: 90px;
   background: rgba(80,35,20,0.06);
   border-color: rgba(80,35,20,0.15);
 }
 body.has-mode-bg #placa-live .live-scorers { color: rgba(80,35,20,0.65); }
-body.has-mode-bg #placa-live .live-scorers em { color: var(--bk-red); }
+body.has-mode-bg #placa-live .live-scorers em { color: var(--accent); }
 body.has-mode-bg #placa-live .score-n {
-  color: var(--bk-red);
+  color: var(--accent);
   font-size: 88px;
 }
 body.has-mode-bg #placa-live .score-dash { color: rgba(80,35,20,0.25); }
@@ -260,14 +266,14 @@ body.has-mode-bg #placa-live .section-title {
   color: rgba(80,35,20,0.5);
   border-bottom-color: rgba(80,35,20,0.15);
 }
-body.has-mode-bg #placa-live .stat-h { color: var(--bk-red); }
-body.has-mode-bg #placa-live .stat-a { color: var(--bk-brown); }
+body.has-mode-bg #placa-live .stat-h { color: var(--accent); }
+body.has-mode-bg #placa-live .stat-a { color: var(--text-dark); }
 body.has-mode-bg #placa-live .stat-name { color: rgba(80,35,20,0.5); }
 body.has-mode-bg #placa-live .stat-bar { background: rgba(80,35,20,0.08); }
-body.has-mode-bg #placa-live .stat-bar .bar-h { background: var(--bk-red); }
-body.has-mode-bg #placa-live .stat-bar .bar-a { background: var(--bk-brown); opacity: 0.5; }
-body.has-mode-bg #placa-live .ev-min { color: var(--bk-red); }
-body.has-mode-bg #placa-live .ev-player { color: var(--bk-brown); }
+body.has-mode-bg #placa-live .stat-bar .bar-h { background: var(--accent); }
+body.has-mode-bg #placa-live .stat-bar .bar-a { background: var(--text-dark); opacity: 0.5; }
+body.has-mode-bg #placa-live .ev-min { color: var(--accent); }
+body.has-mode-bg #placa-live .ev-player { color: var(--text-dark); }
 body.has-mode-bg #placa-live .ev-team { color: rgba(80,35,20,0.5); }
 body.has-mode-bg #placa-live .event-row { border-bottom-color: rgba(80,35,20,0.08); }
 body.has-mode-bg #placa-live .footer-update { color: rgba(80,35,20,0.4); }
@@ -308,7 +314,7 @@ body.has-mode-bg #placa-waiting .wait-status {
    PLACA 1 — ESPERANDO PARTIDO
 ═══════════════════════════════════════════ */
 #placa-waiting {
-  background: var(--bk-dark);
+  background: var(--bg-dark);
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -323,11 +329,11 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-waiting .bk-logo-big {
   font-family: 'Anton', sans-serif;
   font-size: 120px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   letter-spacing: -2px;
   line-height: 1;
   position: relative;
-  text-shadow: 6px 6px 0 var(--bk-brown), 0 0 80px rgba(245,170,28,0.4);
+  text-shadow: 6px 6px 0 var(--text-dark), 0 0 80px rgba(245,170,28,0.4);
 }
 #placa-waiting .tagline {
   font-family: 'Anton', sans-serif;
@@ -347,7 +353,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-waiting .loading-fill {
   position: absolute; top:0; left:-100%;
   width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, var(--bk-yellow), transparent);
+  background: linear-gradient(90deg, transparent, var(--accent-alt), transparent);
   animation: shimmer-bar 1.8s ease infinite;
 }
 #placa-waiting .wait-status {
@@ -361,13 +367,13 @@ body.has-mode-bg #placa-waiting .wait-status {
    PLACA 2 — PRÓXIMO PARTIDO (pre-match)
 ═══════════════════════════════════════════ */
 #placa-prematch {
-  background: var(--bk-yellow);
+  background: var(--accent-alt);
   flex-direction: row;
   align-items: stretch;
 }
 #placa-prematch .left-col {
   width: 480px;
-  background: var(--bk-red);
+  background: var(--accent);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -382,14 +388,14 @@ body.has-mode-bg #placa-waiting .wait-status {
   position: absolute;
   right: -40px; top: 0; bottom: 0;
   width: 80px;
-  background: var(--bk-yellow);
+  background: var(--accent-alt);
   clip-path: polygon(40px 0, 100% 0, 100% 100%, 40px 100%, 0 50%);
 }
 #placa-prematch .bk-logo {
   font-family: 'Anton', sans-serif;
   font-size: 56px;
-  color: var(--bk-yellow);
-  text-shadow: 3px 3px 0 var(--bk-brown);
+  color: var(--accent-alt);
+  text-shadow: 3px 3px 0 var(--text-dark);
   letter-spacing: -1px;
 }
 #placa-prematch .prox-label {
@@ -408,8 +414,8 @@ body.has-mode-bg #placa-waiting .wait-status {
   line-height: 1.4;
 }
 #placa-prematch .competition-badge {
-  background: var(--bk-yellow);
-  color: var(--bk-red);
+  background: var(--accent-alt);
+  color: var(--accent);
   font-family: 'Anton', sans-serif;
   font-size: 18px;
   letter-spacing: 3px;
@@ -446,7 +452,7 @@ body.has-mode-bg #placa-waiting .wait-status {
   width: 160px; height: 160px;
   border-radius: 50%;
   background: rgba(0,0,0,0.1);
-  border: 4px solid var(--bk-brown);
+  border: 4px solid var(--text-dark);
   display: flex; align-items: center; justify-content: center;
   font-size: 80px;
   box-shadow: 0 8px 32px rgba(80,35,20,0.3);
@@ -454,7 +460,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-prematch .team-name {
   font-family: 'Anton', sans-serif;
   font-size: 44px;
-  color: var(--bk-brown);
+  color: var(--text-dark);
   text-align: center;
   line-height: 1;
   letter-spacing: 1px;
@@ -468,14 +474,14 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-prematch .vs-text {
   font-family: 'Anton', sans-serif;
   font-size: 80px;
-  color: var(--bk-red);
+  color: var(--accent);
   line-height: 1;
-  text-shadow: 4px 4px 0 var(--bk-brown);
+  text-shadow: 4px 4px 0 var(--text-dark);
 }
 #placa-prematch .kick-time {
   font-family: 'Anton', sans-serif;
   font-size: 36px;
-  color: var(--bk-brown);
+  color: var(--text-dark);
   background: rgba(80,35,20,0.12);
   padding: 8px 24px;
   border-radius: 8px;
@@ -488,7 +494,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-live {
   flex-direction: row;
   align-items: stretch;
-  background: var(--bk-dark);
+  background: var(--bg-dark);
 }
 
 /* ── MATCH HALF (izquierda 960px) ─────────── */
@@ -519,7 +525,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 }
 #placa-live .live-badge {
   display: flex; align-items: center; gap: 10px;
-  background: var(--bk-red);
+  background: var(--accent);
   border-radius: 6px;
   padding: 8px 18px;
   box-shadow: 0 4px 20px rgba(214,35,0,0.4);
@@ -551,7 +557,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-live .minute-num {
   font-family: 'Anton', sans-serif;
   font-size: 44px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   line-height: 1;
   text-shadow: 0 0 24px rgba(245,170,28,0.4);
 }
@@ -605,7 +611,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-live .live-scorers span { display: block; }
 #placa-live .live-scorers span em {
   font-style: normal;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   font-size: 12px;
   margin-left: 4px;
 }
@@ -686,8 +692,8 @@ body.has-mode-bg #placa-waiting .wait-status {
   font-size: 20px;
   line-height: 1;
 }
-#placa-live .stat-h { text-align: left;  color: var(--bk-yellow); }
-#placa-live .stat-a { text-align: right; color: var(--bk-cream); }
+#placa-live .stat-h { text-align: left;  color: var(--accent-alt); }
+#placa-live .stat-a { text-align: right; color: var(--surface); }
 #placa-live .stat-name {
   font-size: 10px;
   letter-spacing: 3px;
@@ -706,8 +712,8 @@ body.has-mode-bg #placa-waiting .wait-status {
   display: flex;
 }
 #placa-live .stat-bar > span { height: 100%; display: block; }
-#placa-live .stat-bar .bar-h { background: var(--bk-yellow); }
-#placa-live .stat-bar .bar-a { background: var(--bk-cream); opacity: 0.5; }
+#placa-live .stat-bar .bar-h { background: var(--accent-alt); }
+#placa-live .stat-bar .bar-a { background: var(--surface); opacity: 0.5; }
 
 /* Events */
 #placa-live .event-row {
@@ -721,7 +727,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-live .ev-min {
   font-family: 'Anton', sans-serif;
   font-size: 18px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   min-width: 36px;
   text-align: right;
 }
@@ -741,8 +747,8 @@ body.has-mode-bg #placa-waiting .wait-status {
   font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
   padding: 3px 8px; border-radius: 4px; font-weight: 700;
 }
-.tag-g { background: rgba(214,35,0,0.2);   color: var(--bk-red);    border: 1px solid rgba(214,35,0,0.4); }
-.tag-y { background: rgba(245,170,28,0.15); color: var(--bk-yellow); border: 1px solid rgba(245,170,28,0.3); }
+.tag-g { background: rgba(214,35,0,0.2);   color: var(--accent);    border: 1px solid rgba(214,35,0,0.4); }
+.tag-y { background: rgba(245,170,28,0.15); color: var(--accent-alt); border: 1px solid rgba(245,170,28,0.3); }
 .tag-r { background: rgba(180,0,0,0.2);    color: #ff6060;           border: 1px solid rgba(180,0,0,0.4); }
 .tag-s { background: rgba(80,200,80,0.1);  color: #80e080;           border: 1px solid rgba(80,200,80,0.2); }
 
@@ -759,12 +765,12 @@ body.has-mode-bg #placa-waiting .wait-status {
   color: rgba(255,255,255,0.25);
   text-transform: uppercase;
 }
-#placa-live .footer-update span { color: var(--bk-yellow); }
+#placa-live .footer-update span { color: var(--accent-alt); }
 
 /* ── BK HALF (derecha 960px) ─────────────── */
 #placa-live .bk-half {
   width: 960px;
-  background: var(--bk-red);
+  background: var(--accent);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -798,8 +804,8 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-live .bk-mega-logo {
   font-family: 'Anton', sans-serif;
   font-size: 138px;
-  color: var(--bk-yellow);
-  text-shadow: 8px 8px 0 var(--bk-brown), 0 0 100px rgba(245,170,28,0.4);
+  color: var(--accent-alt);
+  text-shadow: 8px 8px 0 var(--text-dark), 0 0 100px rgba(245,170,28,0.4);
   letter-spacing: -3px;
   line-height: 1;
   position: relative; z-index: 2;
@@ -815,7 +821,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 }
 #placa-live .bk-divider {
   width: 110px; height: 4px;
-  background: var(--bk-yellow);
+  background: var(--accent-alt);
   margin: 14px 0;
   position: relative; z-index: 2;
   box-shadow: 0 0 24px rgba(245,170,28,0.6);
@@ -829,9 +835,9 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-live .bk-slogan {
   font-family: 'Anton', sans-serif;
   font-size: 92px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   letter-spacing: 10px;
-  text-shadow: 6px 6px 0 var(--bk-brown);
+  text-shadow: 6px 6px 0 var(--text-dark);
   position: relative; z-index: 2;
   text-align: center;
   line-height: 0.95;
@@ -842,7 +848,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 ═══════════════════════════════════════════ */
 #placa-day {
   flex-direction: column;
-  background: var(--bk-dark);
+  background: var(--bg-dark);
   position: relative;
   overflow: hidden;
 }
@@ -854,7 +860,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 }
 #placa-day .day-header {
   height: 130px;
-  background: var(--bk-red);
+  background: var(--accent);
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -872,8 +878,8 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-day .day-bk-logo {
   font-family: 'Anton', sans-serif;
   font-size: 60px;
-  color: var(--bk-yellow);
-  text-shadow: 4px 4px 0 var(--bk-brown);
+  color: var(--accent-alt);
+  text-shadow: 4px 4px 0 var(--text-dark);
   letter-spacing: -1px;
   position: relative; z-index: 2;
   line-height: 1;
@@ -904,7 +910,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-day .day-comp {
   font-family: 'Anton', sans-serif;
   font-size: 32px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   letter-spacing: 5px;
   position: relative; z-index: 2;
   text-align: right;
@@ -946,27 +952,27 @@ body.has-mode-bg #placa-waiting .wait-status {
 }
 #placa-day .day-row.live {
   background: linear-gradient(90deg, rgba(214,35,0,0.18) 0%, rgba(214,35,0,0.04) 100%);
-  border: 2px solid var(--bk-red);
+  border: 2px solid var(--accent);
   box-shadow: 0 0 30px rgba(214,35,0,0.25);
 }
-#placa-day .day-row.live::after { background: var(--bk-red); }
+#placa-day .day-row.live::after { background: var(--accent); }
 #placa-day .day-row.ft {
   background: rgba(80,35,20,0.18);
   opacity: 0.85;
 }
-#placa-day .day-row.ft::after { background: var(--bk-yellow); opacity: 0.5; }
+#placa-day .day-row.ft::after { background: var(--accent-alt); opacity: 0.5; }
 
 #placa-day .day-time {
   font-family: 'Anton', sans-serif;
   font-size: 78px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   line-height: 1;
   letter-spacing: -1px;
   text-align: center;
 }
 #placa-day .day-row.live .day-time {
   font-size: 56px;
-  color: var(--bk-red);
+  color: var(--accent);
   text-shadow: 0 0 30px rgba(214,35,0,0.5);
 }
 #placa-day .day-row.ft .day-time {
@@ -1019,7 +1025,7 @@ body.has-mode-bg #placa-waiting .wait-status {
 #placa-day .day-score-big {
   font-family: 'Anton', sans-serif;
   font-size: 78px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   letter-spacing: 6px;
   min-width: 110px;
   text-align: center;
@@ -1027,7 +1033,7 @@ body.has-mode-bg #placa-waiting .wait-status {
   text-shadow: 0 0 30px rgba(245,170,28,0.3);
 }
 #placa-day .day-row.ft .day-score-big {
-  color: var(--bk-cream);
+  color: var(--surface);
 }
 
 #placa-day .day-status {
@@ -1046,9 +1052,9 @@ body.has-mode-bg #placa-waiting .wait-status {
   line-height: 1;
 }
 .day-stat-NS  { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.15); }
-.day-stat-LIVE{ background: var(--bk-red); color: white; box-shadow: 0 0 18px rgba(214,35,0,0.5); animation: pulse-live 2s ease infinite; display: flex; align-items: center; gap: 8px; }
+.day-stat-LIVE{ background: var(--accent); color: white; box-shadow: 0 0 18px rgba(214,35,0,0.5); animation: pulse-live 2s ease infinite; display: flex; align-items: center; gap: 8px; }
 .day-stat-LIVE::before { content: ''; width: 8px; height: 8px; background: white; border-radius: 50%; animation: live-blink 1s infinite; }
-.day-stat-FT  { background: rgba(245,170,28,0.18); color: var(--bk-yellow); border: 1px solid rgba(245,170,28,0.4); }
+.day-stat-FT  { background: rgba(245,170,28,0.18); color: var(--accent-alt); border: 1px solid rgba(245,170,28,0.4); }
 @keyframes pulse-live {
   0%, 100% { box-shadow: 0 0 18px rgba(214,35,0,0.5); }
   50%      { box-shadow: 0 0 32px rgba(214,35,0,0.9); }
@@ -1057,7 +1063,7 @@ body.has-mode-bg #placa-waiting .wait-status {
   font-family: 'Anton', sans-serif;
   font-size: 16px;
   letter-spacing: 3px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
 }
 #placa-day .day-empty {
   color: rgba(255,255,255,0.3);
@@ -1082,7 +1088,7 @@ body.has-mode-bg #placa-waiting .wait-status {
   transition: all 0.4s ease;
 }
 #placa-day .day-pages .dot.active {
-  background: var(--bk-yellow);
+  background: var(--accent-alt);
   box-shadow: 0 0 12px rgba(245,170,28,0.6);
   width: 28px;
   border-radius: 5px;
@@ -1091,7 +1097,7 @@ body.has-mode-bg #placa-day .day-pages .dot {
   background: rgba(255,255,255,0.4);
 }
 body.has-mode-bg #placa-day .day-pages .dot.active {
-  background: var(--bk-yellow);
+  background: var(--accent-alt);
 }
 
 /* Modo denso (6+ partidos): se achica la tipografía */
@@ -1114,7 +1120,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 ═══════════════════════════════════════════ */
 #placa-multilive {
   flex-direction: column;
-  background: var(--bk-dark);
+  background: var(--bg-dark);
   position: relative;
 }
 #placa-multilive .ml-header {
@@ -1123,7 +1129,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   align-items: center;
   justify-content: space-between;
   padding: 0 60px;
-  background: var(--bk-red);
+  background: var(--accent);
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -1137,8 +1143,8 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 #placa-multilive .ml-bk-logo {
   font-family: 'Anton', sans-serif;
   font-size: 56px;
-  color: var(--bk-yellow);
-  text-shadow: 4px 4px 0 var(--bk-brown);
+  color: var(--accent-alt);
+  text-shadow: 4px 4px 0 var(--text-dark);
   letter-spacing: -1px;
   position: relative; z-index: 2;
 }
@@ -1240,7 +1246,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 #placa-multilive .ml-score-num {
   font-family: 'Anton', sans-serif;
   font-size: 96px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   line-height: 1;
   text-shadow: 0 0 30px rgba(245,170,28,0.3);
 }
@@ -1252,7 +1258,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 }
 #placa-multilive .ml-min-pill {
   display: flex; align-items: center; gap: 8px;
-  background: var(--bk-red);
+  background: var(--accent);
   padding: 5px 14px;
   border-radius: 100px;
   box-shadow: 0 4px 16px rgba(214,35,0,0.4);
@@ -1299,7 +1305,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
    PLACA 4 — GOL 🔥
 ═══════════════════════════════════════════ */
 #placa-gol {
-  background: var(--bk-red);
+  background: var(--accent);
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -1336,10 +1342,10 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 #placa-gol .gol-word {
   font-family: 'Anton', sans-serif;
   font-size: 220px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   line-height: 0.9;
   text-shadow:
-    8px 8px 0 var(--bk-brown),
+    8px 8px 0 var(--text-dark),
     0 0 80px rgba(245,170,28,0.5);
   letter-spacing: 4px;
   animation: gol-slam 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1379,16 +1385,16 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 #placa-gol .gol-score-num {
   font-family: 'Anton', sans-serif;
   font-size: 52px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   letter-spacing: 4px;
 }
 #placa-gol .bk-corner {
   position: absolute; bottom: 40px; right: 60px; z-index: 3;
   font-family: 'Anton', sans-serif;
   font-size: 40px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   opacity: 0.7;
-  text-shadow: 2px 2px 0 var(--bk-brown);
+  text-shadow: 2px 2px 0 var(--text-dark);
 }
 
 /* ═══════════════════════════════════════════
@@ -1411,7 +1417,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 #placa-roja .roja-card {
   position: relative; z-index: 2;
   width: 180px; height: 240px;
-  background: var(--bk-red);
+  background: var(--accent);
   border-radius: 16px;
   box-shadow:
     0 0 0 6px rgba(255,255,255,0.1),
@@ -1435,7 +1441,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   position: relative; z-index: 2;
   font-family: 'Anton', sans-serif;
   font-size: 60px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   letter-spacing: 3px;
   margin-top: 12px;
 }
@@ -1459,16 +1465,16 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   position: absolute; bottom: 40px; right: 60px; z-index: 3;
   font-family: 'Anton', sans-serif;
   font-size: 40px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   opacity: 0.5;
-  text-shadow: 2px 2px 0 var(--bk-brown);
+  text-shadow: 2px 2px 0 var(--text-dark);
 }
 
 /* ═══════════════════════════════════════════
    PLACA 6 — FINAL DEL PARTIDO
 ═══════════════════════════════════════════ */
 #placa-final {
-  background: var(--bk-brown);
+  background: var(--text-dark);
   flex-direction: row;
   align-items: stretch;
   position: relative;
@@ -1481,7 +1487,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 }
 #placa-final .final-left {
   width: 520px;
-  background: var(--bk-dark);
+  background: var(--bg-dark);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1493,8 +1499,8 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 #placa-final .final-bk {
   font-family: 'Anton', sans-serif;
   font-size: 64px;
-  color: var(--bk-yellow);
-  text-shadow: 3px 3px 0 var(--bk-brown);
+  color: var(--accent-alt);
+  text-shadow: 3px 3px 0 var(--text-dark);
 }
 #placa-final .final-ft-label {
   font-family: 'Anton', sans-serif;
@@ -1554,7 +1560,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 #placa-final .final-team-name {
   font-family: 'Anton', sans-serif;
   font-size: 40px;
-  color: var(--bk-cream);
+  color: var(--surface);
   text-align: center;
   letter-spacing: 1px;
 }
@@ -1567,7 +1573,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 #placa-final .final-score {
   font-family: 'Anton', sans-serif;
   font-size: 140px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   line-height: 1;
   letter-spacing: 12px;
   text-shadow: 6px 6px 0 rgba(0,0,0,0.3), 0 0 60px rgba(245,170,28,0.2);
@@ -1575,7 +1581,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 #placa-final .final-winner {
   font-family: 'Anton', sans-serif;
   font-size: 28px;
-  color: var(--bk-red);
+  color: var(--accent);
   letter-spacing: 5px;
   background: rgba(214,35,0,0.1);
   border: 1px solid rgba(214,35,0,0.3);
@@ -1587,7 +1593,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   bottom: 32px;
   font-family: 'Anton', sans-serif;
   font-size: 22px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   letter-spacing: 6px;
   opacity: 0.4;
 }
@@ -1618,7 +1624,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 @keyframes score-flash {
-  0%   { color: var(--bk-yellow); text-shadow: 0 0 60px rgba(245,170,28,0.8); }
+  0%   { color: var(--accent-alt); text-shadow: 0 0 60px rgba(245,170,28,0.8); }
   100% { color: var(--white); text-shadow: none; }
 }
 @keyframes ball-spin {
@@ -1633,7 +1639,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   align-items: center;
   justify-content: center;
   gap: 60px;
-  background: var(--bk-dark);
+  background: var(--bg-dark);
 }
 #placa-countdown .cd-header {
   display: flex;
@@ -1670,7 +1676,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   font-family: 'Anton', sans-serif;
   font-size: 28px;
   letter-spacing: 5px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   text-transform: uppercase;
   text-align: center;
 }
@@ -1707,7 +1713,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   letter-spacing: -2px;
   text-shadow: 0 0 40px rgba(245,170,28,0.15);
 }
-.cd-num.cd-highlight { color: var(--bk-yellow); }
+.cd-num.cd-highlight { color: var(--accent-alt); }
 .cd-lbl {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 14px;
@@ -1726,7 +1732,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 .cd-done {
   font-family: 'Anton', sans-serif;
   font-size: 48px;
-  color: var(--bk-yellow);
+  color: var(--accent-alt);
   letter-spacing: 4px;
   text-align: center;
 }
@@ -1758,6 +1764,56 @@ body.has-mode-bg #placa-countdown .cd-num {
 }
 body.has-mode-bg #placa-countdown .cd-sep { font-size: 56px; }
 body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
+
+/* ── Layout: mitad superior (layout-half) ─────────────── */
+/* Los marcadores y contadores flotan en la mitad superior  */
+body.layout-half.has-mode-bg #placa-day .day-list,
+body.layout-half.has-mode-bg #placa-multilive .ml-grid,
+body.layout-half.has-mode-bg #placa-live .match-half {
+  margin-top: 30px;
+  margin-bottom: auto;
+  max-height: 500px;
+  overflow: hidden;
+}
+body.layout-half.has-mode-bg #placa-countdown .cd-panel {
+  margin-top: 60px;
+  margin-bottom: auto;
+  justify-content: flex-start;
+}
+body.layout-half.has-mode-bg #placa-day,
+body.layout-half.has-mode-bg #placa-multilive,
+body.layout-half.has-mode-bg #placa-live,
+body.layout-half.has-mode-bg #placa-countdown {
+  align-items: flex-start;
+}
+
+/* ── Countdown overlay (superpuesto sobre imagen) ────── */
+/* Cuando hay imagen de fondo, el contador flota sobre    */
+/* la mitad derecha con panel semitransparente.           */
+body.has-mode-bg #placa-countdown .cd-panel {
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 20px 0 0 20px;
+  padding: 50px 40px;
+  border-left: 3px solid rgba(255,255,255,0.12);
+}
+
+/* Tarjetas de marcadores: usar variables de cliente */
+body.has-mode-bg #placa-day .day-row,
+body.has-mode-bg #placa-multilive .ml-card,
+body.has-mode-bg #placa-live .match-half {
+  background: var(--card-bg) !important;
+  color: var(--card-text) !important;
+}
+body.has-mode-bg #placa-day .day-team-name,
+body.has-mode-bg #placa-multilive .ml-team-name,
+body.has-mode-bg #placa-live .team-name { color: var(--card-text) !important; }
+body.has-mode-bg #placa-day .day-time,
+body.has-mode-bg #placa-day .day-score-big,
+body.has-mode-bg #placa-live .score-n { color: var(--accent) !important; text-shadow: none; }
+body.has-mode-bg #placa-day .day-row.live { border-color: var(--accent) !important; }
+body.has-mode-bg #placa-day .day-stat-FT { background: var(--accent-alt) !important; }
 </style>
 </head>
 <body>
@@ -1765,7 +1821,7 @@ body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
 <!-- PLACA 1: Esperando / Cargando -->
 <div class="placa active" id="placa-waiting">
   <div class="bg-flame"></div>
-  <div class="bk-logo-big">BURGER KING®</div>
+  <div class="bk-logo-big"></div>
   <div class="tagline">Fútbol en vivo</div>
   <div class="loading-bar"><div class="loading-fill"></div></div>
   <div class="wait-status" id="wait-status">Buscando partido...</div>
@@ -1774,7 +1830,7 @@ body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
 <!-- PLACA CUENTA ATRÁS -->
 <div class="placa" id="placa-countdown">
   <div class="cd-header">
-    <div class="cd-brand">BURGER KING®</div>
+    <div class="cd-brand"></div>
     <div class="cd-title">Contando los días</div>
   </div>
   <div class="cd-panel">
@@ -1787,7 +1843,7 @@ body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
 <!-- PLACA 2: Pre-partido -->
 <div class="placa" id="placa-prematch">
   <div class="left-col">
-    <div class="bk-logo">BURGER KING®</div>
+    <div class="bk-logo"></div>
     <div class="prox-label">Próximo</div>
     <div class="match-date" id="pm-date">—</div>
     <div class="competition-badge" id="pm-comp">—</div>
@@ -1868,7 +1924,7 @@ body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
 
   <!-- DERECHA: BK -->
   <div class="bk-half">
-    <div class="bk-mega-logo">BURGER KING®</div>
+    <div class="bk-mega-logo"></div>
     <div class="bk-tagline">Fútbol en vivo</div>
     <div class="bk-divider"></div>
     <div class="bk-burger-icon">🍔</div>
@@ -1879,7 +1935,7 @@ body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
 <!-- PLACA 7: Día (apilada vertical para OOH) -->
 <div class="placa" id="placa-day">
   <div class="day-header">
-    <div class="day-bk-logo">BURGER KING®</div>
+    <div class="day-bk-logo"></div>
     <div class="day-header-mid">
       <div class="day-title">Partidos del día</div>
       <div class="day-date" id="day-date">—</div>
@@ -1893,7 +1949,7 @@ body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
 <!-- PLACA 8: Multi-live (varios partidos en vivo simultáneos) -->
 <div class="placa" id="placa-multilive">
   <div class="ml-header">
-    <div class="ml-bk-logo">BURGER KING®</div>
+    <div class="ml-bk-logo"></div>
     <div class="ml-title-block">
       <div class="ml-live-pill">
         <div class="dot"></div>
@@ -1921,7 +1977,7 @@ body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
     <div class="gol-score-num" id="gol-score">0 — 0</div>
     <div class="gol-score-teams" id="gol-team2-name">—</div>
   </div>
-  <div class="bk-corner">BURGER KING®</div>
+  <div class="bk-corner"></div>
 </div>
 
 <!-- PLACA 5: Tarjeta Roja -->
@@ -1932,14 +1988,14 @@ body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
   <div class="roja-player" id="roja-player">—</div>
   <div class="roja-team" id="roja-team">—</div>
   <div class="roja-minute" id="roja-minute">—'</div>
-  <div class="bk-corner">BURGER KING®</div>
+  <div class="bk-corner"></div>
 </div>
 
 <!-- PLACA 6: Final -->
 <div class="placa" id="placa-final">
   <div class="final-bg"></div>
   <div class="final-left">
-    <div class="final-bk">BURGER KING®</div>
+    <div class="final-bk"></div>
     <div class="final-ft-label">FT</div>
     <div class="final-ft-sub">Partido finalizado</div>
     <div class="final-competition" id="final-comp">—</div>
@@ -1967,6 +2023,33 @@ body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
 const API_BASE    = '/api/sports';
 const POLL_MS     = 60 * 1000; // 1 minuto
 
+// ── Cliente ───────────────────────────────────────────
+// Lee el slug del cliente desde /c/:slug.
+// Si se accede desde la raíz (/), opera en modo legacy.
+const CLIENT_SLUG = (function () {
+  const m = window.location.pathname.match(/^\/c\/([a-z0-9-]+)/);
+  return m ? m[1] : null;
+})();
+
+// Sufijo para localStorage: aísla configs de cada cliente
+const LS = key => CLIENT_SLUG ? `mv_${CLIENT_SLUG}_${key}` : `bk_${key}`;
+
+function applyClientColors(colors) {
+  if (!colors || typeof colors !== 'object') return;
+  const root = document.documentElement;
+  if (colors.accent)    root.style.setProperty('--accent',    colors.accent);
+  if (colors.accentAlt) root.style.setProperty('--accent-alt', colors.accentAlt);
+  if (colors.cardBg)    root.style.setProperty('--card-bg',   colors.cardBg);
+  if (colors.cardText)  root.style.setProperty('--card-text', colors.cardText);
+  if (colors.cardText)  root.style.setProperty('--card-text-muted', colors.cardText + '80');
+}
+
+function applyLayoutConfig(layout) {
+  if (!layout) return;
+  // half: marcadores/contadores solo en mitad superior (top 540px)
+  document.body.classList.toggle('layout-half', !!layout.half);
+}
+
 // Horarios automáticos (configurables desde /admin):
 //   - "day"  : muestra todos los partidos del día en una placa
 //   - "live" : muestra los partidos en vivo (resultado + minuto)
@@ -1979,7 +2062,7 @@ const DEFAULT_SCHEDULE = {
 };
 function loadSchedule() {
   try {
-    const raw = localStorage.getItem('bk_schedule');
+    const raw = localStorage.getItem(LS('schedule'));
     if (!raw) return { ...DEFAULT_SCHEDULE };
     const parsed = JSON.parse(raw);
     return { ...DEFAULT_SCHEDULE, ...parsed };
@@ -2002,7 +2085,7 @@ function getCurrentMode() {
 // ── CUENTA ATRÁS ─────────────────────────────────────────
 function loadCountdownConfig() {
   try {
-    const raw = localStorage.getItem('bk_countdown');
+    const raw = localStorage.getItem(LS('countdown'));
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }
@@ -2086,7 +2169,7 @@ function renderCountdown() {
 // Imagen de fondo por modo (configurable desde /admin).
 function loadBackgrounds() {
   try {
-    const raw = localStorage.getItem('bk_backgrounds');
+    const raw = localStorage.getItem(LS('backgrounds'));
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }
@@ -2107,7 +2190,7 @@ function applyModeBackground() {
 // Si no hay nada guardado, el default es Champions con todos los partidos.
 function loadDisplayConfig() {
   try {
-    const raw = localStorage.getItem('bk_selected_matches');
+    const raw = localStorage.getItem(LS('selected_matches'));
     if (!raw) return { competition: 'CL', ids: [] };
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return { competition: 'CL', ids: parsed };
@@ -2139,7 +2222,8 @@ let state = {
 async function syncFromServer() {
   try {
     console.log('[sync] fetching /api/config…');
-    const r = await fetch('/api/config', { signal: AbortSignal.timeout(4000) });
+    const cfgUrl = CLIENT_SLUG ? `/api/config?client=${CLIENT_SLUG}` : '/api/config';
+    const r = await fetch(cfgUrl, { signal: AbortSignal.timeout(4000) });
     console.log('[sync] response status:', r.status);
     if (!r.ok) return false;
     const cfg = await r.json();
@@ -2154,28 +2238,28 @@ async function syncFromServer() {
     if (cfg.competition != null || cfg.ids != null) {
       const next = JSON.stringify({ competition: cfg.competition || 'CL', ids: cfg.ids || [] });
       console.log('[sync] saving bk_selected_matches:', next);
-      if (next !== localStorage.getItem('bk_selected_matches')) {
-        localStorage.setItem('bk_selected_matches', next);
+      if (next !== localStorage.getItem(LS('selected_matches'))) {
+        localStorage.setItem(LS('selected_matches'), next);
         changed = true;
       }
     }
     if (cfg.schedule && typeof cfg.schedule === 'object') {
       const next = JSON.stringify(cfg.schedule);
-      if (next !== localStorage.getItem('bk_schedule')) {
-        localStorage.setItem('bk_schedule', next);
+      if (next !== localStorage.getItem(LS('schedule'))) {
+        localStorage.setItem(LS('schedule'), next);
         changed = true;
       }
     }
     if (cfg.countdown && typeof cfg.countdown === 'object') {
       const next = JSON.stringify(cfg.countdown);
-      if (next !== localStorage.getItem('bk_countdown')) {
-        localStorage.setItem('bk_countdown', next);
+      if (next !== localStorage.getItem(LS('countdown'))) {
+        localStorage.setItem(LS('countdown'), next);
         changed = true;
       }
     }
     if (cfg.backgrounds && typeof cfg.backgrounds === 'object') {
       let bgs;
-      try { bgs = JSON.parse(localStorage.getItem('bk_backgrounds') || '{}'); } catch { bgs = {}; }
+      try { bgs = JSON.parse(localStorage.getItem(LS('backgrounds')) || '{}'); } catch { bgs = {}; }
       for (const [mode, url] of Object.entries(cfg.backgrounds)) {
         const isBase64Local = typeof bgs[mode] === 'string' && bgs[mode].startsWith('data:');
         if (url && typeof url === 'string' && !url.startsWith('data:')) {
@@ -2184,7 +2268,13 @@ async function syncFromServer() {
           delete bgs[mode]; changed = true;
         }
       }
-      if (changed) localStorage.setItem('bk_backgrounds', JSON.stringify(bgs));
+      if (changed) localStorage.setItem(LS('backgrounds'), JSON.stringify(bgs));
+    }
+    if (cfg.colors && typeof cfg.colors === 'object') {
+      applyClientColors(cfg.colors);
+    }
+    if (cfg.layout && typeof cfg.layout === 'object') {
+      applyLayoutConfig(cfg.layout);
     }
     console.log('[sync] done, changed:', changed);
     return changed;

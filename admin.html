@@ -3,29 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BK · Panel de control</title>
+<title>Movimagen · Panel de control</title>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bk-red:    #D62300;
-  --bk-yellow: #F5AA1C;
-  --bk-brown:  #502314;
-  --bk-cream:  #FFF4DC;
-  --bk-dark:   #1A0A00;
-  --gray-100:  #F5F5F5;
-  --gray-300:  #D0D0D0;
-  --gray-600:  #555;
-  --gray-900:  #1A1A1A;
+  --mv-orange:       #FF6B35;
+  --mv-orange-dark:  #D94F1A;
+  --mv-orange-light: #FFF4EE;
+  --mv-dark:         #1A1A1A;
+  --gray-100:        #F5F5F5;
+  --gray-300:        #D0D0D0;
+  --gray-600:        #555;
+  --gray-900:        #1A1A1A;
+
+  /* Alias backward-compat usados en el resto del CSS */
+  --bk-red:    var(--mv-orange);
+  --bk-yellow: #FFB347;
+  --bk-brown:  var(--mv-dark);
+  --bk-cream:  var(--mv-orange-light);
 }
 
 * { margin:0; padding:0; box-sizing: border-box; }
 
 body {
   font-family: 'Barlow', sans-serif;
-  background: var(--bk-cream);
+  background: var(--mv-orange-light);
   color: var(--gray-900);
   min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 260px 1fr;
+  grid-template-areas: "header header" "sidebar main";
 }
+body > header { grid-area: header; }
+body > .sidebar { grid-area: sidebar; }
+body > main { grid-area: main; }
 
 header {
   background: var(--bk-red);
@@ -47,7 +59,7 @@ header h1 {
   font-family: 'Anton', sans-serif;
   font-size: 36px;
   letter-spacing: -1px;
-  text-shadow: 2px 2px 0 var(--bk-brown);
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.25);
 }
 
 header .subtitle {
@@ -484,6 +496,254 @@ main {
   color: var(--bk-red);
 }
 
+/* ── Sidebar multi-cliente ─────────────────────────── */
+.sidebar {
+  background: white;
+  border-right: 1px solid var(--gray-300);
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  min-height: 0;
+}
+.sidebar-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gray-600);
+  padding: 8px 20px 6px;
+}
+.client-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 20px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.12s;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+.client-item:hover { background: var(--gray-100); }
+.client-item.active {
+  background: rgba(255,107,53,0.08);
+  border-left-color: var(--mv-orange);
+  color: var(--mv-orange);
+  font-weight: 700;
+}
+.client-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gray-300);
+  flex-shrink: 0;
+}
+.client-item.active .client-dot { background: var(--mv-orange); }
+.client-slug {
+  font-size: 11px;
+  color: var(--gray-600);
+  font-family: monospace;
+  margin-left: auto;
+}
+.client-item.active .client-slug { color: var(--mv-orange); opacity: 0.7; }
+
+.btn-new-client {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 14px;
+  padding: 10px 16px;
+  background: var(--mv-orange);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-new-client:hover { background: var(--mv-orange-dark); }
+
+.preview-link {
+  display: block;
+  font-size: 12px;
+  color: var(--gray-600);
+  text-decoration: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  transition: color 0.12s;
+  word-break: break-all;
+}
+.preview-link:hover { color: var(--mv-orange); }
+
+/* ── Panel de colores del cliente ─────────────────── */
+.color-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.color-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+  letter-spacing: 0.3px;
+}
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.color-row input[type="color"] {
+  width: 40px; height: 36px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  padding: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.color-row input[type="text"] {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--gray-900);
+}
+.color-row input[type="text"]:focus { outline: none; border-color: var(--mv-orange); }
+
+/* ── Layout toggle ─────────────────────────────────── */
+.layout-options {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.layout-option {
+  flex: 1;
+  min-width: 180px;
+  padding: 14px 16px;
+  border: 2px solid var(--gray-300);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.layout-option:hover { border-color: var(--mv-orange); }
+.layout-option.selected {
+  border-color: var(--mv-orange);
+  background: rgba(255,107,53,0.06);
+}
+.layout-option strong {
+  font-size: 14px;
+  color: var(--gray-900);
+}
+.layout-option span {
+  font-size: 12px;
+  color: var(--gray-600);
+  line-height: 1.4;
+}
+.layout-option input[type="radio"] { display: none; }
+
+/* ── Modal nuevo cliente ───────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white;
+  border-radius: 14px;
+  padding: 32px;
+  width: 420px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal h3 {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--mv-dark);
+}
+.modal input[type="text"] {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: 'Barlow', sans-serif;
+}
+.modal input[type="text"]:focus { outline: none; border-color: var(--mv-orange); }
+.modal label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+  display: block;
+  margin-bottom: 4px;
+}
+.modal-slug-hint {
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-top: 4px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.btn-delete {
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border: 1px solid #E53935;
+  border-radius: 6px;
+  background: transparent;
+  color: #E53935;
+  cursor: pointer;
+  margin-right: auto;
+  transition: all 0.15s;
+}
+.btn-delete:hover { background: #E53935; color: white; }
+
+/* ── Empty state ───────────────────────────────────── */
+.no-client-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  gap: 16px;
+  color: var(--gray-600);
+}
+.no-client-msg .big-icon { font-size: 48px; opacity: 0.3; }
+.no-client-msg p { font-size: 16px; }
+
+@media (max-width: 768px) {
+  body {
+    grid-template-columns: 1fr;
+    grid-template-areas: "header" "sidebar" "main";
+  }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--gray-300); }
+}
 @media (max-width: 600px) {
   header { flex-direction: column; gap: 12px; align-items: flex-start; padding: 20px; }
   header h1 { font-size: 28px; }
@@ -497,13 +757,96 @@ main {
 
 <header>
   <div class="brand">
-    <h1>BURGER KING®</h1>
+    <h1>MOVIMAGEN</h1>
     <span class="subtitle">Panel de control</span>
   </div>
-  <a class="display-link" href="/" target="_blank">Ver placa →</a>
+  <span id="header-client-name" style="font-family:'Barlow Condensed';font-size:18px;letter-spacing:2px;color:rgba(255,255,255,0.7);"></span>
 </header>
 
-<main>
+<!-- Sidebar de clientes -->
+<aside class="sidebar">
+  <div class="sidebar-section-title">Clientes</div>
+  <div id="client-list">
+    <!-- generado por JS -->
+  </div>
+  <button class="btn-new-client" id="btn-new-client">
+    <span>+</span> Nuevo cliente
+  </button>
+  <div style="margin-top:auto; padding: 0 14px 12px;">
+    <a class="preview-link" id="preview-link" href="/" target="_blank" style="display:none">Ver placa →</a>
+  </div>
+</aside>
+
+<main id="main-content">
+
+  <!-- Estado vacío: ningún cliente seleccionado -->
+  <div id="no-client-panel" class="no-client-msg" style="display:none;">
+    <div class="big-icon">📺</div>
+    <p>Seleccioná un cliente para editar su configuración</p>
+  </div>
+
+  <!-- Contenido del cliente seleccionado -->
+  <div id="client-panels">
+
+  <!-- ── PANEL COLORES ──────────────────────────────── -->
+  <div class="panel">
+    <h2><span>Colores de la interfaz</span></h2>
+    <div class="color-grid">
+      <div class="color-field">
+        <label>Color principal (marcadores, contador)</label>
+        <div class="color-row">
+          <input type="color" id="color-accent" value="#FF6B35">
+          <input type="text"  id="color-accent-text" value="#FF6B35" maxlength="7">
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Color secundario (tiempo, VS, scores)</label>
+        <div class="color-row">
+          <input type="color" id="color-accent-alt" value="#FFB347">
+          <input type="text"  id="color-accent-alt-text" value="#FFB347" maxlength="7">
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Fondo de tarjetas</label>
+        <div class="color-row">
+          <input type="color" id="color-card-bg" value="#FFFFFF">
+          <input type="text"  id="color-card-bg-text" value="#FFFFFF" maxlength="7">
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Texto de tarjetas</label>
+        <div class="color-row">
+          <input type="color" id="color-card-text" value="#1A1A1A">
+          <input type="text"  id="color-card-text-text" value="#1A1A1A" maxlength="7">
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-save-colors">Guardar colores</button>
+    </div>
+  </div>
+
+  <!-- ── PANEL LAYOUT ───────────────────────────────── -->
+  <div class="panel">
+    <h2><span>Formato de pantalla</span></h2>
+    <div class="layout-options">
+      <label class="layout-option selected" id="layout-opt-full">
+        <input type="radio" name="layout-half" value="full" checked>
+        <strong>Panel completo</strong>
+        <span>Los marcadores y contadores ocupan toda la altura del panel derecho (1080px)</span>
+      </label>
+      <label class="layout-option" id="layout-opt-half">
+        <input type="radio" name="layout-half" value="half">
+        <strong>Mitad superior</strong>
+        <span>Los marcadores y contadores se muestran solo en la mitad superior (540px), dejando libre la parte de abajo</span>
+      </label>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-save-layout">Guardar formato</button>
+    </div>
+  </div>
+
+  <!-- ── PANEL HORARIOS ─────────────────────────────── -->
   <div class="panel">
     <h2>
       <span>Horarios automáticos</span>
@@ -682,13 +1025,48 @@ main {
       que la imagen aparezca en la placa de otra pantalla.
     </div>
   </div>
+
+  </div><!-- /client-panels -->
 </main>
+
+<!-- Modal nuevo cliente -->
+<div class="modal-overlay" id="modal-new-client">
+  <div class="modal">
+    <h3>NUEVO CLIENTE</h3>
+    <div>
+      <label>Nombre del cliente</label>
+      <input type="text" id="new-client-name" placeholder="Ej: Burger King" autocomplete="off">
+    </div>
+    <div>
+      <label>Slug (URL)</label>
+      <input type="text" id="new-client-slug" placeholder="ej: burger-king" autocomplete="off">
+      <div class="modal-slug-hint">Solo letras minúsculas, números y guiones. Será la URL: <code>/c/<span id="slug-preview">slug</span></code></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-cancel-new">Cancelar</button>
+      <button class="btn btn-primary" id="btn-confirm-new">Crear cliente</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast">Selección guardada</div>
 
 <script>
-const STORAGE_KEY = 'bk_selected_matches';
-const SCHEDULE_KEY = 'bk_schedule';
+// ── Multi-cliente ─────────────────────────────────────────
+let currentClient = null; // {slug, name}
+
+// Prefijo localStorage para aislar datos por cliente
+function LS(key) {
+  return currentClient ? `mv_${currentClient.slug}_${key}` : `mv_default_${key}`;
+}
+
+const STORAGE_KEY  = () => LS('selected_matches');
+const SCHEDULE_KEY = () => LS('schedule');
+const BG_KEY_FN    = () => LS('backgrounds');
+const CD_KEY       = () => LS('countdown');
+const COLORS_KEY   = () => LS('colors');
+const LAYOUT_KEY   = () => LS('layout');
+
 const DEFAULT_SCHEDULE = {
   dayStart:  '07:00',
   dayEnd:    '18:00',
@@ -701,21 +1079,21 @@ let currentMatches = [];
 // ── Config cross-device (/api/config) ─────────────────
 async function syncFromServer() {
   try {
-    const r = await fetch('/api/config', { signal: AbortSignal.timeout(4000) });
+    const r = await fetch(cfgApiUrl(), { signal: AbortSignal.timeout(4000) });
     if (!r.ok) return;
     const cfg = await r.json();
     if (!cfg || typeof cfg !== 'object' || Object.keys(cfg).length === 0) return;
 
     if (cfg.competition != null || cfg.ids != null) {
       const payload = { competition: cfg.competition || 'CL', ids: Array.isArray(cfg.ids) ? cfg.ids : [] };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(STORAGE_KEY(), JSON.stringify(payload));
     }
     if (cfg.schedule && typeof cfg.schedule === 'object') {
-      localStorage.setItem(SCHEDULE_KEY, JSON.stringify(cfg.schedule));
+      localStorage.setItem(SCHEDULE_KEY(), JSON.stringify(cfg.schedule));
     }
     if (cfg.backgrounds && typeof cfg.backgrounds === 'object') {
       let bgs;
-      try { bgs = JSON.parse(localStorage.getItem(BG_KEY) || '{}'); } catch { bgs = {}; }
+      try { bgs = JSON.parse(localStorage.getItem(BG_KEY_FN()) || '{}'); } catch { bgs = {}; }
       for (const [mode, url] of Object.entries(cfg.backgrounds)) {
         const isBase64 = typeof bgs[mode] === 'string' && bgs[mode].startsWith('data:');
         if (url && typeof url === 'string' && !url.startsWith('data:')) {
@@ -724,26 +1102,39 @@ async function syncFromServer() {
           delete bgs[mode];
         }
       }
-      localStorage.setItem(BG_KEY, JSON.stringify(bgs));
+      localStorage.setItem(BG_KEY_FN(), JSON.stringify(bgs));
     }
     if (cfg.countdown && typeof cfg.countdown === 'object') {
-      localStorage.setItem('bk_countdown', JSON.stringify(cfg.countdown));
+      localStorage.setItem(CD_KEY(), JSON.stringify(cfg.countdown));
+    }
+    if (cfg.colors && typeof cfg.colors === 'object') {
+      localStorage.setItem(COLORS_KEY(), JSON.stringify(cfg.colors));
+    }
+    if (cfg.layout && typeof cfg.layout === 'object') {
+      localStorage.setItem(LAYOUT_KEY(), JSON.stringify(cfg.layout));
     }
   } catch { /* network error, ignore */ }
 }
 
+function cfgApiUrl() {
+  return currentClient ? `/api/config?client=${currentClient.slug}` : '/api/config';
+}
+
 async function pushToServer() {
+  if (!currentClient) return; // no push sin cliente seleccionado
   try {
-    const cfg = loadConfig();
+    const cfg      = loadConfig();
     const schedule = loadSchedule();
-    const bgs = loadBackgrounds();
-    const urlBgs = {};
+    const bgs      = loadBackgrounds();
+    const urlBgs   = {};
     for (const [k, v] of Object.entries(bgs)) {
       urlBgs[k] = (v && !v.startsWith('data:')) ? v : null;
     }
     const countdown = loadCountdownConfig();
-    const payload = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs, countdown };
-    const r = await fetch('/api/config', {
+    const colors    = loadColorsConfig();
+    const layout    = loadLayoutConfig();
+    const payload   = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs, countdown, colors, layout };
+    const r = await fetch(cfgApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -754,7 +1145,7 @@ async function pushToServer() {
 
 function loadSchedule() {
   try {
-    const raw = localStorage.getItem(SCHEDULE_KEY);
+    const raw = localStorage.getItem(SCHEDULE_KEY());
     if (!raw) return { ...DEFAULT_SCHEDULE };
     const parsed = JSON.parse(raw);
     return { ...DEFAULT_SCHEDULE, ...parsed };
@@ -762,7 +1153,7 @@ function loadSchedule() {
 }
 
 function saveSchedule(s) {
-  localStorage.setItem(SCHEDULE_KEY, JSON.stringify(s));
+  localStorage.setItem(SCHEDULE_KEY(), JSON.stringify(s));
 }
 
 function applyScheduleToInputs(s) {
@@ -794,13 +1185,13 @@ function refreshScheduleStatus() {
 const BG_KEY = 'bk_backgrounds';
 function loadBackgrounds() {
   try {
-    const raw = localStorage.getItem(BG_KEY);
+    const raw = localStorage.getItem(BG_KEY_FN());
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }
 function saveBackgrounds(bgs) {
   try {
-    localStorage.setItem(BG_KEY, JSON.stringify(bgs));
+    localStorage.setItem(BG_KEY_FN(), JSON.stringify(bgs));
     return true;
   } catch (e) {
     if (e.name === 'QuotaExceededError' || /quota/i.test(e.message)) {
@@ -890,7 +1281,7 @@ document.querySelectorAll('[data-clear]').forEach(btn => {
 // Backwards compat: a plain array is treated as CL ids.
 function loadConfig() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY());
     if (!raw) return { competition: 'CL', ids: [] };
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return { competition: 'CL', ids: parsed };
@@ -909,7 +1300,7 @@ function loadSelection() {
 
 function saveSelection(ids) {
   const payload = { competition: currentCompetition, ids };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  localStorage.setItem(STORAGE_KEY(), JSON.stringify(payload));
   refreshOnAirIndicator();
 }
 
@@ -1069,18 +1460,103 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 // ── CUENTA ATRÁS ─────────────────────────────────────────
-const COUNTDOWN_KEY = 'bk_countdown';
-
 function loadCountdownConfig() {
   try {
-    const raw = localStorage.getItem(COUNTDOWN_KEY);
+    const raw = localStorage.getItem(CD_KEY());
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }
 
 function saveCountdownConfig(cd) {
-  localStorage.setItem(COUNTDOWN_KEY, JSON.stringify(cd));
+  localStorage.setItem(CD_KEY(), JSON.stringify(cd));
 }
+
+// ── Colores ───────────────────────────────────────────────
+const DEFAULT_COLORS = { accent: '#FF6B35', accentAlt: '#FFB347', cardBg: '#FFFFFF', cardText: '#1A1A1A' };
+
+function loadColorsConfig() {
+  try {
+    const raw = localStorage.getItem(COLORS_KEY());
+    return raw ? { ...DEFAULT_COLORS, ...JSON.parse(raw) } : { ...DEFAULT_COLORS };
+  } catch { return { ...DEFAULT_COLORS }; }
+}
+
+function saveColorsConfig(c) { localStorage.setItem(COLORS_KEY(), JSON.stringify(c)); }
+
+function applyColorsToInputs(c) {
+  const set = (id, val) => {
+    const col = document.getElementById(id);
+    const txt = document.getElementById(id + '-text');
+    if (col) col.value = val;
+    if (txt) txt.value = val;
+  };
+  set('color-accent', c.accent || DEFAULT_COLORS.accent);
+  set('color-accent-alt', c.accentAlt || DEFAULT_COLORS.accentAlt);
+  set('color-card-bg', c.cardBg || DEFAULT_COLORS.cardBg);
+  set('color-card-text', c.cardText || DEFAULT_COLORS.cardText);
+}
+
+// Sincroniza color picker ↔ text input
+['accent','accent-alt','card-bg','card-text'].forEach(id => {
+  const col = document.getElementById('color-' + id);
+  const txt = document.getElementById('color-' + id + '-text');
+  if (col && txt) {
+    col.addEventListener('input', () => { txt.value = col.value; });
+    txt.addEventListener('input', () => {
+      if (/^#[0-9A-Fa-f]{6}$/.test(txt.value)) col.value = txt.value;
+    });
+  }
+});
+
+document.getElementById('btn-save-colors').addEventListener('click', () => {
+  const c = {
+    accent:    document.getElementById('color-accent-text').value,
+    accentAlt: document.getElementById('color-accent-alt-text').value,
+    cardBg:    document.getElementById('color-card-bg-text').value,
+    cardText:  document.getElementById('color-card-text-text').value,
+  };
+  saveColorsConfig(c);
+  pushToServer();
+  showToast('Colores guardados · sincronizando…');
+});
+
+// ── Layout ────────────────────────────────────────────────
+const DEFAULT_LAYOUT = { half: false };
+
+function loadLayoutConfig() {
+  try {
+    const raw = localStorage.getItem(LAYOUT_KEY());
+    return raw ? { ...DEFAULT_LAYOUT, ...JSON.parse(raw) } : { ...DEFAULT_LAYOUT };
+  } catch { return { ...DEFAULT_LAYOUT }; }
+}
+
+function saveLayoutConfig(l) { localStorage.setItem(LAYOUT_KEY(), JSON.stringify(l)); }
+
+function applyLayoutToInputs(l) {
+  const half = !!l.half;
+  const optFull = document.getElementById('layout-opt-full');
+  const optHalf = document.getElementById('layout-opt-half');
+  if (optFull) optFull.classList.toggle('selected', !half);
+  if (optHalf) optHalf.classList.toggle('selected', half);
+  document.querySelectorAll('input[name="layout-half"]').forEach(r => {
+    r.checked = (r.value === (half ? 'half' : 'full'));
+  });
+}
+
+document.querySelectorAll('input[name="layout-half"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.querySelectorAll('.layout-option').forEach(o => o.classList.remove('selected'));
+    r.closest('.layout-option')?.classList.add('selected');
+  });
+});
+
+document.getElementById('btn-save-layout').addEventListener('click', () => {
+  const selected = document.querySelector('input[name="layout-half"]:checked');
+  const l = { half: selected?.value === 'half' };
+  saveLayoutConfig(l);
+  pushToServer();
+  showToast('Formato guardado · sincronizando…');
+});
 
 function applyCountdownToInputs(cd) {
   document.getElementById('cd-active').checked = !!cd.active;
@@ -1128,10 +1604,55 @@ document.getElementById('btn-save-countdown').addEventListener('click', () => {
   showToast(cd.active ? 'Cuenta atrás activada · sincronizando…' : 'Cuenta atrás desactivada · sincronizando…');
 });
 
-// Iniciar: sincronizar con el servidor, luego renderizar con los valores actualizados.
-async function init() {
-  await syncFromServer();
+// ── Gestión multi-cliente ─────────────────────────────────
 
+let allClients = [];
+
+async function fetchClientList() {
+  try {
+    const r = await fetch('/api/clients');
+    if (!r.ok) return [];
+    return await r.json();
+  } catch { return []; }
+}
+
+function renderClientList() {
+  const container = document.getElementById('client-list');
+  if (!allClients.length) {
+    container.innerHTML = '<div style="padding:8px 20px;font-size:13px;color:var(--gray-600);">Sin clientes aún</div>';
+    return;
+  }
+  container.innerHTML = allClients.map(c => `
+    <div class="client-item ${currentClient?.slug === c.slug ? 'active' : ''}" data-slug="${c.slug}">
+      <span class="client-dot"></span>
+      <span>${c.name}</span>
+      <span class="client-slug">${c.slug}</span>
+    </div>
+  `).join('');
+  container.querySelectorAll('.client-item').forEach(el => {
+    el.addEventListener('click', () => selectClient(el.dataset.slug));
+  });
+}
+
+async function selectClient(slug) {
+  currentClient = allClients.find(c => c.slug === slug) || null;
+  if (!currentClient) return;
+
+  renderClientList();
+
+  // Header y link de preview
+  document.getElementById('header-client-name').textContent = currentClient.name;
+  const link = document.getElementById('preview-link');
+  link.href = `/c/${currentClient.slug}`;
+  link.textContent = `Ver placa → /c/${currentClient.slug}`;
+  link.style.display = 'block';
+
+  // Mostrar paneles
+  document.getElementById('no-client-panel').style.display = 'none';
+  document.getElementById('client-panels').style.display = '';
+
+  // Sincronizar config del servidor y poblar formularios
+  await syncFromServer();
   const savedCfg = loadConfig();
   const savedTab = document.querySelector(`.tab[data-comp="${savedCfg.competition}"]`);
   if (savedTab) {
@@ -1144,6 +1665,65 @@ async function init() {
   refreshScheduleStatus();
   refreshBgPreviews();
   applyCountdownToInputs(loadCountdownConfig());
+  applyColorsToInputs(loadColorsConfig());
+  applyLayoutToInputs(loadLayoutConfig());
+}
+
+// Modal nuevo cliente
+document.getElementById('btn-new-client').addEventListener('click', () => {
+  document.getElementById('new-client-name').value = '';
+  document.getElementById('new-client-slug').value = '';
+  document.getElementById('slug-preview').textContent = 'slug';
+  document.getElementById('modal-new-client').classList.add('open');
+});
+
+document.getElementById('new-client-name').addEventListener('input', e => {
+  const slug = e.target.value.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  document.getElementById('new-client-slug').value = slug;
+  document.getElementById('slug-preview').textContent = slug || 'slug';
+});
+document.getElementById('new-client-slug').addEventListener('input', e => {
+  document.getElementById('slug-preview').textContent = e.target.value || 'slug';
+});
+
+document.getElementById('btn-cancel-new').addEventListener('click', () => {
+  document.getElementById('modal-new-client').classList.remove('open');
+});
+
+document.getElementById('btn-confirm-new').addEventListener('click', async () => {
+  const name = document.getElementById('new-client-name').value.trim();
+  const slug = document.getElementById('new-client-slug').value.trim();
+  if (!name || !slug) { showToast('Completá nombre y slug'); return; }
+  const r = await fetch('/api/clients', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slug, name }),
+  });
+  const res = await r.json();
+  if (!r.ok) { showToast('Error: ' + (res.error || r.status)); return; }
+  document.getElementById('modal-new-client').classList.remove('open');
+  allClients = await fetchClientList();
+  renderClientList();
+  await selectClient(slug);
+  showToast(`Cliente "${name}" creado`);
+});
+
+// Iniciar
+async function init() {
+  allClients = await fetchClientList();
+  renderClientList();
+
+  // Ocultar paneles hasta que se seleccione un cliente
+  document.getElementById('client-panels').style.display = 'none';
+  document.getElementById('no-client-panel').style.display = '';
+
+  // Si hay al menos un cliente, seleccionar el primero automáticamente
+  if (allClients.length > 0) {
+    await selectClient(allClients[0].slug);
+  }
+
   setInterval(refreshScheduleStatus, 30000);
 }
 init();

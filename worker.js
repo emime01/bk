@@ -1,12 +1,12 @@
-// Cloudflare Worker — BK Billboard
-// Routes: /api/sports (ESPN proxy) · /api/config (KV store, optional) · everything else → assets
-//
-// To enable cross-device config sync, create a KV namespace and add to wrangler.jsonc:
-//   npx wrangler kv namespace create CONFIG   → copy the id
-//   npx wrangler kv namespace create CONFIG --preview → copy the preview_id
-// Then add to wrangler.jsonc:
-//   "kv_namespaces": [{ "binding": "CONFIG_KV", "id": "...", "preview_id": "..." }]
-// Without KV, /api/config returns {} and the display falls back to localStorage defaults.
+// Movimagen Billboard Worker
+// Routes:
+//   GET  /api/sports?competition=CL&date=YYYY-MM-DD  — ESPN proxy
+//   GET  /api/config?client=slug                      — client config (KV)
+//   POST /api/config?client=slug                      — save client config
+//   GET  /api/clients                                  — list all clients
+//   POST /api/clients                                  — create client {slug, name}
+//   DELETE /api/clients/:slug                          — delete client
+//   GET  /c/:slug                                      — serve display page
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 
@@ -150,11 +150,22 @@ function jsonRes(data, status = 200, cacheSeconds = 0) {
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-// ── Route handlers ────────────────────────────────────
+function sanitizeBody(body) {
+  if (body.backgrounds) {
+    for (const k of Object.keys(body.backgrounds)) {
+      if (typeof body.backgrounds[k] === 'string' && body.backgrounds[k].startsWith('data:')) {
+        body.backgrounds[k] = null;
+      }
+    }
+  }
+  return body;
+}
+
+// ── Sports handler ────────────────────────────────────
 
 async function handleSports(url) {
   const competition = url.searchParams.get('competition') || 'CL';
@@ -187,31 +198,62 @@ async function handleSports(url) {
   }
 }
 
-const CONFIG_KEY = 'bk_config_v1';
+// ── Multi-client config handlers ──────────────────────
 
-async function handleConfigGet(env) {
-  if (!env.CONFIG_KV) return jsonRes({}, 200); // KV not set up yet → empty config
+const CLIENTS_LIST_KEY = 'mv_clients';
+const clientCfgKey = slug => `mv_client_${slug}`;
+
+// Legacy single-config key (backward compat)
+const LEGACY_KEY = 'bk_config_v1';
+
+async function handleClientList(env) {
+  if (!env.CONFIG_KV) return jsonRes([], 200);
   try {
-    const val = await env.CONFIG_KV.get(CONFIG_KEY, 'json');
-    return jsonRes(val || {}, 200);
-  } catch (e) {
-    return jsonRes({}, 200);
-  }
+    const list = await env.CONFIG_KV.get(CLIENTS_LIST_KEY, 'json') || [];
+    return jsonRes(list, 200);
+  } catch { return jsonRes([], 200); }
 }
 
-async function handleConfigPost(request, env) {
+async function handleClientCreate(request, env) {
+  if (!env.CONFIG_KV) return jsonRes({ error: 'KV not configured' }, 503);
+  const { slug, name } = await request.json();
+  if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+    return jsonRes({ error: 'Slug inválido (solo letras minúsculas, números y guiones)' }, 400);
+  }
+  let list = await env.CONFIG_KV.get(CLIENTS_LIST_KEY, 'json') || [];
+  if (list.find(c => c.slug === slug)) {
+    return jsonRes({ error: 'El slug ya existe' }, 409);
+  }
+  list.push({ slug, name: name || slug, createdAt: new Date().toISOString() });
+  await env.CONFIG_KV.put(CLIENTS_LIST_KEY, JSON.stringify(list));
+  await env.CONFIG_KV.put(clientCfgKey(slug), JSON.stringify({}));
+  return jsonRes({ ok: true, slug });
+}
+
+async function handleClientDelete(slug, env) {
+  if (!env.CONFIG_KV) return jsonRes({ error: 'KV not configured' }, 503);
+  let list = await env.CONFIG_KV.get(CLIENTS_LIST_KEY, 'json') || [];
+  list = list.filter(c => c.slug !== slug);
+  await env.CONFIG_KV.put(CLIENTS_LIST_KEY, JSON.stringify(list));
+  await env.CONFIG_KV.delete(clientCfgKey(slug));
+  return jsonRes({ ok: true });
+}
+
+async function handleConfigGet(slug, env) {
+  if (!env.CONFIG_KV) return jsonRes({}, 200);
+  try {
+    const key = slug ? clientCfgKey(slug) : LEGACY_KEY;
+    const val = await env.CONFIG_KV.get(key, 'json');
+    return jsonRes(val || {}, 200);
+  } catch { return jsonRes({}, 200); }
+}
+
+async function handleConfigPost(slug, request, env) {
   if (!env.CONFIG_KV) return jsonRes({ ok: false, error: 'KV not configured' }, 503);
   try {
-    const body = await request.json();
-    // Strip base64 images before storing (too large for KV / polling)
-    if (body.backgrounds) {
-      for (const k of Object.keys(body.backgrounds)) {
-        if (typeof body.backgrounds[k] === 'string' && body.backgrounds[k].startsWith('data:')) {
-          body.backgrounds[k] = null;
-        }
-      }
-    }
-    await env.CONFIG_KV.put(CONFIG_KEY, JSON.stringify(body));
+    const body = sanitizeBody(await request.json());
+    const key  = slug ? clientCfgKey(slug) : LEGACY_KEY;
+    await env.CONFIG_KV.put(key, JSON.stringify(body));
     return jsonRes({ ok: true });
   } catch (e) {
     return jsonRes({ ok: false, error: e.message }, 500);
@@ -228,16 +270,35 @@ export default {
       return new Response(null, { headers: CORS_HEADERS });
     }
 
+    // Sports API (ESPN proxy)
     if (url.pathname === '/api/sports') {
       return handleSports(url);
     }
 
+    // Client config
     if (url.pathname === '/api/config') {
-      if (request.method === 'GET')  return handleConfigGet(env);
-      if (request.method === 'POST') return handleConfigPost(request, env);
+      const slug = url.searchParams.get('client') || null;
+      if (request.method === 'GET')  return handleConfigGet(slug, env);
+      if (request.method === 'POST') return handleConfigPost(slug, request, env);
     }
 
-    // Fall through to static assets (index.html, admin.html, etc.)
+    // Client management
+    if (url.pathname === '/api/clients') {
+      if (request.method === 'GET')  return handleClientList(env);
+      if (request.method === 'POST') return handleClientCreate(request, env);
+    }
+    const clientDeleteMatch = url.pathname.match(/^\/api\/clients\/([a-z0-9-]+)$/);
+    if (clientDeleteMatch && request.method === 'DELETE') {
+      return handleClientDelete(clientDeleteMatch[1], env);
+    }
+
+    // Client display page — serve index.html at /c/:slug
+    if (url.pathname.startsWith('/c/')) {
+      const indexReq = new Request(new URL('/index.html', request.url), request);
+      return env.ASSETS.fetch(indexReq);
+    }
+
+    // Static assets
     return env.ASSETS.fetch(request);
   },
 };
