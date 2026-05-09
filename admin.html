@@ -412,6 +412,78 @@ main {
   text-shadow: 0 0 6px var(--bk-yellow);
 }
 
+/* ── Toggle cuenta atrás ──────────────────────────────── */
+.cd-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.cd-toggle-wrap input[type="checkbox"] { display: none; }
+.cd-toggle-track {
+  width: 52px; height: 28px;
+  background: var(--gray-300);
+  border-radius: 100px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.cd-toggle-track .cd-toggle-thumb {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 22px; height: 22px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  transition: left 0.2s;
+}
+.cd-toggle-wrap input:checked ~ .cd-toggle-track { background: var(--bk-red); }
+.cd-toggle-wrap input:checked ~ .cd-toggle-track .cd-toggle-thumb { left: 27px; }
+.cd-active-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-600);
+  letter-spacing: 0.5px;
+}
+.cd-toggle-wrap input:checked ~ .cd-active-label { color: var(--bk-red); }
+.cd-date-input {
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--bk-brown);
+  background: white;
+}
+.cd-date-input:focus { outline: none; border-color: var(--bk-red); }
+.cd-text-input {
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gray-900);
+  background: white;
+  width: 180px;
+}
+.cd-text-input:focus { outline: none; border-color: var(--bk-red); }
+.cd-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: rgba(214,35,0,0.1);
+  color: var(--bk-red);
+}
+
 @media (max-width: 600px) {
   header { flex-direction: column; gap: 12px; align-items: flex-start; padding: 20px; }
   header h1 { font-size: 28px; }
@@ -464,6 +536,54 @@ main {
     <div class="actions">
       <button class="btn btn-secondary" id="btn-reset-schedule">Restaurar predeterminados</button>
       <button class="btn btn-primary" id="btn-save-schedule">Guardar horarios</button>
+    </div>
+  </div>
+
+  <!-- ── PANEL CUENTA ATRÁS ──────────────────────────── -->
+  <div class="panel">
+    <h2>
+      <span>Cuenta atrás</span>
+      <span class="count" id="cd-status">—</span>
+    </h2>
+    <div class="schedule">
+
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Activar cuenta atrás</strong>
+          <span>Reemplaza la placa normal con los contadores de días</span>
+        </div>
+        <label class="cd-toggle-wrap">
+          <input type="checkbox" id="cd-active">
+          <span class="cd-toggle-track"><span class="cd-toggle-thumb"></span></span>
+          <span class="cd-active-label" id="cd-active-label">Desactivado</span>
+        </label>
+      </div>
+
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Mundial 2026</strong>
+          <span>Fecha y hora de inicio del torneo (hora local Uruguay)</span>
+        </div>
+        <div class="time-pair">
+          <input class="cd-date-input" type="datetime-local" id="cd-mundial-date" value="2026-06-11T18:00">
+          <input class="cd-text-input" type="text" id="cd-mundial-label" placeholder="MUNDIAL 2026">
+        </div>
+      </div>
+
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Debut Uruguay</strong>
+          <span>Fecha y hora del primer partido de La Celeste</span>
+        </div>
+        <div class="time-pair">
+          <input class="cd-date-input" type="datetime-local" id="cd-uruguay-date" value="2026-06-19T21:00">
+          <input class="cd-text-input" type="text" id="cd-uruguay-label" placeholder="DEBUT URUGUAY">
+        </div>
+      </div>
+
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-save-countdown">Guardar y sincronizar</button>
     </div>
   </div>
 
@@ -606,6 +726,9 @@ async function syncFromServer() {
       }
       localStorage.setItem(BG_KEY, JSON.stringify(bgs));
     }
+    if (cfg.countdown && typeof cfg.countdown === 'object') {
+      localStorage.setItem('bk_countdown', JSON.stringify(cfg.countdown));
+    }
   } catch { /* network error, ignore */ }
 }
 
@@ -618,7 +741,8 @@ async function pushToServer() {
     for (const [k, v] of Object.entries(bgs)) {
       urlBgs[k] = (v && !v.startsWith('data:')) ? v : null;
     }
-    const payload = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs };
+    const countdown = loadCountdownConfig();
+    const payload = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs, countdown };
     const r = await fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -944,6 +1068,66 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
+// ── CUENTA ATRÁS ─────────────────────────────────────────
+const COUNTDOWN_KEY = 'bk_countdown';
+
+function loadCountdownConfig() {
+  try {
+    const raw = localStorage.getItem(COUNTDOWN_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveCountdownConfig(cd) {
+  localStorage.setItem(COUNTDOWN_KEY, JSON.stringify(cd));
+}
+
+function applyCountdownToInputs(cd) {
+  document.getElementById('cd-active').checked = !!cd.active;
+  if (cd.mundialDate) document.getElementById('cd-mundial-date').value = cd.mundialDate;
+  if (cd.mundialLabel) document.getElementById('cd-mundial-label').value = cd.mundialLabel;
+  if (cd.uruguayDate) document.getElementById('cd-uruguay-date').value = cd.uruguayDate;
+  if (cd.uruguayLabel) document.getElementById('cd-uruguay-label').value = cd.uruguayLabel;
+  refreshCountdownStatus();
+}
+
+function refreshCountdownStatus() {
+  const cd = loadCountdownConfig();
+  const label = document.getElementById('cd-active-label');
+  const status = document.getElementById('cd-status');
+  if (cd.active) {
+    if (label) label.textContent = 'Activado';
+    if (status) {
+      status.textContent = 'EN AIRE';
+      status.style.background = 'rgba(214,35,0,0.12)';
+      status.style.color = 'var(--bk-red)';
+    }
+  } else {
+    if (label) label.textContent = 'Desactivado';
+    if (status) {
+      status.textContent = 'Inactivo';
+      status.style.background = '';
+      status.style.color = '';
+    }
+  }
+}
+
+document.getElementById('cd-active').addEventListener('change', refreshCountdownStatus);
+
+document.getElementById('btn-save-countdown').addEventListener('click', () => {
+  const cd = {
+    active:       document.getElementById('cd-active').checked,
+    mundialDate:  document.getElementById('cd-mundial-date').value,
+    mundialLabel: document.getElementById('cd-mundial-label').value.trim() || 'MUNDIAL 2026',
+    uruguayDate:  document.getElementById('cd-uruguay-date').value,
+    uruguayLabel: document.getElementById('cd-uruguay-label').value.trim() || 'DEBUT URUGUAY',
+  };
+  saveCountdownConfig(cd);
+  refreshCountdownStatus();
+  pushToServer();
+  showToast(cd.active ? 'Cuenta atrás activada · sincronizando…' : 'Cuenta atrás desactivada · sincronizando…');
+});
+
 // Iniciar: sincronizar con el servidor, luego renderizar con los valores actualizados.
 async function init() {
   await syncFromServer();
@@ -959,6 +1143,7 @@ async function init() {
   applyScheduleToInputs(loadSchedule());
   refreshScheduleStatus();
   refreshBgPreviews();
+  applyCountdownToInputs(loadCountdownConfig());
   setInterval(refreshScheduleStatus, 30000);
 }
 init();

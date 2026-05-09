@@ -1625,6 +1625,139 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   from { transform: rotate(0deg) scale(0.5); }
   to   { transform: rotate(360deg) scale(1); }
 }
+
+/* ── PLACA CUENTA ATRÁS ───────────────────────────────── */
+#placa-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  background: var(--bk-dark);
+}
+#placa-countdown .cd-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+#placa-countdown .cd-brand {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  letter-spacing: 8px;
+  color: rgba(245,170,28,0.6);
+}
+#placa-countdown .cd-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 52px;
+  letter-spacing: 4px;
+  color: var(--white);
+  text-align: center;
+  text-shadow: 0 0 40px rgba(245,170,28,0.2);
+}
+#placa-countdown .cd-events {
+  display: flex;
+  gap: 80px;
+  align-items: flex-start;
+}
+.cd-event {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+.cd-event-label {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  letter-spacing: 5px;
+  color: var(--bk-yellow);
+  text-transform: uppercase;
+  text-align: center;
+}
+.cd-event-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  text-align: center;
+}
+.cd-digits {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+.cd-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.cd-num {
+  font-family: 'Anton', sans-serif;
+  font-size: 120px;
+  line-height: 1;
+  color: var(--white);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  min-width: 160px;
+  text-align: center;
+  padding: 10px 0;
+  letter-spacing: -2px;
+  text-shadow: 0 0 40px rgba(245,170,28,0.15);
+}
+.cd-num.cd-highlight { color: var(--bk-yellow); }
+.cd-lbl {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+}
+.cd-sep {
+  font-family: 'Anton', sans-serif;
+  font-size: 80px;
+  color: rgba(255,255,255,0.15);
+  line-height: 1.35;
+  align-self: flex-start;
+  margin-top: 10px;
+}
+.cd-done {
+  font-family: 'Anton', sans-serif;
+  font-size: 48px;
+  color: var(--bk-yellow);
+  letter-spacing: 4px;
+  text-align: center;
+}
+
+/* En modo billboard: apila los eventos en panel derecho */
+body.has-mode-bg #placa-countdown {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: stretch;
+  background: transparent;
+}
+body.has-mode-bg #placa-countdown .cd-panel {
+  flex: 0 0 860px;
+  margin-right: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+body.has-mode-bg #placa-countdown .cd-header { display: none; }
+body.has-mode-bg #placa-countdown .cd-events {
+  flex-direction: column;
+  gap: 36px;
+}
+body.has-mode-bg #placa-countdown .cd-num {
+  font-size: 80px;
+  min-width: 110px;
+}
+body.has-mode-bg #placa-countdown .cd-sep { font-size: 56px; }
+body.has-mode-bg #placa-countdown .cd-event-label { font-size: 22px; }
 </style>
 </head>
 <body>
@@ -1636,6 +1769,19 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   <div class="tagline">Fútbol en vivo</div>
   <div class="loading-bar"><div class="loading-fill"></div></div>
   <div class="wait-status" id="wait-status">Buscando partido...</div>
+</div>
+
+<!-- PLACA CUENTA ATRÁS -->
+<div class="placa" id="placa-countdown">
+  <div class="cd-header">
+    <div class="cd-brand">BURGER KING®</div>
+    <div class="cd-title">Contando los días</div>
+  </div>
+  <div class="cd-panel">
+    <div class="cd-events" id="cd-events">
+      <!-- generado por JS -->
+    </div>
+  </div>
 </div>
 
 <!-- PLACA 2: Pre-partido -->
@@ -1841,6 +1987,7 @@ function loadSchedule() {
 }
 function getCurrentMode() {
   const s = loadSchedule();
+  if (loadCountdownConfig().active) return 'countdown';
   const now = new Date();
   const m = now.getHours() * 60 + now.getMinutes();
   const toMin = (hhmm) => {
@@ -1850,6 +1997,90 @@ function getCurrentMode() {
   if (m >= toMin(s.dayStart)  && m < toMin(s.dayEnd))  return 'day';
   if (m >= toMin(s.liveStart) && m < toMin(s.liveEnd)) return 'live';
   return 'off';
+}
+
+// ── CUENTA ATRÁS ─────────────────────────────────────────
+function loadCountdownConfig() {
+  try {
+    const raw = localStorage.getItem('bk_countdown');
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+let _cdInterval = null;
+
+function startCountdown() {
+  showPlaca('countdown');
+  if (_cdInterval) clearInterval(_cdInterval);
+  _cdInterval = setInterval(renderCountdown, 1000);
+  renderCountdown();
+}
+
+function stopCountdown() {
+  if (_cdInterval) { clearInterval(_cdInterval); _cdInterval = null; }
+}
+
+function renderCountdown() {
+  const cfg = loadCountdownConfig();
+  if (!cfg.active) { stopCountdown(); fetchMatches(); return; }
+
+  const events = [
+    { id: 'mundial', label: cfg.mundialLabel || 'MUNDIAL 2026',    date: cfg.mundialDate },
+    { id: 'uruguay', label: cfg.uruguayLabel || 'DEBUT URUGUAY',   date: cfg.uruguayDate },
+  ].filter(e => e.date);
+
+  const container = document.getElementById('cd-events');
+  if (!container) return;
+
+  if (!events.length) {
+    container.innerHTML = '<div class="cd-done">Sin fechas configuradas</div>';
+    return;
+  }
+
+  const now = Date.now();
+  container.innerHTML = events.map(evt => {
+    const diff = new Date(evt.date).getTime() - now;
+    if (diff <= 0) {
+      return `<div class="cd-event">
+        <div class="cd-event-label">${evt.label}</div>
+        <div class="cd-done">¡YA COMENZÓ!</div>
+      </div>`;
+    }
+    const days  = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins  = Math.floor((diff % 3600000) / 60000);
+    const secs  = Math.floor((diff % 60000) / 1000);
+    const pad   = n => String(n).padStart(2, '0');
+    const highlight = days === 0 ? ' cd-highlight' : '';
+    return `<div class="cd-event">
+      <div class="cd-event-label">${evt.label}</div>
+      <div class="cd-digits">
+        <div class="cd-unit">
+          <div class="cd-num${days === 0 ? '' : ' cd-highlight'}">${days}</div>
+          <div class="cd-lbl">días</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <div class="cd-num${highlight}">${pad(hours)}</div>
+          <div class="cd-lbl">horas</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <div class="cd-num${highlight}">${pad(mins)}</div>
+          <div class="cd-lbl">min</div>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <div class="cd-num${highlight}">${pad(secs)}</div>
+          <div class="cd-lbl">seg</div>
+        </div>
+      </div>
+      <div class="cd-event-sub">${new Date(evt.date).toLocaleString('es-UY', {
+        day:'numeric', month:'long', year:'numeric',
+        hour:'2-digit', minute:'2-digit', timeZone:'America/Montevideo'
+      })}</div>
+    </div>`;
+  }).join('');
 }
 
 // Imagen de fondo por modo (configurable desde /admin).
@@ -1935,6 +2166,13 @@ async function syncFromServer() {
         changed = true;
       }
     }
+    if (cfg.countdown && typeof cfg.countdown === 'object') {
+      const next = JSON.stringify(cfg.countdown);
+      if (next !== localStorage.getItem('bk_countdown')) {
+        localStorage.setItem('bk_countdown', next);
+        changed = true;
+      }
+    }
     if (cfg.backgrounds && typeof cfg.backgrounds === 'object') {
       let bgs;
       try { bgs = JSON.parse(localStorage.getItem('bk_backgrounds') || '{}'); } catch { bgs = {}; }
@@ -1979,6 +2217,14 @@ async function fetchMatches() {
     const mode = getCurrentMode();
     console.log('[fetch] mode:', mode);
     applyModeBackground();
+
+    if (mode === 'countdown') {
+      clearTimeout(state.rotateTimeout);
+      clearTimeout(state.quickPollTimeout);
+      clearTimeout(state.dayRotateTimeout);
+      startCountdown();
+      return;
+    }
 
     if (mode === 'off') {
       clearTimeout(state.rotateTimeout);
