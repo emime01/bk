@@ -2232,7 +2232,9 @@ function loadBackgrounds() {
 function applyModeBackground() {
   const mode = getCurrentMode();
   const bgs  = loadBackgrounds();
-  const url  = bgs[mode];
+  // Si el modo actual no tiene fondo propio, usar day → live como fallback
+  // para que el layout lateral/superior siempre funcione cuando hay imagen
+  const url  = bgs[mode] || bgs['day'] || bgs['live'];
   if (url) {
     document.documentElement.style.setProperty('--mode-bg', `url("${url.replace(/"/g,'\\"')}")`);
     document.body.classList.add('has-mode-bg');

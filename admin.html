@@ -990,11 +990,24 @@ main {
           <button class="btn btn-primary"   data-save-bg="off">Guardar</button>
         </div>
       </div>
+
+      <div class="bg-card" data-mode="countdown">
+        <h3>Cuenta atrás</h3>
+        <div class="bg-preview" id="prev-countdown"><div class="placeholder">Sin imagen</div></div>
+        <div class="file-row">
+          <input type="file" accept="image/*" id="file-countdown">
+          <input type="url" placeholder="o pegá una URL https://…" id="url-countdown">
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-secondary" data-clear="countdown">Quitar</button>
+          <button class="btn btn-primary"   data-save-bg="countdown">Guardar</button>
+        </div>
+      </div>
     </div>
     <div class="help" style="margin-top:14px">
       Subí un archivo (recomendado &lt; 1.5 MB c/u, formato 16:9) o pegá una URL pública.
-      La imagen se aplica automáticamente cuando entra ese modo. Si no ponés nada,
-      se usa el fondo oscuro por defecto.
+      La imagen se aplica automáticamente cuando entra ese modo. Si no configurás fondo
+      para la <em>Cuenta atrás</em>, se usa el mismo fondo del Modo día como respaldo.
     </div>
   </div>
 
@@ -1004,6 +1017,8 @@ main {
       <button class="tab" data-comp="UEL">Europa League</button>
       <button class="tab" data-comp="LIB">Libertadores</button>
       <button class="tab" data-comp="SUD">Sudamericana</button>
+      <button class="tab" data-comp="URU">Uruguay 1ª</button>
+      <button class="tab" data-comp="URU2">Uruguay 2ª</button>
       <button class="tab" data-comp="PL">Premier</button>
       <button class="tab" data-comp="LL">LaLiga</button>
       <button class="tab" data-comp="BL">Bundesliga</button>
@@ -1221,7 +1236,7 @@ function saveBackgrounds(bgs) {
 }
 function refreshBgPreviews() {
   const bgs = loadBackgrounds();
-  ['day','live','off'].forEach(mode => {
+  ['day','live','off','countdown'].forEach(mode => {
     const prev = document.getElementById('prev-' + mode);
     const url  = bgs[mode];
     if (url) {

@@ -19,6 +19,8 @@ const LEAGUE_MAP = {
   SA:  'ita.1',
   LIB: 'conmebol.libertadores',
   SUD: 'conmebol.sudamericana',
+  URU: 'uru.1',
+  URU2:'uru.2',
 };
 
 const LEAGUE_NAMES = {
@@ -30,6 +32,8 @@ const LEAGUE_NAMES = {
   SA:  'Serie A',
   LIB: 'Copa Libertadores',
   SUD: 'Copa Sudamericana',
+  URU: 'Primera División Uruguay',
+  URU2:'Segunda División Uruguay',
 };
 
 // ── ESPN data mapping ─────────────────────────────────
