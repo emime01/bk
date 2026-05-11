@@ -1886,25 +1886,42 @@ body.has-mode-bg.countdown-fullscreen #placa-countdown.active {
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-panel {
   flex: none;
-  width: 88%; max-width: 1400px;
+  width: 92%; max-width: 1600px;
   margin: 0;
   flex-direction: column;
   border-radius: 24px;
   border-left: none;
   border: 2px solid rgba(255,255,255,0.12);
-  padding: 70px 80px;
-  gap: 50px;
+  padding: 50px 80px;
+  gap: 40px;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-header { display: flex; }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-events {
-  flex-direction: row; gap: 100px; justify-content: center;
+  flex-direction: column;
+  gap: 50px;
+  align-items: center;
+}
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-event {
+  flex-direction: row;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+  justify-content: center;
+}
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-event-label {
+  font-size: 28px; letter-spacing: 5px;
+  min-width: 260px; text-align: right;
+}
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-digits {
+  gap: 10px;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-num {
-  font-size: 140px; min-width: 180px;
+  font-size: 110px; min-width: 140px;
 }
-body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-sep { font-size: 100px; }
-body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-event-label {
-  font-size: 32px; letter-spacing: 6px;
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-sep { font-size: 80px; }
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-lbl { font-size: 14px; }
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-event-sub {
+  display: none;
 }
 </style>
 </head>
