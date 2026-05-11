@@ -811,136 +811,9 @@ main {
         <div class="color-row">
           <input type="color" id="color-card-bg" value="#FFFFFF">
           <input type="text"  id="color-card-bg-text" value="#FFFFFF" maxlength="7">
-        </div>
-      </div>
-      <div class="color-field">
-        <label>Texto de tarjetas</label>
-        <div class="color-row">
-          <input type="color" id="color-card-text" value="#1A1A1A">
-          <input type="text"  id="color-card-text-text" value="#1A1A1A" maxlength="7">
-        </div>
-      </div>
-      <div class="color-field">
-        <label>Fondo del contador (con imagen)</label>
-        <div class="color-row">
-          <input type="color" id="color-cd-panel-bg" value="#000000">
-          <input type="text"  id="color-cd-panel-bg-text" value="#000000" maxlength="7">
           <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
-          <input type="range" id="color-cd-opacity" min="0" max="100" value="60" style="width:80px;">
-          <span id="color-cd-opacity-val" style="font-size:12px;min-width:32px;">60%</span>
-        </div>
-      </div>
-      <div class="color-field">
-        <label>Texto del contador</label>
-        <div class="color-row">
-          <input type="color" id="color-cd-text" value="#FFFFFF">
-          <input type="text"  id="color-cd-text-text" value="#FFFFFF" maxlength="7">
-        </div>
-      </div>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary" id="btn-save-colors">Guardar colores</button>
-    </div>
-  </div>
-
-  <!-- ── PANEL LAYOUT ───────────────────────────────── -->
-  <div class="panel">
-    <h2><span>Formato de pantalla</span></h2>
-    <div class="layout-options">
-      <label class="layout-option selected" id="layout-opt-side">
-        <input type="radio" name="layout-pos" value="side" checked>
-        <strong>A un lado (lateral)</strong>
-        <span>Los marcadores y el contador se muestran en un panel a la derecha. La imagen de fondo llena toda la pantalla detrás.</span>
-      </label>
-      <label class="layout-option" id="layout-opt-top">
-        <input type="radio" name="layout-pos" value="top">
-        <strong>Mitad superior</strong>
-        <span>Los marcadores y el contador aparecen en la franja superior. La imagen de fondo es visible en toda la pantalla.</span>
-      </label>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary" id="btn-save-layout">Guardar formato</button>
-    </div>
-  </div>
-
-  <!-- ── PANEL HORARIOS ─────────────────────────────── -->
-  <div class="panel">
-    <h2>
-      <span>Horarios automáticos</span>
-      <span class="count" id="schedule-status">—</span>
-    </h2>
-    <div class="schedule">
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Modo día</strong>
-          <span>Todos los partidos del día en una placa</span>
-        </div>
-        <div class="time-pair">
-          <input type="time" id="day-start" value="07:00">
-          <span class="dash">a</span>
-          <input type="time" id="day-end" value="18:00">
-        </div>
-      </div>
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Modo en vivo</strong>
-          <span>Resultados en tiempo real con marcador y minuto</span>
-        </div>
-        <div class="time-pair">
-          <input type="time" id="live-start" value="18:00">
-          <span class="dash">a</span>
-          <input type="time" id="live-end" value="23:00">
-        </div>
-      </div>
-    </div>
-    <div class="actions">
-      <button class="btn btn-secondary" id="btn-reset-schedule">Restaurar predeterminados</button>
-      <button class="btn btn-primary" id="btn-save-schedule">Guardar horarios</button>
-    </div>
-  </div>
-
-  <!-- ── PANEL CUENTA ATRÁS ──────────────────────────── -->
-  <div class="panel">
-    <h2>
-      <span>Cuenta atrás</span>
-      <span class="count" id="cd-status">—</span>
-    </h2>
-    <div class="schedule">
-
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Activar cuenta atrás</strong>
-          <span>Reemplaza la placa normal con los contadores de días</span>
-        </div>
-        <label class="cd-toggle-wrap">
-          <input type="checkbox" id="cd-active">
-          <span class="cd-toggle-track"><span class="cd-toggle-thumb"></span></span>
-          <span class="cd-active-label" id="cd-active-label">Desactivado</span>
-        </label>
-      </div>
-
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Mundial 2026</strong>
-          <span>Fecha y hora de inicio del torneo (hora local Uruguay)</span>
-        </div>
-        <div class="time-pair">
-          <input class="cd-date-input" type="datetime-local" id="cd-mundial-date" value="2026-06-11T18:00">
-          <input class="cd-text-input" type="text" id="cd-mundial-label" placeholder="MUNDIAL 2026">
-        </div>
-      </div>
-
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Debut Uruguay</strong>
-          <span>Fecha y hora del primer partido de La Celeste</span>
-        </div>
-        <div class="time-pair">
-          <input class="cd-date-input" type="datetime-local" id="cd-uruguay-date" value="2026-06-19T21:00">
-          <input class="cd-text-input" type="text" id="cd-uruguay-label" placeholder="DEBUT URUGUAY">
-        </div>
-      </div>
-
+          <input type="range" id="color-card-bg-opacity" min="0" max="100" value="100" style="width:80px;">
+          <span id="color-card-bg-opacity-val" style="font-size:12px;min-width:32px;">100%</span>
     </div>
     <div class="actions">
       <button class="btn btn-primary" id="btn-save-countdown">Guardar y sincronizar</button>
@@ -957,7 +830,10 @@ main {
         <div class="bg-preview" id="prev-day"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-day">
-          <input type="url" placeholder="o pegá una URL https://…" id="url-day">
+          <input type="url" placeholder="Imagen: URL https://…" id="url-day">
+        </div>
+        <div class="file-row" style="margin-top:6px">
+          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-day">
         </div>
         <div class="row-actions">
           <button class="btn btn-secondary" data-clear="day">Quitar</button>
@@ -970,7 +846,10 @@ main {
         <div class="bg-preview" id="prev-live"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-live">
-          <input type="url" placeholder="o pegá una URL https://…" id="url-live">
+          <input type="url" placeholder="Imagen: URL https://…" id="url-live">
+        </div>
+        <div class="file-row" style="margin-top:6px">
+          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-live">
         </div>
         <div class="row-actions">
           <button class="btn btn-secondary" data-clear="live">Quitar</button>
@@ -983,7 +862,10 @@ main {
         <div class="bg-preview" id="prev-off"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-off">
-          <input type="url" placeholder="o pegá una URL https://…" id="url-off">
+          <input type="url" placeholder="Imagen: URL https://…" id="url-off">
+        </div>
+        <div class="file-row" style="margin-top:6px">
+          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-off">
         </div>
         <div class="row-actions">
           <button class="btn btn-secondary" data-clear="off">Quitar</button>
@@ -996,7 +878,10 @@ main {
         <div class="bg-preview" id="prev-countdown"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-countdown">
-          <input type="url" placeholder="o pegá una URL https://…" id="url-countdown">
+          <input type="url" placeholder="Imagen: URL https://…" id="url-countdown">
+        </div>
+        <div class="file-row" style="margin-top:6px">
+          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-countdown">
         </div>
         <div class="row-actions">
           <button class="btn btn-secondary" data-clear="countdown">Quitar</button>
@@ -1005,8 +890,8 @@ main {
       </div>
     </div>
     <div class="help" style="margin-top:14px">
-      Subí un archivo (recomendado &lt; 1.5 MB c/u, formato 16:9) o pegá una URL pública.
-      La imagen se aplica automáticamente cuando entra ese modo. Si no configurás fondo
+      Subí una imagen (recomendado &lt; 1.5 MB, formato 16:9), pegá una URL de imagen, o pegá una URL de video (.mp4/.webm).
+      El video tiene prioridad sobre la imagen cuando ambos están configurados. Si no configurás fondo
       para la <em>Cuenta atrás</em>, se usa el mismo fondo del Modo día como respaldo.
     </div>
   </div>
@@ -1095,47 +980,7 @@ function LS(key) {
 const STORAGE_KEY  = () => LS('selected_matches');
 const SCHEDULE_KEY = () => LS('schedule');
 const BG_KEY_FN    = () => LS('backgrounds');
-const CD_KEY       = () => LS('countdown');
-const COLORS_KEY   = () => LS('colors');
-const LAYOUT_KEY   = () => LS('layout');
-
-const DEFAULT_SCHEDULE = {
-  dayStart:  '07:00',
-  dayEnd:    '18:00',
-  liveStart: '18:00',
-  liveEnd:   '23:00',
-};
-let currentCompetition = 'CL';
-let currentMatches = [];
-
-// ── Config cross-device (/api/config) ─────────────────
-async function syncFromServer() {
-  try {
-    const r = await fetch(cfgApiUrl(), { signal: AbortSignal.timeout(4000) });
-    if (!r.ok) return;
-    const cfg = await r.json();
-    if (!cfg || typeof cfg !== 'object' || Object.keys(cfg).length === 0) return;
-
-    if (cfg.competition != null || cfg.ids != null) {
-      const payload = { competition: cfg.competition || 'CL', ids: Array.isArray(cfg.ids) ? cfg.ids : [] };
-      localStorage.setItem(STORAGE_KEY(), JSON.stringify(payload));
-    }
-    if (cfg.schedule && typeof cfg.schedule === 'object') {
-      localStorage.setItem(SCHEDULE_KEY(), JSON.stringify(cfg.schedule));
-    }
-    if (cfg.backgrounds && typeof cfg.backgrounds === 'object') {
-      let bgs;
-      try { bgs = JSON.parse(localStorage.getItem(BG_KEY_FN()) || '{}'); } catch { bgs = {}; }
-      for (const [mode, url] of Object.entries(cfg.backgrounds)) {
-        const isBase64 = typeof bgs[mode] === 'string' && bgs[mode].startsWith('data:');
-        if (url && typeof url === 'string' && !url.startsWith('data:')) {
-          bgs[mode] = url;
-        } else if (!url && bgs[mode] && !isBase64) {
-          delete bgs[mode];
-        }
-      }
-      localStorage.setItem(BG_KEY_FN(), JSON.stringify(bgs));
-    }
+const VIDEOS_KEY   = () => LS('videos');
     if (cfg.countdown && typeof cfg.countdown === 'object') {
       localStorage.setItem(CD_KEY(), JSON.stringify(cfg.countdown));
     }
@@ -1165,7 +1010,8 @@ async function pushToServer() {
     const countdown = loadCountdownConfig();
     const colors    = loadColorsConfig();
     const layout    = loadLayoutConfig();
-    const payload   = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs, countdown, colors, layout };
+    const videos    = loadVideos();
+    const payload   = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs, videos, countdown, colors, layout };
     const r = await fetch(cfgApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1221,6 +1067,13 @@ function loadBackgrounds() {
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }
+function loadVideos() {
+  try { return JSON.parse(localStorage.getItem(VIDEOS_KEY()) || '{}'); } catch { return {}; }
+}
+function saveVideos(v) {
+  localStorage.setItem(VIDEOS_KEY(), JSON.stringify(v));
+}
+
 function saveBackgrounds(bgs) {
   try {
     localStorage.setItem(BG_KEY_FN(), JSON.stringify(bgs));
@@ -1248,10 +1101,17 @@ function refreshBgPreviews() {
       prev.style.backgroundImage = '';
       prev.innerHTML = '<div class="placeholder">Sin imagen</div>';
     }
-    // Reflejar URL en el input si es una URL (no data URL)
     const urlInput = document.getElementById('url-' + mode);
     if (url && !url.startsWith('data:')) urlInput.value = url;
     else urlInput.value = '';
+  });
+}
+
+function refreshVideoInputs() {
+  const vids = loadVideos();
+  ['day','live','off','countdown'].forEach(mode => {
+    const inp = document.getElementById('video-url-' + mode);
+    if (inp) inp.value = vids[mode] || '';
   });
 }
 
@@ -1267,8 +1127,21 @@ function readFileAsDataURL(file) {
 document.querySelectorAll('[data-save-bg]').forEach(btn => {
   btn.addEventListener('click', async () => {
     const mode = btn.dataset.saveBg;
-    const file = document.getElementById('file-' + mode).files?.[0];
-    const url  = document.getElementById('url-'  + mode).value.trim();
+    const file     = document.getElementById('file-' + mode)?.files?.[0];
+    const url      = document.getElementById('url-'  + mode)?.value.trim();
+    const videoUrl = document.getElementById('video-url-' + mode)?.value.trim();
+
+    if (videoUrl) {
+      // Save as video background
+      const vids = loadVideos();
+      vids[mode] = videoUrl;
+      saveVideos(vids);
+      refreshBgPreviews();
+      pushToServer();
+      showToast('Video de "' + mode + '" guardado · sincronizando…');
+      return;
+    }
+
     let value = null;
     if (file) {
       if (file.size > 3 * 1024 * 1024) {
@@ -1280,7 +1153,7 @@ document.querySelectorAll('[data-save-bg]').forEach(btn => {
     } else if (url) {
       value = url;
     } else {
-      showToast('Elegí un archivo o pegá una URL');
+      showToast('Elegí un archivo, pegá una URL de imagen o una URL de video');
       return;
     }
     const bgs = loadBackgrounds();
@@ -1299,9 +1172,14 @@ document.querySelectorAll('[data-clear]').forEach(btn => {
     const mode = btn.dataset.clear;
     const bgs = loadBackgrounds();
     delete bgs[mode];
+    const vids = loadVideos();
+    delete vids[mode];
+    saveVideos(vids);
     if (saveBackgrounds(bgs)) {
       document.getElementById('file-' + mode).value = '';
       document.getElementById('url-'  + mode).value = '';
+      const videoInput = document.getElementById('video-url-' + mode);
+      if (videoInput) videoInput.value = '';
       refreshBgPreviews();
       pushToServer();
       showToast('Fondo de "' + mode + '" eliminado · sincronizando…');
@@ -1506,7 +1384,7 @@ function saveCountdownConfig(cd) {
 // ── Colores ───────────────────────────────────────────────
 const DEFAULT_COLORS = {
   accent: '#FF6B35', accentAlt: '#FFB347',
-  cardBg: '#FFFFFF', cardText: '#1A1A1A',
+  cardBg: '#FFFFFF', cardBgOpacity: 100, cardText: '#1A1A1A',
   cdPanelBg: 'rgba(0,0,0,0.60)', cdText: '#FFFFFF',
 };
 
@@ -1552,31 +1430,11 @@ function applyColorsToInputs(c) {
   set('color-card-bg',   c.cardBg    || DEFAULT_COLORS.cardBg);
   set('color-card-text', c.cardText  || DEFAULT_COLORS.cardText);
   set('color-cd-text',   c.cdText    || DEFAULT_COLORS.cdText);
-
-  const { hex, opacity } = parseCdPanelBg(c.cdPanelBg || DEFAULT_COLORS.cdPanelBg);
-  const colPnl = document.getElementById('color-cd-panel-bg');
-  const txtPnl = document.getElementById('color-cd-panel-bg-text');
-  const sldPnl = document.getElementById('color-cd-opacity');
-  const valPnl = document.getElementById('color-cd-opacity-val');
-  if (colPnl) colPnl.value = hex;
-  if (txtPnl) txtPnl.value = hex;
-  if (sldPnl) sldPnl.value = opacity;
-  if (valPnl) valPnl.textContent = opacity + '%';
-}
-
-// Sincroniza color picker ↔ text input
-['accent','accent-alt','card-bg','card-text','cd-text'].forEach(id => {
-  const col = document.getElementById('color-' + id);
-  const txt = document.getElementById('color-' + id + '-text');
-  if (col && txt) {
-    col.addEventListener('input', () => { txt.value = col.value; });
-    txt.addEventListener('input', () => {
-      if (/^#[0-9A-Fa-f]{6}$/.test(txt.value)) col.value = txt.value;
-    });
-  }
-});
-
-// Slider de opacidad del contador
+  const cardOpacity = c.cardBgOpacity ?? DEFAULT_COLORS.cardBgOpacity;
+  const cardOpacitySlider = document.getElementById('color-card-bg-opacity');
+  const cardOpacityVal    = document.getElementById('color-card-bg-opacity-val');
+  if (cardOpacitySlider) cardOpacitySlider.value = cardOpacity;
+  if (cardOpacityVal)    cardOpacityVal.textContent = cardOpacity + '%';
 const cdOpacitySlider = document.getElementById('color-cd-opacity');
 const cdOpacityVal    = document.getElementById('color-cd-opacity-val');
 if (cdOpacitySlider) {
@@ -1584,17 +1442,13 @@ if (cdOpacitySlider) {
     if (cdOpacityVal) cdOpacityVal.textContent = cdOpacitySlider.value + '%';
   });
 }
-
-document.getElementById('btn-save-colors').addEventListener('click', () => {
-  const hex     = document.getElementById('color-cd-panel-bg-text')?.value || '#000000';
-  const opacity = parseInt(document.getElementById('color-cd-opacity')?.value || '60');
-  const c = {
-    accent:     document.getElementById('color-accent-text').value,
-    accentAlt:  document.getElementById('color-accent-alt-text').value,
-    cardBg:     document.getElementById('color-card-bg-text').value,
-    cardText:   document.getElementById('color-card-text-text').value,
-    cdPanelBg:  buildCdPanelBg(hex, opacity),
-    cdText:     document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
+const cardOpacitySlider = document.getElementById('color-card-bg-opacity');
+const cardOpacityValEl  = document.getElementById('color-card-bg-opacity-val');
+if (cardOpacitySlider) {
+  cardOpacitySlider.addEventListener('input', () => {
+    if (cardOpacityValEl) cardOpacityValEl.textContent = cardOpacitySlider.value + '%';
+  });
+}
   };
   saveColorsConfig(c);
   pushToServer();
@@ -1639,10 +1493,16 @@ document.getElementById('btn-save-layout').addEventListener('click', () => {
 
 function applyCountdownToInputs(cd) {
   document.getElementById('cd-active').checked = !!cd.active;
-  if (cd.mundialDate) document.getElementById('cd-mundial-date').value = cd.mundialDate;
+  if (cd.mundialDate)  document.getElementById('cd-mundial-date').value  = cd.mundialDate;
   if (cd.mundialLabel) document.getElementById('cd-mundial-label').value = cd.mundialLabel;
-  if (cd.uruguayDate) document.getElementById('cd-uruguay-date').value = cd.uruguayDate;
+  if (cd.uruguayDate)  document.getElementById('cd-uruguay-date').value  = cd.uruguayDate;
   if (cd.uruguayLabel) document.getElementById('cd-uruguay-label').value = cd.uruguayLabel;
+  const isFullscreen = !!cd.fullscreen;
+  document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
+    r.checked = (r.value === (isFullscreen ? 'fullscreen' : 'lateral'));
+  });
+  document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', !isFullscreen);
+  document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', isFullscreen);
   refreshCountdownStatus();
 }
 
@@ -1669,80 +1529,22 @@ function refreshCountdownStatus() {
 
 document.getElementById('cd-active').addEventListener('change', refreshCountdownStatus);
 
+document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', r.value === 'lateral');
+    document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', r.value === 'fullscreen');
+  });
+});
+
 document.getElementById('btn-save-countdown').addEventListener('click', () => {
+  const cdLayoutVal = document.querySelector('input[name="cd-layout"]:checked')?.value;
   const cd = {
     active:       document.getElementById('cd-active').checked,
     mundialDate:  document.getElementById('cd-mundial-date').value,
     mundialLabel: document.getElementById('cd-mundial-label').value.trim() || 'MUNDIAL 2026',
     uruguayDate:  document.getElementById('cd-uruguay-date').value,
     uruguayLabel: document.getElementById('cd-uruguay-label').value.trim() || 'DEBUT URUGUAY',
-  };
-  saveCountdownConfig(cd);
-  refreshCountdownStatus();
-  pushToServer();
-  showToast(cd.active ? 'Cuenta atrás activada · sincronizando…' : 'Cuenta atrás desactivada · sincronizando…');
-});
-
-// ── Gestión multi-cliente ─────────────────────────────────
-
-let allClients = [];
-
-async function fetchClientList() {
-  try {
-    const r = await fetch('/api/clients');
-    if (!r.ok) return [];
-    return await r.json();
-  } catch { return []; }
-}
-
-function renderClientList() {
-  const container = document.getElementById('client-list');
-  if (!allClients.length) {
-    container.innerHTML = '<div style="padding:8px 20px;font-size:13px;color:var(--gray-600);">Sin clientes aún</div>';
-    return;
-  }
-  container.innerHTML = allClients.map(c => `
-    <div class="client-item ${currentClient?.slug === c.slug ? 'active' : ''}" data-slug="${c.slug}">
-      <span class="client-dot"></span>
-      <span>${c.name}</span>
-      <span class="client-slug">${c.slug}</span>
-    </div>
-  `).join('');
-  container.querySelectorAll('.client-item').forEach(el => {
-    el.addEventListener('click', () => selectClient(el.dataset.slug));
-  });
-}
-
-async function selectClient(slug) {
-  currentClient = allClients.find(c => c.slug === slug) || null;
-  if (!currentClient) return;
-
-  renderClientList();
-
-  // Header y link de preview
-  document.getElementById('header-client-name').textContent = currentClient.name;
-  const link = document.getElementById('preview-link');
-  link.href = `/c/${currentClient.slug}`;
-  link.textContent = `Ver placa → /c/${currentClient.slug}`;
-  link.style.display = 'block';
-
-  // Mostrar paneles
-  document.getElementById('no-client-panel').style.display = 'none';
-  document.getElementById('client-panels').style.display = '';
-
-  // Sincronizar config del servidor y poblar formularios
-  await syncFromServer();
-  const savedCfg = loadConfig();
-  const savedTab = document.querySelector(`.tab[data-comp="${savedCfg.competition}"]`);
-  if (savedTab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    savedTab.classList.add('active');
-  }
-  loadAndRender(savedCfg.competition || 'CL');
-  refreshOnAirIndicator();
-  applyScheduleToInputs(loadSchedule());
-  refreshScheduleStatus();
-  refreshBgPreviews();
+    fullscreen:   cdLayoutVal === 'fullscreen',
   applyCountdownToInputs(loadCountdownConfig());
   applyColorsToInputs(loadColorsConfig());
   applyLayoutToInputs(loadLayoutConfig());

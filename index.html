@@ -82,20 +82,25 @@ body.has-mode-bg #placa-day .day-list {
   width: 800px;
   margin-right: 60px;
   padding: 50px 0;
-  gap: 14px;
+  gap: 20px;
   background: transparent;
+  justify-content: center;
 }
 body.has-mode-bg #placa-day .day-row {
+  flex: none;
   background: white;
   border: none;
   box-shadow: 0 8px 28px rgba(0,0,0,0.28);
   backdrop-filter: none;
   grid-template-columns: 105px 1fr auto 1fr 130px;
   gap: 14px;
-  padding: 0 22px;
+  padding: 22px 22px;
   border-radius: 14px;
+  border-top: 5px solid var(--accent);
 }
 body.has-mode-bg #placa-day .day-row::after { display: none; }
+body.has-mode-bg #placa-day .day-row.live { border-top-color: var(--accent); }
+body.has-mode-bg #placa-day .day-row.ft  { border-top-color: var(--accent-alt); }
 body.has-mode-bg #placa-day .day-row.live {
   background: white;
   border: 3px solid var(--accent);
@@ -124,10 +129,10 @@ body.has-mode-bg #placa-day .day-team-name {
   font-size: 30px;
 }
 body.has-mode-bg #placa-day .day-team-crest {
-  width: 66px; height: 66px;
+  width: 80px; height: 80px;
   background: rgba(80,35,20,0.06);
   border: 1px solid rgba(80,35,20,0.15);
-  font-size: 32px;
+  font-size: 36px;
 }
 body.has-mode-bg #placa-day .day-vs {
   color: rgba(80,35,20,0.35);
@@ -159,21 +164,20 @@ body.has-mode-bg #placa-day .day-stat-FT {
 }
 body.has-mode-bg #placa-day .day-min-text { color: var(--accent); }
 
-/* Gap interno del equipo reducido para que el nombre quepa en el 1fr */
-body.has-mode-bg #placa-day .day-team-side { gap: 10px; }
-/* Nombre del equipo: una sola línea con ellipsis en modo billboard */
+body.has-mode-bg #placa-day .day-team-side { gap: 12px; }
 body.has-mode-bg #placa-day .day-team-name {
-  white-space: nowrap;
+  white-space: normal;
+  text-overflow: clip;
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  -webkit-line-clamp: unset;
-  display: block;
 }
 
 /* Modo denso adaptado al ancho de 800px */
 body.has-mode-bg #placa-day .day-list.dense .day-row {
   grid-template-columns: 80px 1fr auto 1fr 100px;
-  padding: 0 16px;
+  padding: 14px 16px;
   gap: 10px;
 }
 body.has-mode-bg #placa-day .day-list.dense .day-time { font-size: 36px; }
@@ -1867,242 +1871,51 @@ body.has-mode-bg.layout-top #placa-countdown.active .cd-num {
   min-width: 90px;
 }
 body.has-mode-bg.layout-top #placa-countdown.active .cd-sep { font-size: 44px; }
-</style>
-</head>
-<body>
 
-<!-- PLACA 1: Esperando / Cargando -->
-<div class="placa active" id="placa-waiting">
-  <div class="bg-flame"></div>
-  <div class="bk-logo-big"></div>
-  <div class="tagline">Fútbol en vivo</div>
-  <div class="loading-bar"><div class="loading-fill"></div></div>
-  <div class="wait-status" id="wait-status">Buscando partido...</div>
-</div>
+/* === VIDEO DE FONDO === */
+#bg-video {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 0; pointer-events: none;
+}
 
-<!-- PLACA CUENTA ATRÁS -->
-<div class="placa" id="placa-countdown">
-  <div class="cd-header">
-    <div class="cd-brand"></div>
-    <div class="cd-title">Contando los días</div>
-  </div>
-  <div class="cd-panel">
-    <div class="cd-events" id="cd-events">
-      <!-- generado por JS -->
-    </div>
-  </div>
-</div>
-
-<!-- PLACA 2: Pre-partido -->
-<div class="placa" id="placa-prematch">
-  <div class="left-col">
-    <div class="bk-logo"></div>
-    <div class="prox-label">Próximo</div>
-    <div class="match-date" id="pm-date">—</div>
-    <div class="competition-badge" id="pm-comp">—</div>
-  </div>
-  <div class="right-col">
-    <div class="teams-row">
-      <div class="team-block">
-        <div class="team-crest" id="pm-crest1">🏟️</div>
-        <div class="team-name" id="pm-team1">—</div>
-      </div>
-      <div class="vs-block">
-        <div class="vs-text">VS</div>
-        <div class="kick-time" id="pm-time">--:--</div>
-      </div>
-      <div class="team-block">
-        <div class="team-crest" id="pm-crest2">🏟️</div>
-        <div class="team-name" id="pm-team2">—</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- PLACA 3: En vivo -->
-<div class="placa" id="placa-live">
-
-  <!-- IZQUIERDA: PARTIDO -->
-  <div class="match-half">
-    <div class="match-header">
-      <div class="live-badge">
-        <div class="live-dot"></div>
-        <div class="live-text">EN VIVO</div>
-      </div>
-      <div class="competition-name" id="live-comp">—</div>
-      <div class="minute-display">
-        <div class="minute-num" id="live-min">0</div>
-        <div class="minute-label">MIN</div>
-      </div>
-    </div>
-
-    <div class="teams-row">
-      <div class="team-block">
-        <div class="team-crest" id="live-crest1">🏟️</div>
-        <div class="team-name" id="live-team1">—</div>
-        <div class="live-scorers" id="live-scorers1"></div>
-        <div class="live-cards-row" id="live-cards1"></div>
-      </div>
-      <div class="score-block">
-        <div class="score-nums">
-          <div class="score-n" id="live-score1">0</div>
-          <div class="score-dash">—</div>
-          <div class="score-n" id="live-score2">0</div>
-        </div>
-        <div class="halftime-label" id="live-status-label">Primer tiempo</div>
-      </div>
-      <div class="team-block">
-        <div class="team-crest" id="live-crest2">🏟️</div>
-        <div class="team-name" id="live-team2">—</div>
-        <div class="live-scorers" id="live-scorers2"></div>
-        <div class="live-cards-row" id="live-cards2"></div>
-      </div>
-    </div>
-
-    <div class="info-row">
-      <div class="info-col">
-        <div class="section-title">Estadísticas</div>
-        <div id="live-stats"></div>
-      </div>
-      <div class="info-col">
-        <div class="section-title">Eventos del partido</div>
-        <div id="live-events"></div>
-      </div>
-    </div>
-
-    <div class="match-footer">
-      <div class="footer-update">Actualizado <span id="live-update">--:--:--</span></div>
-    </div>
-  </div>
-
-  <!-- DERECHA: BK -->
-  <div class="bk-half">
-    <div class="bk-mega-logo"></div>
-    <div class="bk-tagline">Fútbol en vivo</div>
-    <div class="bk-divider"></div>
-    <div class="bk-burger-icon">🍔</div>
-    <div class="bk-slogan">HAVE IT<br>YOUR WAY</div>
-  </div>
-</div>
-
-<!-- PLACA 7: Día (apilada vertical para OOH) -->
-<div class="placa" id="placa-day">
-  <div class="day-header">
-    <div class="day-bk-logo"></div>
-    <div class="day-header-mid">
-      <div class="day-title">Partidos del día</div>
-      <div class="day-date" id="day-date">—</div>
-    </div>
-    <div class="day-comp" id="day-comp">—</div>
-  </div>
-  <div class="day-list" id="day-grid"></div>
-  <div class="day-pages" id="day-pages"></div>
-</div>
-
-<!-- PLACA 8: Multi-live (varios partidos en vivo simultáneos) -->
-<div class="placa" id="placa-multilive">
-  <div class="ml-header">
-    <div class="ml-bk-logo"></div>
-    <div class="ml-title-block">
-      <div class="ml-live-pill">
-        <div class="dot"></div>
-        <div class="text">EN VIVO</div>
-      </div>
-      <div class="ml-comp" id="ml-comp">—</div>
-    </div>
-  </div>
-  <div class="ml-grid" id="ml-grid"></div>
-</div>
-
-<!-- PLACA 4: GOL -->
-<div class="placa" id="placa-gol">
-  <div class="gol-bg-text">GOL</div>
-  <div class="gol-flames"></div>
-  <div class="gol-top">
-    <div class="gol-ball">⚽</div>
-    <div class="gol-word">GOL</div>
-    <div class="gol-ball">⚽</div>
-  </div>
-  <div class="gol-scorer" id="gol-scorer">—</div>
-  <div class="gol-team" id="gol-team">—</div>
-  <div class="gol-score-pill">
-    <div class="gol-score-teams" id="gol-team1-name">—</div>
-    <div class="gol-score-num" id="gol-score">0 — 0</div>
-    <div class="gol-score-teams" id="gol-team2-name">—</div>
-  </div>
-  <div class="bk-corner"></div>
-</div>
-
-<!-- PLACA 5: Tarjeta Roja -->
-<div class="placa" id="placa-roja">
-  <div class="roja-bg"></div>
-  <div class="roja-card"></div>
-  <div class="roja-title">EXPULSADO</div>
-  <div class="roja-player" id="roja-player">—</div>
-  <div class="roja-team" id="roja-team">—</div>
-  <div class="roja-minute" id="roja-minute">—'</div>
-  <div class="bk-corner"></div>
-</div>
-
-<!-- PLACA 6: Final -->
-<div class="placa" id="placa-final">
-  <div class="final-bg"></div>
-  <div class="final-left">
-    <div class="final-bk"></div>
-    <div class="final-ft-label">FT</div>
-    <div class="final-ft-sub">Partido finalizado</div>
-    <div class="final-competition" id="final-comp">—</div>
-  </div>
-  <div class="final-right">
-    <div class="final-teams">
-      <div class="final-team">
-        <div class="final-crest" id="final-crest1">🏟️</div>
-        <div class="final-team-name" id="final-team1">—</div>
-      </div>
-      <div class="final-score-block">
-        <div class="final-score" id="final-score">0 — 0</div>
-        <div class="final-winner" id="final-winner">—</div>
-      </div>
-      <div class="final-team">
-        <div class="final-crest" id="final-crest2">🏟️</div>
-        <div class="final-team-name" id="final-team2">—</div>
-      </div>
-    </div>
-  </div>
-  <div class="bk-bottom">HAVE IT YOUR WAY</div>
-</div>
-
-<script>
-const API_BASE    = '/api/sports';
-const POLL_MS     = 60 * 1000; // 1 minuto
-
-// ── Cliente ───────────────────────────────────────────
-// Lee el slug del cliente desde /c/:slug.
-// Si se accede desde la raíz (/), opera en modo legacy.
-const CLIENT_SLUG = (function () {
-  const m = window.location.pathname.match(/^\/c\/([a-z0-9-]+)/);
-  return m ? m[1] : null;
-})();
-
-// Sufijo para localStorage: aísla configs de cada cliente
-const LS = key => CLIENT_SLUG ? `mv_${CLIENT_SLUG}_${key}` : `bk_${key}`;
-
-function applyClientColors(colors) {
-  if (!colors || typeof colors !== 'object') return;
-  const root = document.documentElement;
-  if (colors.accent)      root.style.setProperty('--accent',       colors.accent);
-  if (colors.accentAlt)   root.style.setProperty('--accent-alt',   colors.accentAlt);
-  if (colors.cardBg)      root.style.setProperty('--card-bg',      colors.cardBg);
-  if (colors.cardText)    root.style.setProperty('--card-text',     colors.cardText);
-  if (colors.cardText)    root.style.setProperty('--card-text-muted', colors.cardText + '80');
-  if (colors.cdPanelBg)   root.style.setProperty('--cd-panel-bg',  colors.cdPanelBg);
-  if (colors.cdText)      root.style.setProperty('--cd-text',       colors.cdText);
+/* === CONTADOR PANTALLA COMPLETA === */
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-panel {
+  flex: none;
+  width: 88%; max-width: 1400px;
+  margin: 0;
+  flex-direction: column;
+  border-radius: 24px;
+  border-left: none;
+  border: 2px solid rgba(255,255,255,0.12);
+  padding: 70px 80px;
+  gap: 50px;
+}
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-header { display: flex; }
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-events {
+  flex-direction: row; gap: 100px; justify-content: center;
+}
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-num {
+  font-size: 140px; min-width: 180px;
+}
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-sep { font-size: 100px; }
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-event-label {
+  font-size: 32px; letter-spacing: 6px;
+}
 }
 
 function applyLayoutConfig(layout) {
   if (!layout) return;
-  // top: contenido en la mitad superior; por defecto (sin clase): lateral
   document.body.classList.toggle('layout-top', !!layout.top);
+}
+
+function applyCountdownLayout() {
+  const cd = loadCountdownConfig();
+  document.body.classList.toggle('countdown-fullscreen', !!cd.fullscreen);
 }
 
 // Horarios automáticos (configurables desde /admin):
@@ -2229,15 +2042,20 @@ function loadBackgrounds() {
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }
-function applyModeBackground() {
-  const mode = getCurrentMode();
-  const bgs  = loadBackgrounds();
-  // Si el modo actual no tiene fondo propio, usar day → live como fallback
-  // para que el layout lateral/superior siempre funcione cuando hay imagen
-  const url  = bgs[mode] || bgs['day'] || bgs['live'];
-  if (url) {
-    document.documentElement.style.setProperty('--mode-bg', `url("${url.replace(/"/g,'\\"')}")`);
+function loadVideos() {
+  try {
+    const raw = localStorage.getItem(LS('videos'));
     document.body.classList.add('has-mode-bg');
+    if (videoUrl) {
+      document.documentElement.style.removeProperty('--mode-bg');
+      const vid = document.createElement('video');
+      vid.id = 'bg-video';
+      vid.autoplay = true; vid.loop = true; vid.muted = true; vid.playsInline = true;
+      vid.src = videoUrl;
+      document.body.insertBefore(vid, document.body.firstChild);
+    } else {
+      document.documentElement.style.setProperty('--mode-bg', `url("${imgUrl.replace(/"/g,'\\"')}")`);
+    }
   } else {
     document.documentElement.style.removeProperty('--mode-bg');
     document.body.classList.remove('has-mode-bg');
@@ -2342,11 +2160,13 @@ async function syncFromServer() {
       }
       if (changed) localStorage.setItem(LS('backgrounds'), JSON.stringify(bgs));
     }
-    if (cfg.colors && typeof cfg.colors === 'object') {
-      applyClientColors(cfg.colors);
+    if (cfg.videos && typeof cfg.videos === 'object') {
+      const next = JSON.stringify(cfg.videos);
+      if (next !== localStorage.getItem(LS('videos'))) {
+        localStorage.setItem(LS('videos'), next);
+        changed = true;
+      }
     }
-    if (cfg.layout && typeof cfg.layout === 'object') {
-      applyLayoutConfig(cfg.layout);
     }
     console.log('[sync] done, changed:', changed);
     return changed;
@@ -2979,6 +2799,7 @@ setInterval(() => setText('live-update', new Date().toLocaleTimeString('es-UY'))
 // Sync desde el servidor al cargar, luego arranca el ciclo principal.
 syncFromServer().then(() => {
   applyModeBackground();
+  applyCountdownLayout();
   fetchMatches();
 });
 setInterval(fetchMatches, POLL_MS);
