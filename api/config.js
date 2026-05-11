@@ -1,21 +1,26 @@
 // Vercel serverless function — config store backed by Vercel KV (Upstash REST).
-// Two endpoints in one handler: GET reads, POST writes.
+// GET  /api/config?client=slug  → read client config
+// POST /api/config?client=slug  → write client config
+// (no ?client → legacy single-key mode for backward compat)
 //
 // Setup (una vez):
 //   1) Vercel dashboard → Storage → Create → KV (Upstash)
 //   2) Connect to project "bk"
 //   3) Vercel inyecta KV_REST_API_URL y KV_REST_API_TOKEN automáticamente
 //
-// Sin KV configurado, GET devuelve {} (la placa cae a localStorage) y POST devuelve 503.
-// El worker.js (Cloudflare) hace lo mismo con Cloudflare KV — los dos coexisten.
+// Sin KV configurado, GET devuelve {} y POST devuelve 503.
 
-const KEY = 'bk_config_v1';
+const LEGACY_KEY   = 'bk_config_v1';
+const clientKey    = slug => `mv_client_${slug}`;
 
-async function kvGet() {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+const KV_URL   = () => process.env.KV_REST_API_URL;
+const KV_TOKEN = () => process.env.KV_REST_API_TOKEN;
+
+async function kvGet(key) {
+  const url = KV_URL();
+  const token = KV_TOKEN();
   if (!url || !token) return null;
-  const r = await fetch(`${url}/get/${KEY}`, {
+  const r = await fetch(`${url}/get/${encodeURIComponent(key)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!r.ok) return null;
@@ -23,7 +28,6 @@ async function kvGet() {
   if (!data.result) return {};
   try {
     let parsed = JSON.parse(data.result);
-    // Handle legacy double-encoded values: parse again if it's still a string.
     if (typeof parsed === 'string') {
       try { parsed = JSON.parse(parsed); } catch {}
     }
@@ -31,14 +35,14 @@ async function kvGet() {
   } catch { return {}; }
 }
 
-async function kvSet(value) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+async function kvSet(key, value) {
+  const url = KV_URL();
+  const token = KV_TOKEN();
   if (!url || !token) return false;
-  const r = await fetch(`${url}/set/${KEY}`, {
+  const r = await fetch(`${url}/set/${encodeURIComponent(key)}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(value),
+    body: JSON.stringify(JSON.stringify(value)),
   });
   return r.ok;
 }
@@ -50,22 +54,25 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(204).end();
 
+  // Vercel populates req.query from URL query string
+  const slug = (req.query && req.query.client) ? String(req.query.client) : null;
+  const key  = slug ? clientKey(slug) : LEGACY_KEY;
+
   if (req.method === 'GET') {
     try {
-      const cfg = await kvGet();
+      const cfg = await kvGet(key);
       return res.status(200).json(cfg ?? {});
-    } catch (e) {
+    } catch {
       return res.status(200).json({});
     }
   }
 
   if (req.method === 'POST') {
-    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+    if (!KV_URL() || !KV_TOKEN()) {
       return res.status(503).json({ ok: false, error: 'KV not configured (enable Vercel KV in Storage tab)' });
     }
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-      // Strip base64 backgrounds — too large for KV / polling.
       if (body.backgrounds && typeof body.backgrounds === 'object') {
         for (const k of Object.keys(body.backgrounds)) {
           if (typeof body.backgrounds[k] === 'string' && body.backgrounds[k].startsWith('data:')) {
@@ -73,7 +80,7 @@ module.exports = async function handler(req, res) {
           }
         }
       }
-      const ok = await kvSet(body);
+      const ok = await kvSet(key, body);
       return res.status(ok ? 200 : 500).json({ ok });
     } catch (e) {
       return res.status(500).json({ ok: false, error: e.message });
