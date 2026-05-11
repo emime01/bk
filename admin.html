@@ -811,6 +811,9 @@ main {
         <div class="color-row">
           <input type="color" id="color-card-bg" value="#FFFFFF">
           <input type="text"  id="color-card-bg-text" value="#FFFFFF" maxlength="7">
+          <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+          <input type="range" id="color-card-bg-opacity" min="0" max="100" value="100" style="width:80px;">
+          <span id="color-card-bg-opacity-val" style="font-size:12px;min-width:32px;">100%</span>
         </div>
       </div>
       <div class="color-field">
@@ -941,6 +944,23 @@ main {
         </div>
       </div>
 
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Visualización</strong>
+          <span>Cómo se muestra el contador cuando hay imagen o video de fondo</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <label class="layout-option selected" id="cd-layout-opt-side" style="flex:0 0 auto;padding:10px 18px;">
+            <input type="radio" name="cd-layout" value="lateral" checked>
+            <strong>A un lado</strong>
+          </label>
+          <label class="layout-option" id="cd-layout-opt-full" style="flex:0 0 auto;padding:10px 18px;">
+            <input type="radio" name="cd-layout" value="fullscreen">
+            <strong>Pantalla completa</strong>
+          </label>
+        </div>
+      </div>
+
     </div>
     <div class="actions">
       <button class="btn btn-primary" id="btn-save-countdown">Guardar y sincronizar</button>
@@ -957,7 +977,10 @@ main {
         <div class="bg-preview" id="prev-day"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-day">
-          <input type="url" placeholder="o pegá una URL https://…" id="url-day">
+          <input type="url" placeholder="Imagen: URL https://…" id="url-day">
+        </div>
+        <div class="file-row" style="margin-top:6px">
+          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-day">
         </div>
         <div class="row-actions">
           <button class="btn btn-secondary" data-clear="day">Quitar</button>
@@ -970,7 +993,10 @@ main {
         <div class="bg-preview" id="prev-live"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-live">
-          <input type="url" placeholder="o pegá una URL https://…" id="url-live">
+          <input type="url" placeholder="Imagen: URL https://…" id="url-live">
+        </div>
+        <div class="file-row" style="margin-top:6px">
+          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-live">
         </div>
         <div class="row-actions">
           <button class="btn btn-secondary" data-clear="live">Quitar</button>
@@ -983,7 +1009,10 @@ main {
         <div class="bg-preview" id="prev-off"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-off">
-          <input type="url" placeholder="o pegá una URL https://…" id="url-off">
+          <input type="url" placeholder="Imagen: URL https://…" id="url-off">
+        </div>
+        <div class="file-row" style="margin-top:6px">
+          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-off">
         </div>
         <div class="row-actions">
           <button class="btn btn-secondary" data-clear="off">Quitar</button>
@@ -996,7 +1025,10 @@ main {
         <div class="bg-preview" id="prev-countdown"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-countdown">
-          <input type="url" placeholder="o pegá una URL https://…" id="url-countdown">
+          <input type="url" placeholder="Imagen: URL https://…" id="url-countdown">
+        </div>
+        <div class="file-row" style="margin-top:6px">
+          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-countdown">
         </div>
         <div class="row-actions">
           <button class="btn btn-secondary" data-clear="countdown">Quitar</button>
@@ -1005,8 +1037,8 @@ main {
       </div>
     </div>
     <div class="help" style="margin-top:14px">
-      Subí un archivo (recomendado &lt; 1.5 MB c/u, formato 16:9) o pegá una URL pública.
-      La imagen se aplica automáticamente cuando entra ese modo. Si no configurás fondo
+      Subí una imagen (recomendado &lt; 1.5 MB, formato 16:9), pegá una URL de imagen, o pegá una URL de video (.mp4/.webm).
+      El video tiene prioridad sobre la imagen cuando ambos están configurados. Si no configurás fondo
       para la <em>Cuenta atrás</em>, se usa el mismo fondo del Modo día como respaldo.
     </div>
   </div>
@@ -1095,6 +1127,7 @@ function LS(key) {
 const STORAGE_KEY  = () => LS('selected_matches');
 const SCHEDULE_KEY = () => LS('schedule');
 const BG_KEY_FN    = () => LS('backgrounds');
+const VIDEOS_KEY   = () => LS('videos');
 const CD_KEY       = () => LS('countdown');
 const COLORS_KEY   = () => LS('colors');
 const LAYOUT_KEY   = () => LS('layout');
@@ -1136,6 +1169,9 @@ async function syncFromServer() {
       }
       localStorage.setItem(BG_KEY_FN(), JSON.stringify(bgs));
     }
+    if (cfg.videos && typeof cfg.videos === 'object') {
+      localStorage.setItem(VIDEOS_KEY(), JSON.stringify(cfg.videos));
+    }
     if (cfg.countdown && typeof cfg.countdown === 'object') {
       localStorage.setItem(CD_KEY(), JSON.stringify(cfg.countdown));
     }
@@ -1165,7 +1201,8 @@ async function pushToServer() {
     const countdown = loadCountdownConfig();
     const colors    = loadColorsConfig();
     const layout    = loadLayoutConfig();
-    const payload   = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs, countdown, colors, layout };
+    const videos    = loadVideos();
+    const payload   = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs, videos, countdown, colors, layout };
     const r = await fetch(cfgApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1221,6 +1258,13 @@ function loadBackgrounds() {
     return raw ? JSON.parse(raw) : {};
   } catch { return {}; }
 }
+function loadVideos() {
+  try { return JSON.parse(localStorage.getItem(VIDEOS_KEY()) || '{}'); } catch { return {}; }
+}
+function saveVideos(v) {
+  localStorage.setItem(VIDEOS_KEY(), JSON.stringify(v));
+}
+
 function saveBackgrounds(bgs) {
   try {
     localStorage.setItem(BG_KEY_FN(), JSON.stringify(bgs));
@@ -1248,10 +1292,17 @@ function refreshBgPreviews() {
       prev.style.backgroundImage = '';
       prev.innerHTML = '<div class="placeholder">Sin imagen</div>';
     }
-    // Reflejar URL en el input si es una URL (no data URL)
     const urlInput = document.getElementById('url-' + mode);
     if (url && !url.startsWith('data:')) urlInput.value = url;
     else urlInput.value = '';
+  });
+}
+
+function refreshVideoInputs() {
+  const vids = loadVideos();
+  ['day','live','off','countdown'].forEach(mode => {
+    const inp = document.getElementById('video-url-' + mode);
+    if (inp) inp.value = vids[mode] || '';
   });
 }
 
@@ -1267,8 +1318,21 @@ function readFileAsDataURL(file) {
 document.querySelectorAll('[data-save-bg]').forEach(btn => {
   btn.addEventListener('click', async () => {
     const mode = btn.dataset.saveBg;
-    const file = document.getElementById('file-' + mode).files?.[0];
-    const url  = document.getElementById('url-'  + mode).value.trim();
+    const file     = document.getElementById('file-' + mode)?.files?.[0];
+    const url      = document.getElementById('url-'  + mode)?.value.trim();
+    const videoUrl = document.getElementById('video-url-' + mode)?.value.trim();
+
+    if (videoUrl) {
+      // Save as video background
+      const vids = loadVideos();
+      vids[mode] = videoUrl;
+      saveVideos(vids);
+      refreshBgPreviews();
+      pushToServer();
+      showToast('Video de "' + mode + '" guardado · sincronizando…');
+      return;
+    }
+
     let value = null;
     if (file) {
       if (file.size > 3 * 1024 * 1024) {
@@ -1280,7 +1344,7 @@ document.querySelectorAll('[data-save-bg]').forEach(btn => {
     } else if (url) {
       value = url;
     } else {
-      showToast('Elegí un archivo o pegá una URL');
+      showToast('Elegí un archivo, pegá una URL de imagen o una URL de video');
       return;
     }
     const bgs = loadBackgrounds();
@@ -1299,9 +1363,14 @@ document.querySelectorAll('[data-clear]').forEach(btn => {
     const mode = btn.dataset.clear;
     const bgs = loadBackgrounds();
     delete bgs[mode];
+    const vids = loadVideos();
+    delete vids[mode];
+    saveVideos(vids);
     if (saveBackgrounds(bgs)) {
       document.getElementById('file-' + mode).value = '';
       document.getElementById('url-'  + mode).value = '';
+      const videoInput = document.getElementById('video-url-' + mode);
+      if (videoInput) videoInput.value = '';
       refreshBgPreviews();
       pushToServer();
       showToast('Fondo de "' + mode + '" eliminado · sincronizando…');
@@ -1506,7 +1575,7 @@ function saveCountdownConfig(cd) {
 // ── Colores ───────────────────────────────────────────────
 const DEFAULT_COLORS = {
   accent: '#FF6B35', accentAlt: '#FFB347',
-  cardBg: '#FFFFFF', cardText: '#1A1A1A',
+  cardBg: '#FFFFFF', cardBgOpacity: 100, cardText: '#1A1A1A',
   cdPanelBg: 'rgba(0,0,0,0.60)', cdText: '#FFFFFF',
 };
 
@@ -1552,6 +1621,11 @@ function applyColorsToInputs(c) {
   set('color-card-bg',   c.cardBg    || DEFAULT_COLORS.cardBg);
   set('color-card-text', c.cardText  || DEFAULT_COLORS.cardText);
   set('color-cd-text',   c.cdText    || DEFAULT_COLORS.cdText);
+  const cardOpacity = c.cardBgOpacity ?? DEFAULT_COLORS.cardBgOpacity;
+  const cardOpacitySlider = document.getElementById('color-card-bg-opacity');
+  const cardOpacityVal    = document.getElementById('color-card-bg-opacity-val');
+  if (cardOpacitySlider) cardOpacitySlider.value = cardOpacity;
+  if (cardOpacityVal)    cardOpacityVal.textContent = cardOpacity + '%';
 
   const { hex, opacity } = parseCdPanelBg(c.cdPanelBg || DEFAULT_COLORS.cdPanelBg);
   const colPnl = document.getElementById('color-cd-panel-bg');
@@ -1576,7 +1650,7 @@ function applyColorsToInputs(c) {
   }
 });
 
-// Slider de opacidad del contador
+// Sliders de opacidad
 const cdOpacitySlider = document.getElementById('color-cd-opacity');
 const cdOpacityVal    = document.getElementById('color-cd-opacity-val');
 if (cdOpacitySlider) {
@@ -1584,17 +1658,25 @@ if (cdOpacitySlider) {
     if (cdOpacityVal) cdOpacityVal.textContent = cdOpacitySlider.value + '%';
   });
 }
+const cardOpacitySlider = document.getElementById('color-card-bg-opacity');
+const cardOpacityValEl  = document.getElementById('color-card-bg-opacity-val');
+if (cardOpacitySlider) {
+  cardOpacitySlider.addEventListener('input', () => {
+    if (cardOpacityValEl) cardOpacityValEl.textContent = cardOpacitySlider.value + '%';
+  });
+}
 
 document.getElementById('btn-save-colors').addEventListener('click', () => {
   const hex     = document.getElementById('color-cd-panel-bg-text')?.value || '#000000';
   const opacity = parseInt(document.getElementById('color-cd-opacity')?.value || '60');
   const c = {
-    accent:     document.getElementById('color-accent-text').value,
-    accentAlt:  document.getElementById('color-accent-alt-text').value,
-    cardBg:     document.getElementById('color-card-bg-text').value,
-    cardText:   document.getElementById('color-card-text-text').value,
-    cdPanelBg:  buildCdPanelBg(hex, opacity),
-    cdText:     document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
+    accent:        document.getElementById('color-accent-text').value,
+    accentAlt:     document.getElementById('color-accent-alt-text').value,
+    cardBg:        document.getElementById('color-card-bg-text').value,
+    cardBgOpacity: parseInt(document.getElementById('color-card-bg-opacity')?.value ?? '100'),
+    cardText:      document.getElementById('color-card-text-text').value,
+    cdPanelBg:     buildCdPanelBg(hex, opacity),
+    cdText:        document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
   };
   saveColorsConfig(c);
   pushToServer();
@@ -1639,10 +1721,16 @@ document.getElementById('btn-save-layout').addEventListener('click', () => {
 
 function applyCountdownToInputs(cd) {
   document.getElementById('cd-active').checked = !!cd.active;
-  if (cd.mundialDate) document.getElementById('cd-mundial-date').value = cd.mundialDate;
+  if (cd.mundialDate)  document.getElementById('cd-mundial-date').value  = cd.mundialDate;
   if (cd.mundialLabel) document.getElementById('cd-mundial-label').value = cd.mundialLabel;
-  if (cd.uruguayDate) document.getElementById('cd-uruguay-date').value = cd.uruguayDate;
+  if (cd.uruguayDate)  document.getElementById('cd-uruguay-date').value  = cd.uruguayDate;
   if (cd.uruguayLabel) document.getElementById('cd-uruguay-label').value = cd.uruguayLabel;
+  const isFullscreen = !!cd.fullscreen;
+  document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
+    r.checked = (r.value === (isFullscreen ? 'fullscreen' : 'lateral'));
+  });
+  document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', !isFullscreen);
+  document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', isFullscreen);
   refreshCountdownStatus();
 }
 
@@ -1669,13 +1757,22 @@ function refreshCountdownStatus() {
 
 document.getElementById('cd-active').addEventListener('change', refreshCountdownStatus);
 
+document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', r.value === 'lateral');
+    document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', r.value === 'fullscreen');
+  });
+});
+
 document.getElementById('btn-save-countdown').addEventListener('click', () => {
+  const cdLayoutVal = document.querySelector('input[name="cd-layout"]:checked')?.value;
   const cd = {
     active:       document.getElementById('cd-active').checked,
     mundialDate:  document.getElementById('cd-mundial-date').value,
     mundialLabel: document.getElementById('cd-mundial-label').value.trim() || 'MUNDIAL 2026',
     uruguayDate:  document.getElementById('cd-uruguay-date').value,
     uruguayLabel: document.getElementById('cd-uruguay-label').value.trim() || 'DEBUT URUGUAY',
+    fullscreen:   cdLayoutVal === 'fullscreen',
   };
   saveCountdownConfig(cd);
   refreshCountdownStatus();
@@ -1743,6 +1840,7 @@ async function selectClient(slug) {
   applyScheduleToInputs(loadSchedule());
   refreshScheduleStatus();
   refreshBgPreviews();
+  refreshVideoInputs();
   applyCountdownToInputs(loadCountdownConfig());
   applyColorsToInputs(loadColorsConfig());
   applyLayoutToInputs(loadLayoutConfig());
