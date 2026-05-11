@@ -9,25 +9,29 @@
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 
 const LEAGUE_MAP = {
-  'CL':  'uefa.champions',
-  'UEL': 'uefa.europa',
-  'PL':  'eng.1',
-  'LL':  'esp.1',
-  'BL':  'ger.1',
-  'SA':  'ita.1',
-  'LIB': 'conmebol.libertadores',
-  'SUD': 'conmebol.sudamericana',
+  'CL':   'uefa.champions',
+  'UEL':  'uefa.europa',
+  'PL':   'eng.1',
+  'LL':   'esp.1',
+  'BL':   'ger.1',
+  'SA':   'ita.1',
+  'LIB':  'conmebol.libertadores',
+  'SUD':  'conmebol.sudamericana',
+  'URU':  'uru.1',
+  'URU2': 'uru.2',
 };
 
 const LEAGUE_NAMES = {
-  'CL':  'UEFA Champions League',
-  'UEL': 'UEFA Europa League',
-  'PL':  'Premier League',
-  'LL':  'LaLiga',
-  'BL':  'Bundesliga',
-  'SA':  'Serie A',
-  'LIB': 'Copa Libertadores',
-  'SUD': 'Copa Sudamericana',
+  'CL':   'UEFA Champions League',
+  'UEL':  'UEFA Europa League',
+  'PL':   'Premier League',
+  'LL':   'LaLiga',
+  'BL':   'Bundesliga',
+  'SA':   'Serie A',
+  'LIB':  'Copa Libertadores',
+  'SUD':  'Copa Sudamericana',
+  'URU':  'Primera División Uruguay',
+  'URU2': 'Segunda División Uruguay',
 };
 
 function mapStatus(comp) {
