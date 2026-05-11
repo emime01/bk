@@ -1037,7 +1037,28 @@ main {
         </div>
       </div>
 
-    </div>
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Mostrar</strong>
+          <span>Qué eventos mostrar en el contador</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <label class="layout-option selected" id="cd-show-opt-both" style="flex:0 0 auto;padding:10px 18px;">
+            <input type="radio" name="cd-show" value="both" checked>
+            <strong>Ambos</strong>
+          </label>
+          <label class="layout-option" id="cd-show-opt-mundial" style="flex:0 0 auto;padding:10px 18px;">
+            <input type="radio" name="cd-show" value="mundial">
+            <strong>Solo Mundial</strong>
+          </label>
+          <label class="layout-option" id="cd-show-opt-uruguay" style="flex:0 0 auto;padding:10px 18px;">
+            <input type="radio" name="cd-show" value="uruguay">
+            <strong>Solo Uruguay</strong>
+          </label>
+        </div>
+      </div>
+
+
     <div class="actions">
       <button class="btn btn-primary" id="btn-save-countdown">Guardar y sincronizar</button>
     </div>
@@ -1731,6 +1752,13 @@ function applyCountdownToInputs(cd) {
   });
   document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', !isFullscreen);
   document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', isFullscreen);
+  const showVal = cd.showEvents || 'both';
+  document.querySelectorAll('input[name="cd-show"]').forEach(r => {
+    r.checked = (r.value === showVal);
+  });
+  document.getElementById('cd-show-opt-both')?.classList.toggle('selected', showVal === 'both');
+  document.getElementById('cd-show-opt-mundial')?.classList.toggle('selected', showVal === 'mundial');
+  document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', showVal === 'uruguay');
   refreshCountdownStatus();
 }
 
@@ -1764,8 +1792,17 @@ document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
   });
 });
 
+document.querySelectorAll('input[name="cd-show"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('cd-show-opt-both')?.classList.toggle('selected', r.value === 'both');
+    document.getElementById('cd-show-opt-mundial')?.classList.toggle('selected', r.value === 'mundial');
+    document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', r.value === 'uruguay');
+  });
+});
+
 document.getElementById('btn-save-countdown').addEventListener('click', () => {
   const cdLayoutVal = document.querySelector('input[name="cd-layout"]:checked')?.value;
+  const cdShowVal   = document.querySelector('input[name="cd-show"]:checked')?.value || 'both';
   const cd = {
     active:       document.getElementById('cd-active').checked,
     mundialDate:  document.getElementById('cd-mundial-date').value,
@@ -1773,6 +1810,7 @@ document.getElementById('btn-save-countdown').addEventListener('click', () => {
     uruguayDate:  document.getElementById('cd-uruguay-date').value,
     uruguayLabel: document.getElementById('cd-uruguay-label').value.trim() || 'DEBUT URUGUAY',
     fullscreen:   cdLayoutVal === 'fullscreen',
+    showEvents:   cdShowVal,
   };
   saveCountdownConfig(cd);
   refreshCountdownStatus();

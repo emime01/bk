@@ -1886,14 +1886,16 @@ body.has-mode-bg.countdown-fullscreen #placa-countdown.active {
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-panel {
   flex: none;
-  width: 92%; max-width: 1600px;
+  width: auto;
+  min-width: 600px;
+  max-width: 90vw;
   margin: 0;
   flex-direction: column;
   border-radius: 24px;
   border-left: none;
   border: 2px solid rgba(255,255,255,0.12);
-  padding: 50px 80px;
-  gap: 40px;
+  padding: 40px 60px;
+  gap: 30px;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-header { display: flex; }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-events {
@@ -2233,10 +2235,11 @@ function renderCountdown() {
   const cfg = loadCountdownConfig();
   if (!cfg.active) { stopCountdown(); fetchMatches(); return; }
 
+  const show = cfg.showEvents || 'both';
   const events = [
     { id: 'mundial', label: cfg.mundialLabel || 'MUNDIAL 2026',    date: cfg.mundialDate },
     { id: 'uruguay', label: cfg.uruguayLabel || 'DEBUT URUGUAY',   date: cfg.uruguayDate },
-  ].filter(e => e.date);
+  ].filter(e => e.date && (show === 'both' || show === e.id));
 
   const container = document.getElementById('cd-events');
   if (!container) return;
