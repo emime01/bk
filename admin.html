@@ -1128,6 +1128,50 @@ const STORAGE_KEY  = () => LS('selected_matches');
 const SCHEDULE_KEY = () => LS('schedule');
 const BG_KEY_FN    = () => LS('backgrounds');
 const VIDEOS_KEY   = () => LS('videos');
+const CD_KEY       = () => LS('countdown');
+const COLORS_KEY   = () => LS('colors');
+const LAYOUT_KEY   = () => LS('layout');
+
+const DEFAULT_SCHEDULE = {
+  dayStart:  '07:00',
+  dayEnd:    '18:00',
+  liveStart: '18:00',
+  liveEnd:   '23:00',
+};
+let currentCompetition = 'CL';
+let currentMatches = [];
+
+// ── Config cross-device (/api/config) ─────────────────
+async function syncFromServer() {
+  try {
+    const r = await fetch(cfgApiUrl(), { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return;
+    const cfg = await r.json();
+    if (!cfg || typeof cfg !== 'object' || Object.keys(cfg).length === 0) return;
+
+    if (cfg.competition != null || cfg.ids != null) {
+      const payload = { competition: cfg.competition || 'CL', ids: Array.isArray(cfg.ids) ? cfg.ids : [] };
+      localStorage.setItem(STORAGE_KEY(), JSON.stringify(payload));
+    }
+    if (cfg.schedule && typeof cfg.schedule === 'object') {
+      localStorage.setItem(SCHEDULE_KEY(), JSON.stringify(cfg.schedule));
+    }
+    if (cfg.backgrounds && typeof cfg.backgrounds === 'object') {
+      let bgs;
+      try { bgs = JSON.parse(localStorage.getItem(BG_KEY_FN()) || '{}'); } catch { bgs = {}; }
+      for (const [mode, url] of Object.entries(cfg.backgrounds)) {
+        const isBase64 = typeof bgs[mode] === 'string' && bgs[mode].startsWith('data:');
+        if (url && typeof url === 'string' && !url.startsWith('data:')) {
+          bgs[mode] = url;
+        } else if (!url && bgs[mode] && !isBase64) {
+          delete bgs[mode];
+        }
+      }
+      localStorage.setItem(BG_KEY_FN(), JSON.stringify(bgs));
+    }
+    if (cfg.videos && typeof cfg.videos === 'object') {
+      localStorage.setItem(VIDEOS_KEY(), JSON.stringify(cfg.videos));
+    }
     if (cfg.countdown && typeof cfg.countdown === 'object') {
       localStorage.setItem(CD_KEY(), JSON.stringify(cfg.countdown));
     }
@@ -1582,6 +1626,31 @@ function applyColorsToInputs(c) {
   const cardOpacityVal    = document.getElementById('color-card-bg-opacity-val');
   if (cardOpacitySlider) cardOpacitySlider.value = cardOpacity;
   if (cardOpacityVal)    cardOpacityVal.textContent = cardOpacity + '%';
+
+  const { hex, opacity } = parseCdPanelBg(c.cdPanelBg || DEFAULT_COLORS.cdPanelBg);
+  const colPnl = document.getElementById('color-cd-panel-bg');
+  const txtPnl = document.getElementById('color-cd-panel-bg-text');
+  const sldPnl = document.getElementById('color-cd-opacity');
+  const valPnl = document.getElementById('color-cd-opacity-val');
+  if (colPnl) colPnl.value = hex;
+  if (txtPnl) txtPnl.value = hex;
+  if (sldPnl) sldPnl.value = opacity;
+  if (valPnl) valPnl.textContent = opacity + '%';
+}
+
+// Sincroniza color picker ↔ text input
+['accent','accent-alt','card-bg','card-text','cd-text'].forEach(id => {
+  const col = document.getElementById('color-' + id);
+  const txt = document.getElementById('color-' + id + '-text');
+  if (col && txt) {
+    col.addEventListener('input', () => { txt.value = col.value; });
+    txt.addEventListener('input', () => {
+      if (/^#[0-9A-Fa-f]{6}$/.test(txt.value)) col.value = txt.value;
+    });
+  }
+});
+
+// Sliders de opacidad
 const cdOpacitySlider = document.getElementById('color-cd-opacity');
 const cdOpacityVal    = document.getElementById('color-cd-opacity-val');
 if (cdOpacitySlider) {
@@ -1596,6 +1665,18 @@ if (cardOpacitySlider) {
     if (cardOpacityValEl) cardOpacityValEl.textContent = cardOpacitySlider.value + '%';
   });
 }
+
+document.getElementById('btn-save-colors').addEventListener('click', () => {
+  const hex     = document.getElementById('color-cd-panel-bg-text')?.value || '#000000';
+  const opacity = parseInt(document.getElementById('color-cd-opacity')?.value || '60');
+  const c = {
+    accent:        document.getElementById('color-accent-text').value,
+    accentAlt:     document.getElementById('color-accent-alt-text').value,
+    cardBg:        document.getElementById('color-card-bg-text').value,
+    cardBgOpacity: parseInt(document.getElementById('color-card-bg-opacity')?.value ?? '100'),
+    cardText:      document.getElementById('color-card-text-text').value,
+    cdPanelBg:     buildCdPanelBg(hex, opacity),
+    cdText:        document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
   };
   saveColorsConfig(c);
   pushToServer();
@@ -1692,6 +1773,71 @@ document.getElementById('btn-save-countdown').addEventListener('click', () => {
     uruguayDate:  document.getElementById('cd-uruguay-date').value,
     uruguayLabel: document.getElementById('cd-uruguay-label').value.trim() || 'DEBUT URUGUAY',
     fullscreen:   cdLayoutVal === 'fullscreen',
+  };
+  saveCountdownConfig(cd);
+  refreshCountdownStatus();
+  pushToServer();
+  showToast(cd.active ? 'Cuenta atrás activada · sincronizando…' : 'Cuenta atrás desactivada · sincronizando…');
+});
+
+// ── Gestión multi-cliente ─────────────────────────────────
+
+let allClients = [];
+
+async function fetchClientList() {
+  try {
+    const r = await fetch('/api/clients');
+    if (!r.ok) return [];
+    return await r.json();
+  } catch { return []; }
+}
+
+function renderClientList() {
+  const container = document.getElementById('client-list');
+  if (!allClients.length) {
+    container.innerHTML = '<div style="padding:8px 20px;font-size:13px;color:var(--gray-600);">Sin clientes aún</div>';
+    return;
+  }
+  container.innerHTML = allClients.map(c => `
+    <div class="client-item ${currentClient?.slug === c.slug ? 'active' : ''}" data-slug="${c.slug}">
+      <span class="client-dot"></span>
+      <span>${c.name}</span>
+      <span class="client-slug">${c.slug}</span>
+    </div>
+  `).join('');
+  container.querySelectorAll('.client-item').forEach(el => {
+    el.addEventListener('click', () => selectClient(el.dataset.slug));
+  });
+}
+
+async function selectClient(slug) {
+  currentClient = allClients.find(c => c.slug === slug) || null;
+  if (!currentClient) return;
+
+  renderClientList();
+
+  document.getElementById('header-client-name').textContent = currentClient.name;
+  const link = document.getElementById('preview-link');
+  link.href = `/c/${currentClient.slug}`;
+  link.textContent = `Ver placa → /c/${currentClient.slug}`;
+  link.style.display = 'block';
+
+  document.getElementById('no-client-panel').style.display = 'none';
+  document.getElementById('client-panels').style.display = '';
+
+  await syncFromServer();
+  const savedCfg = loadConfig();
+  const savedTab = document.querySelector(`.tab[data-comp="${savedCfg.competition}"]`);
+  if (savedTab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    savedTab.classList.add('active');
+  }
+  loadAndRender(savedCfg.competition || 'CL');
+  refreshOnAirIndicator();
+  applyScheduleToInputs(loadSchedule());
+  refreshScheduleStatus();
+  refreshBgPreviews();
+  refreshVideoInputs();
   applyCountdownToInputs(loadCountdownConfig());
   applyColorsToInputs(loadColorsConfig());
   applyLayoutToInputs(loadLayoutConfig());
