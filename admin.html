@@ -823,23 +823,6 @@ main {
           <input type="text"  id="color-card-text-text" value="#1A1A1A" maxlength="7">
         </div>
       </div>
-      <div class="color-field">
-        <label>Fondo del contador (con imagen)</label>
-        <div class="color-row">
-          <input type="color" id="color-cd-panel-bg" value="#000000">
-          <input type="text"  id="color-cd-panel-bg-text" value="#000000" maxlength="7">
-          <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
-          <input type="range" id="color-cd-opacity" min="0" max="100" value="60" style="width:80px;">
-          <span id="color-cd-opacity-val" style="font-size:12px;min-width:32px;">60%</span>
-        </div>
-      </div>
-      <div class="color-field">
-        <label>Texto del contador</label>
-        <div class="color-row">
-          <input type="color" id="color-cd-text" value="#FFFFFF">
-          <input type="text"  id="color-cd-text-text" value="#FFFFFF" maxlength="7">
-        </div>
-      </div>
     </div>
     <div class="actions">
       <button class="btn btn-primary" id="btn-save-colors">Guardar colores</button>
@@ -1037,7 +1020,64 @@ main {
         </div>
       </div>
 
-    </div>
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Mostrar</strong>
+          <span>Qué eventos mostrar en el contador</span>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <label class="layout-option selected" id="cd-show-opt-both" style="flex:0 0 auto;padding:10px 18px;">
+            <input type="radio" name="cd-show" value="both" checked>
+            <strong>Ambos</strong>
+          </label>
+          <label class="layout-option" id="cd-show-opt-mundial" style="flex:0 0 auto;padding:10px 18px;">
+            <input type="radio" name="cd-show" value="mundial">
+            <strong>Solo Mundial</strong>
+          </label>
+          <label class="layout-option" id="cd-show-opt-uruguay" style="flex:0 0 auto;padding:10px 18px;">
+            <input type="radio" name="cd-show" value="uruguay">
+            <strong>Solo Uruguay</strong>
+          </label>
+        </div>
+      </div>
+
+
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Colores del contador</strong>
+          <span>Fondo, borde y texto de los números</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="color-field" style="margin:0;">
+            <label>Fondo del panel</label>
+            <div class="color-row">
+              <input type="color" id="color-cd-panel-bg" value="#000000">
+              <input type="text"  id="color-cd-panel-bg-text" value="#000000" maxlength="7">
+              <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+              <input type="range" id="color-cd-opacity" min="0" max="100" value="75" style="width:80px;">
+              <span id="color-cd-opacity-val" style="font-size:12px;min-width:32px;">75%</span>
+            </div>
+          </div>
+          <div class="color-field" style="margin:0;">
+            <label>Borde del panel y separadores</label>
+            <div class="color-row">
+              <input type="color" id="color-cd-border" value="#C8A028">
+              <input type="text"  id="color-cd-border-text" value="#C8A028" maxlength="7">
+              <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+              <input type="range" id="color-cd-border-opacity" min="0" max="100" value="70" style="width:80px;">
+              <span id="color-cd-border-opacity-val" style="font-size:12px;min-width:32px;">70%</span>
+            </div>
+          </div>
+          <div class="color-field" style="margin:0;">
+            <label>Texto y números</label>
+            <div class="color-row">
+              <input type="color" id="color-cd-text" value="#FFFFFF">
+              <input type="text"  id="color-cd-text-text" value="#FFFFFF" maxlength="7">
+            </div>
+          </div>
+        </div>
+      </div>
+
     <div class="actions">
       <button class="btn btn-primary" id="btn-save-countdown">Guardar y sincronizar</button>
     </div>
@@ -1576,7 +1616,8 @@ function saveCountdownConfig(cd) {
 const DEFAULT_COLORS = {
   accent: '#FF6B35', accentAlt: '#FFB347',
   cardBg: '#FFFFFF', cardBgOpacity: 100, cardText: '#1A1A1A',
-  cdPanelBg: 'rgba(0,0,0,0.60)', cdText: '#FFFFFF',
+  cdPanelBg: 'rgba(0,0,0,0.75)', cdText: '#FFFFFF',
+  cdBorderColor: 'rgba(200,160,40,0.70)',
 };
 
 function loadColorsConfig() {
@@ -1620,26 +1661,32 @@ function applyColorsToInputs(c) {
   set('color-accent-alt', c.accentAlt || DEFAULT_COLORS.accentAlt);
   set('color-card-bg',   c.cardBg    || DEFAULT_COLORS.cardBg);
   set('color-card-text', c.cardText  || DEFAULT_COLORS.cardText);
-  set('color-cd-text',   c.cdText    || DEFAULT_COLORS.cdText);
+
   const cardOpacity = c.cardBgOpacity ?? DEFAULT_COLORS.cardBgOpacity;
   const cardOpacitySlider = document.getElementById('color-card-bg-opacity');
   const cardOpacityVal    = document.getElementById('color-card-bg-opacity-val');
   if (cardOpacitySlider) cardOpacitySlider.value = cardOpacity;
   if (cardOpacityVal)    cardOpacityVal.textContent = cardOpacity + '%';
 
-  const { hex, opacity } = parseCdPanelBg(c.cdPanelBg || DEFAULT_COLORS.cdPanelBg);
-  const colPnl = document.getElementById('color-cd-panel-bg');
-  const txtPnl = document.getElementById('color-cd-panel-bg-text');
+  // Colores del contador (panel en countdown)
+  set('color-cd-text', c.cdText || DEFAULT_COLORS.cdText);
+  const { hex: pHex, opacity: pOp } = parseCdPanelBg(c.cdPanelBg || DEFAULT_COLORS.cdPanelBg);
+  set('color-cd-panel-bg', pHex);
   const sldPnl = document.getElementById('color-cd-opacity');
   const valPnl = document.getElementById('color-cd-opacity-val');
-  if (colPnl) colPnl.value = hex;
-  if (txtPnl) txtPnl.value = hex;
-  if (sldPnl) sldPnl.value = opacity;
-  if (valPnl) valPnl.textContent = opacity + '%';
+  if (sldPnl) sldPnl.value = pOp;
+  if (valPnl) valPnl.textContent = pOp + '%';
+
+  const { hex: bHex, opacity: bOp } = parseCdPanelBg(c.cdBorderColor || DEFAULT_COLORS.cdBorderColor);
+  set('color-cd-border', bHex);
+  const sldBrd = document.getElementById('color-cd-border-opacity');
+  const valBrd = document.getElementById('color-cd-border-opacity-val');
+  if (sldBrd) sldBrd.value = bOp;
+  if (valBrd) valBrd.textContent = bOp + '%';
 }
 
 // Sincroniza color picker ↔ text input
-['accent','accent-alt','card-bg','card-text','cd-text'].forEach(id => {
+['accent','accent-alt','card-bg','card-text','cd-text','cd-panel-bg','cd-border'].forEach(id => {
   const col = document.getElementById('color-' + id);
   const txt = document.getElementById('color-' + id + '-text');
   if (col && txt) {
@@ -1658,6 +1705,13 @@ if (cdOpacitySlider) {
     if (cdOpacityVal) cdOpacityVal.textContent = cdOpacitySlider.value + '%';
   });
 }
+const cdBorderOpacitySlider = document.getElementById('color-cd-border-opacity');
+const cdBorderOpacityVal    = document.getElementById('color-cd-border-opacity-val');
+if (cdBorderOpacitySlider) {
+  cdBorderOpacitySlider.addEventListener('input', () => {
+    if (cdBorderOpacityVal) cdBorderOpacityVal.textContent = cdBorderOpacitySlider.value + '%';
+  });
+}
 const cardOpacitySlider = document.getElementById('color-card-bg-opacity');
 const cardOpacityValEl  = document.getElementById('color-card-bg-opacity-val');
 if (cardOpacitySlider) {
@@ -1667,16 +1721,14 @@ if (cardOpacitySlider) {
 }
 
 document.getElementById('btn-save-colors').addEventListener('click', () => {
-  const hex     = document.getElementById('color-cd-panel-bg-text')?.value || '#000000';
-  const opacity = parseInt(document.getElementById('color-cd-opacity')?.value || '60');
+  const existing = loadColorsConfig();
   const c = {
+    ...existing,
     accent:        document.getElementById('color-accent-text').value,
     accentAlt:     document.getElementById('color-accent-alt-text').value,
     cardBg:        document.getElementById('color-card-bg-text').value,
     cardBgOpacity: parseInt(document.getElementById('color-card-bg-opacity')?.value ?? '100'),
     cardText:      document.getElementById('color-card-text-text').value,
-    cdPanelBg:     buildCdPanelBg(hex, opacity),
-    cdText:        document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
   };
   saveColorsConfig(c);
   pushToServer();
@@ -1731,6 +1783,13 @@ function applyCountdownToInputs(cd) {
   });
   document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', !isFullscreen);
   document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', isFullscreen);
+  const showVal = cd.showEvents || 'both';
+  document.querySelectorAll('input[name="cd-show"]').forEach(r => {
+    r.checked = (r.value === showVal);
+  });
+  document.getElementById('cd-show-opt-both')?.classList.toggle('selected', showVal === 'both');
+  document.getElementById('cd-show-opt-mundial')?.classList.toggle('selected', showVal === 'mundial');
+  document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', showVal === 'uruguay');
   refreshCountdownStatus();
 }
 
@@ -1764,8 +1823,17 @@ document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
   });
 });
 
+document.querySelectorAll('input[name="cd-show"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('cd-show-opt-both')?.classList.toggle('selected', r.value === 'both');
+    document.getElementById('cd-show-opt-mundial')?.classList.toggle('selected', r.value === 'mundial');
+    document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', r.value === 'uruguay');
+  });
+});
+
 document.getElementById('btn-save-countdown').addEventListener('click', () => {
   const cdLayoutVal = document.querySelector('input[name="cd-layout"]:checked')?.value;
+  const cdShowVal   = document.querySelector('input[name="cd-show"]:checked')?.value || 'both';
   const cd = {
     active:       document.getElementById('cd-active').checked,
     mundialDate:  document.getElementById('cd-mundial-date').value,
@@ -1773,8 +1841,21 @@ document.getElementById('btn-save-countdown').addEventListener('click', () => {
     uruguayDate:  document.getElementById('cd-uruguay-date').value,
     uruguayLabel: document.getElementById('cd-uruguay-label').value.trim() || 'DEBUT URUGUAY',
     fullscreen:   cdLayoutVal === 'fullscreen',
+    showEvents:   cdShowVal,
   };
   saveCountdownConfig(cd);
+  // Save cd colors (stored in Colors config)
+  const panelHex = document.getElementById('color-cd-panel-bg-text')?.value || '#000000';
+  const panelOp  = parseInt(document.getElementById('color-cd-opacity')?.value || '75');
+  const borderHex = document.getElementById('color-cd-border-text')?.value || '#C8A028';
+  const borderOp  = parseInt(document.getElementById('color-cd-border-opacity')?.value || '70');
+  const cdColors = {
+    ...loadColorsConfig(),
+    cdPanelBg:    buildCdPanelBg(panelHex, panelOp),
+    cdText:       document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
+    cdBorderColor: buildCdPanelBg(borderHex, borderOp),
+  };
+  saveColorsConfig(cdColors);
   refreshCountdownStatus();
   pushToServer();
   showToast(cd.active ? 'Cuenta atrás activada · sincronizando…' : 'Cuenta atrás desactivada · sincronizando…');
