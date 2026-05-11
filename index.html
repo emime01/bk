@@ -82,20 +82,25 @@ body.has-mode-bg #placa-day .day-list {
   width: 800px;
   margin-right: 60px;
   padding: 50px 0;
-  gap: 14px;
+  gap: 20px;
   background: transparent;
+  justify-content: center;
 }
 body.has-mode-bg #placa-day .day-row {
+  flex: none;
   background: white;
   border: none;
   box-shadow: 0 8px 28px rgba(0,0,0,0.28);
   backdrop-filter: none;
   grid-template-columns: 105px 1fr auto 1fr 130px;
   gap: 14px;
-  padding: 0 22px;
+  padding: 22px 22px;
   border-radius: 14px;
+  border-top: 5px solid var(--accent);
 }
 body.has-mode-bg #placa-day .day-row::after { display: none; }
+body.has-mode-bg #placa-day .day-row.live { border-top-color: var(--accent); }
+body.has-mode-bg #placa-day .day-row.ft  { border-top-color: var(--accent-alt); }
 body.has-mode-bg #placa-day .day-row.live {
   background: white;
   border: 3px solid var(--accent);
@@ -124,10 +129,10 @@ body.has-mode-bg #placa-day .day-team-name {
   font-size: 30px;
 }
 body.has-mode-bg #placa-day .day-team-crest {
-  width: 66px; height: 66px;
+  width: 80px; height: 80px;
   background: rgba(80,35,20,0.06);
   border: 1px solid rgba(80,35,20,0.15);
-  font-size: 32px;
+  font-size: 36px;
 }
 body.has-mode-bg #placa-day .day-vs {
   color: rgba(80,35,20,0.35);
@@ -159,21 +164,20 @@ body.has-mode-bg #placa-day .day-stat-FT {
 }
 body.has-mode-bg #placa-day .day-min-text { color: var(--accent); }
 
-/* Gap interno del equipo reducido para que el nombre quepa en el 1fr */
-body.has-mode-bg #placa-day .day-team-side { gap: 10px; }
-/* Nombre del equipo: una sola línea con ellipsis en modo billboard */
+body.has-mode-bg #placa-day .day-team-side { gap: 12px; }
 body.has-mode-bg #placa-day .day-team-name {
-  white-space: nowrap;
+  white-space: normal;
+  text-overflow: clip;
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  -webkit-line-clamp: unset;
-  display: block;
 }
 
 /* Modo denso adaptado al ancho de 800px */
 body.has-mode-bg #placa-day .day-list.dense .day-row {
   grid-template-columns: 80px 1fr auto 1fr 100px;
-  padding: 0 16px;
+  padding: 14px 16px;
   gap: 10px;
 }
 body.has-mode-bg #placa-day .day-list.dense .day-time { font-size: 36px; }
