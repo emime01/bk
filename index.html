@@ -22,8 +22,9 @@
   --card-text-muted: rgba(26,26,26,0.45);
 
   /* Colores del contador/cuenta atrás */
-  --cd-panel-bg: rgba(0,0,0,0.60);
-  --cd-text:     #FFFFFF;
+  --cd-panel-bg:    rgba(0,0,0,0.75);
+  --cd-text:        #FFFFFF;
+  --cd-border-color: rgba(200,160,40,0.7);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -1642,8 +1643,6 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 
 /* ── PLACA CUENTA ATRÁS ───────────────────────────────── */
 #placa-countdown {
-  /* SIN display:flex aquí — lo controla .placa.active para que
-     el countdown no "filtre" visualmente cuando está oculto */
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -1683,60 +1682,52 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 }
 .cd-event-label {
   font-family: 'Anton', sans-serif;
-  font-size: 28px;
+  font-size: 24px;
   letter-spacing: 5px;
-  color: var(--accent-alt);
+  color: var(--cd-text, #fff);
   text-transform: uppercase;
   text-align: center;
 }
-.cd-event-sub {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 14px;
-  letter-spacing: 3px;
-  color: rgba(255,255,255,0.35);
-  text-transform: uppercase;
-  text-align: center;
-}
+.cd-event-sub { display: none; }
 .cd-digits {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: flex-end;
 }
 .cd-unit {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 .cd-num {
   font-family: 'Anton', sans-serif;
   font-size: 120px;
   line-height: 1;
-  color: var(--white);
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
+  color: var(--cd-text, #fff);
+  background: rgba(0,0,0,0.45);
+  border: 2px solid var(--cd-border-color, rgba(200,160,40,0.7));
+  border-radius: 10px;
   min-width: 160px;
   text-align: center;
-  padding: 10px 0;
+  padding: 12px 0;
   letter-spacing: -2px;
-  text-shadow: 0 0 40px rgba(245,170,28,0.15);
 }
 .cd-num.cd-highlight { color: var(--accent-alt); }
 .cd-lbl {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 3px;
-  color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.5);
   text-transform: uppercase;
 }
 .cd-sep {
   font-family: 'Anton', sans-serif;
   font-size: 80px;
-  color: rgba(255,255,255,0.15);
-  line-height: 1.35;
-  align-self: flex-start;
-  margin-top: 10px;
+  color: var(--cd-border-color, rgba(200,160,40,0.7));
+  line-height: 1;
+  align-self: center;
+  margin-bottom: 28px;
 }
 .cd-done {
   font-family: 'Anton', sans-serif;
@@ -1755,8 +1746,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 /*  · layout-top: franja en la MITAD SUPERIOR              */
 /* ─────────────────────────────────────────────────────── */
 
-/* == LAYOUT LATERAL (por defecto) ======================= */
-/* Countdown en el panel derecho — SOLO cuando es activo   */
+/* == LAYOUT LATERAL (por defecto con fondo) ============= */
 body.has-mode-bg #placa-countdown.active {
   flex-direction: row;
   justify-content: flex-end;
@@ -1764,30 +1754,49 @@ body.has-mode-bg #placa-countdown.active {
   background: transparent;
 }
 body.has-mode-bg #placa-countdown.active .cd-panel {
-  flex: 0 0 860px;
-  margin-right: 30px;
+  flex: 0 0 44%;
+  max-width: 720px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 40px;
-  background: var(--cd-panel-bg, rgba(0,0,0,0.6));
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 20px 0 0 20px;
-  border-left: 3px solid rgba(255,255,255,0.12);
+  gap: 28px;
+  background: var(--cd-panel-bg, rgba(0,0,0,0.75));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-left: 2px solid var(--cd-border-color, rgba(200,160,40,0.7));
+  padding: 40px 36px;
 }
-body.has-mode-bg #placa-countdown.active .cd-header { display: none; }
+body.has-mode-bg #placa-countdown.active .cd-header {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+body.has-mode-bg #placa-countdown.active .cd-title {
+  font-size: 26px;
+  letter-spacing: 3px;
+  color: var(--cd-text, #fff);
+}
+body.has-mode-bg #placa-countdown.active .cd-brand { display: none; }
 body.has-mode-bg #placa-countdown.active .cd-events {
   flex-direction: column;
-  gap: 36px;
+  gap: 28px;
+  width: 100%;
+}
+body.has-mode-bg #placa-countdown.active .cd-event {
+  width: 100%;
+  align-items: center;
 }
 body.has-mode-bg #placa-countdown.active .cd-num {
-  font-size: 80px;
-  min-width: 110px;
+  font-size: 68px;
+  min-width: 88px;
+  padding: 8px 0;
 }
-body.has-mode-bg #placa-countdown.active .cd-sep { font-size: 56px; }
-body.has-mode-bg #placa-countdown.active .cd-event-label { font-size: 22px; }
+body.has-mode-bg #placa-countdown.active .cd-sep { font-size: 46px; margin-bottom: 22px; }
+body.has-mode-bg #placa-countdown.active .cd-event-label { font-size: 18px; letter-spacing: 3px; }
+body.has-mode-bg #placa-countdown.active .cd-lbl { font-size: 11px; }
+
+/* == PANTALLA COMPLETA ================================== */
 
 /* Tarjetas de marcadores con colores de cliente */
 body.has-mode-bg #placa-day .day-row { background: var(--card-bg) !important; }
@@ -1887,44 +1896,37 @@ body.has-mode-bg.countdown-fullscreen #placa-countdown.active {
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-panel {
   flex: none;
   width: auto;
-  min-width: 600px;
-  max-width: 90vw;
+  min-width: 560px;
+  max-width: 88vw;
+  height: auto;
   margin: 0;
-  flex-direction: column;
-  border-radius: 24px;
-  border-left: none;
-  border: 2px solid rgba(255,255,255,0.12);
-  padding: 40px 60px;
-  gap: 30px;
+  border: 2px solid var(--cd-border-color, rgba(200,160,40,0.7));
+  border-left: 2px solid var(--cd-border-color, rgba(200,160,40,0.7));
+  border-radius: 20px;
+  padding: 44px 60px;
+  gap: 32px;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-header { display: flex; }
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-title {
+  font-size: 28px;
+  letter-spacing: 4px;
+}
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-events {
   flex-direction: column;
-  gap: 50px;
+  gap: 36px;
   align-items: center;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-event {
-  flex-direction: row;
   align-items: center;
-  gap: 40px;
-  width: 100%;
-  justify-content: center;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-event-label {
-  font-size: 28px; letter-spacing: 5px;
-  min-width: 260px; text-align: right;
-}
-body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-digits {
-  gap: 10px;
+  font-size: 22px; letter-spacing: 4px;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-num {
-  font-size: 110px; min-width: 140px;
+  font-size: 100px; min-width: 126px; padding: 10px 0;
 }
-body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-sep { font-size: 80px; }
-body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-lbl { font-size: 14px; }
-body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-event-sub {
-  display: none;
-}
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-sep { font-size: 70px; margin-bottom: 26px; }
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-lbl { font-size: 13px; }
 </style>
 </head>
 <body>
@@ -2163,8 +2165,9 @@ function applyClientColors(colors) {
     root.style.setProperty('--card-text',       colors.cardText);
     root.style.setProperty('--card-text-muted', colors.cardText + '80');
   }
-  if (colors.cdPanelBg) root.style.setProperty('--cd-panel-bg', colors.cdPanelBg);
-  if (colors.cdText)    root.style.setProperty('--cd-text',      colors.cdText);
+  if (colors.cdPanelBg)     root.style.setProperty('--cd-panel-bg',     colors.cdPanelBg);
+  if (colors.cdText)        root.style.setProperty('--cd-text',         colors.cdText);
+  if (colors.cdBorderColor) root.style.setProperty('--cd-border-color', colors.cdBorderColor);
 }
 
 function applyLayoutConfig(layout) {
@@ -2269,28 +2272,24 @@ function renderCountdown() {
       <div class="cd-digits">
         <div class="cd-unit">
           <div class="cd-num${days === 0 ? '' : ' cd-highlight'}">${days}</div>
-          <div class="cd-lbl">días</div>
+          <div class="cd-lbl">DÍAS</div>
         </div>
         <div class="cd-sep">:</div>
         <div class="cd-unit">
           <div class="cd-num${highlight}">${pad(hours)}</div>
-          <div class="cd-lbl">horas</div>
+          <div class="cd-lbl">HORAS</div>
         </div>
         <div class="cd-sep">:</div>
         <div class="cd-unit">
           <div class="cd-num${highlight}">${pad(mins)}</div>
-          <div class="cd-lbl">min</div>
+          <div class="cd-lbl">MINUTOS</div>
         </div>
         <div class="cd-sep">:</div>
         <div class="cd-unit">
           <div class="cd-num${highlight}">${pad(secs)}</div>
-          <div class="cd-lbl">seg</div>
+          <div class="cd-lbl">SEGUNDOS</div>
         </div>
       </div>
-      <div class="cd-event-sub">${new Date(evt.date).toLocaleString('es-UY', {
-        day:'numeric', month:'long', year:'numeric',
-        hour:'2-digit', minute:'2-digit', timeZone:'America/Montevideo'
-      })}</div>
     </div>`;
   }).join('');
 }
