@@ -1044,6 +1044,17 @@ main {
 
       <div class="schedule-row">
         <div class="schedule-label">
+          <strong>Tamaño de los números</strong>
+          <span>Escala del contador</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="range" id="cd-scale" min="50" max="200" value="100" step="5" style="width:180px;">
+          <span id="cd-scale-val" style="font-size:13px;min-width:40px;color:var(--gray-600);">100%</span>
+        </div>
+      </div>
+
+      <div class="schedule-row">
+        <div class="schedule-label">
           <strong>Colores del contador</strong>
           <span>Fondo, borde y texto de los números</span>
         </div>
@@ -1790,6 +1801,8 @@ function applyCountdownToInputs(cd) {
   document.getElementById('cd-show-opt-both')?.classList.toggle('selected', showVal === 'both');
   document.getElementById('cd-show-opt-mundial')?.classList.toggle('selected', showVal === 'mundial');
   document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', showVal === 'uruguay');
+  const scaleEl = document.getElementById('cd-scale');
+  if (scaleEl) { scaleEl.value = cd.scale || 100; document.getElementById('cd-scale-val').textContent = (cd.scale || 100) + '%'; }
   refreshCountdownStatus();
 }
 
@@ -1831,6 +1844,10 @@ document.querySelectorAll('input[name="cd-show"]').forEach(r => {
   });
 });
 
+document.getElementById('cd-scale').addEventListener('input', () => {
+  document.getElementById('cd-scale-val').textContent = document.getElementById('cd-scale').value + '%';
+});
+
 document.getElementById('btn-save-countdown').addEventListener('click', () => {
   const cdLayoutVal = document.querySelector('input[name="cd-layout"]:checked')?.value;
   const cdShowVal   = document.querySelector('input[name="cd-show"]:checked')?.value || 'both';
@@ -1842,6 +1859,7 @@ document.getElementById('btn-save-countdown').addEventListener('click', () => {
     uruguayLabel: document.getElementById('cd-uruguay-label').value.trim() || 'DEBUT URUGUAY',
     fullscreen:   cdLayoutVal === 'fullscreen',
     showEvents:   cdShowVal,
+    scale:        parseInt(document.getElementById('cd-scale')?.value || '100'),
   };
   saveCountdownConfig(cd);
   // Save cd colors (stored in Colors config)

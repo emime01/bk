@@ -25,6 +25,7 @@
   --cd-panel-bg:    transparent;
   --cd-text:        #FFFFFF;
   --cd-border-color: rgba(200,160,40,0.7);
+  --cd-scale:       1;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -1680,6 +1681,8 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   display: flex;
   gap: 80px;
   align-items: flex-start;
+  transform: scale(var(--cd-scale, 1));
+  transform-origin: top center;
 }
 .cd-event {
   display: flex;
@@ -2242,6 +2245,8 @@ function stopCountdown() {
 function renderCountdown() {
   const cfg = loadCountdownConfig();
   if (!cfg.active) { stopCountdown(); fetchMatches(); return; }
+
+  document.documentElement.style.setProperty('--cd-scale', ((cfg.scale || 100) / 100).toFixed(2));
 
   const show = cfg.showEvents || 'both';
   const events = [
