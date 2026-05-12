@@ -25,6 +25,7 @@
   --cd-panel-bg:    transparent;
   --cd-text:        #FFFFFF;
   --cd-border-color: rgba(200,160,40,0.7);
+  --cd-scale:       1;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -1709,13 +1710,13 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 }
 .cd-num {
   font-family: 'Anton', sans-serif;
-  font-size: 120px;
+  font-size: calc(120px * var(--cd-scale, 1));
   line-height: 1;
   color: var(--cd-text, #fff);
   background: rgba(0,0,0,0.45);
   border: 2px solid var(--cd-border-color, rgba(200,160,40,0.7));
   border-radius: 10px;
-  min-width: 160px;
+  min-width: calc(160px * var(--cd-scale, 1));
   text-align: center;
   padding: 12px 0;
   letter-spacing: -2px;
@@ -1730,7 +1731,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 }
 .cd-sep {
   font-family: 'Anton', sans-serif;
-  font-size: 80px;
+  font-size: calc(80px * var(--cd-scale, 1));
   color: var(--cd-border-color, rgba(200,160,40,0.7));
   line-height: 1;
   align-self: center;
@@ -1793,11 +1794,11 @@ body.has-mode-bg #placa-countdown.active .cd-event {
   align-items: center;
 }
 body.has-mode-bg #placa-countdown.active .cd-num {
-  font-size: 68px;
-  min-width: 88px;
+  font-size: calc(68px * var(--cd-scale, 1));
+  min-width: calc(88px * var(--cd-scale, 1));
   padding: 8px 0;
 }
-body.has-mode-bg #placa-countdown.active .cd-sep { font-size: 46px; margin-bottom: 22px; }
+body.has-mode-bg #placa-countdown.active .cd-sep { font-size: calc(46px * var(--cd-scale, 1)); margin-bottom: 22px; }
 body.has-mode-bg #placa-countdown.active .cd-event-label { font-size: 18px; letter-spacing: 3px; }
 body.has-mode-bg #placa-countdown.active .cd-lbl { font-size: 11px; }
 
@@ -1928,9 +1929,9 @@ body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-event-label {
   font-size: 22px; letter-spacing: 4px;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-num {
-  font-size: 100px; min-width: 126px; padding: 10px 0;
+  font-size: calc(100px * var(--cd-scale, 1)); min-width: calc(126px * var(--cd-scale, 1)); padding: 10px 0;
 }
-body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-sep { font-size: 70px; margin-bottom: 26px; }
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-sep { font-size: calc(70px * var(--cd-scale, 1)); margin-bottom: 26px; }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-lbl { font-size: 13px; }
 </style>
 </head>
@@ -2242,6 +2243,8 @@ function stopCountdown() {
 function renderCountdown() {
   const cfg = loadCountdownConfig();
   if (!cfg.active) { stopCountdown(); fetchMatches(); return; }
+
+  document.documentElement.style.setProperty('--cd-scale', ((cfg.scale || 100) / 100).toFixed(2));
 
   const show = cfg.showEvents || 'both';
   const events = [
