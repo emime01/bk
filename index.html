@@ -1657,6 +1657,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   gap: 60px;
   background: var(--bg-dark);
 }
+#placa-countdown.hide-header .cd-header { display: none !important; }
 #placa-countdown .cd-header {
   display: flex;
   flex-direction: column;
@@ -1724,7 +1725,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 .cd-num.cd-highlight { color: var(--accent-alt); }
 .cd-lbl {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 13px;
+  font-size: calc(16px * var(--cd-scale, 1));
   letter-spacing: 3px;
   color: rgba(255,255,255,0.5);
   text-transform: uppercase;
@@ -1800,7 +1801,7 @@ body.has-mode-bg #placa-countdown.active .cd-num {
 }
 body.has-mode-bg #placa-countdown.active .cd-sep { font-size: calc(46px * var(--cd-scale, 1)); margin-bottom: 22px; }
 body.has-mode-bg #placa-countdown.active .cd-event-label { font-size: 18px; letter-spacing: 3px; }
-body.has-mode-bg #placa-countdown.active .cd-lbl { font-size: 11px; }
+body.has-mode-bg #placa-countdown.active .cd-lbl { font-size: calc(14px * var(--cd-scale, 1)); }
 
 /* == PANTALLA COMPLETA ================================== */
 
@@ -1932,7 +1933,7 @@ body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-num {
   font-size: calc(100px * var(--cd-scale, 1)); min-width: calc(126px * var(--cd-scale, 1)); padding: 10px 0;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-sep { font-size: calc(70px * var(--cd-scale, 1)); margin-bottom: 26px; }
-body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-lbl { font-size: 13px; }
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-lbl { font-size: calc(16px * var(--cd-scale, 1)); }
 </style>
 </head>
 <body>
@@ -2245,6 +2246,7 @@ function renderCountdown() {
   if (!cfg.active) { stopCountdown(); fetchMatches(); return; }
 
   document.documentElement.style.setProperty('--cd-scale', ((cfg.scale || 100) / 100).toFixed(2));
+  document.getElementById('placa-countdown')?.classList.toggle('hide-header', cfg.showHeader === false);
 
   const show = cfg.showEvents || 'both';
   const events = [

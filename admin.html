@@ -1022,6 +1022,18 @@ main {
 
       <div class="schedule-row">
         <div class="schedule-label">
+          <strong>Encabezado</strong>
+          <span>Mostrar título "Contando los días" y nombre del evento</span>
+        </div>
+        <label class="cd-toggle-wrap">
+          <input type="checkbox" id="cd-show-header" checked>
+          <span class="cd-toggle-track"><span class="cd-toggle-thumb"></span></span>
+          <span class="cd-active-label" id="cd-show-header-label">Visible</span>
+        </label>
+      </div>
+
+      <div class="schedule-row">
+        <div class="schedule-label">
           <strong>Mostrar</strong>
           <span>Qué eventos mostrar en el contador</span>
         </div>
@@ -1803,6 +1815,9 @@ function applyCountdownToInputs(cd) {
   document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', showVal === 'uruguay');
   const scaleEl = document.getElementById('cd-scale');
   if (scaleEl) { scaleEl.value = cd.scale || 100; document.getElementById('cd-scale-val').textContent = (cd.scale || 100) + '%'; }
+  const showHeader = cd.showHeader !== false;
+  const headerEl = document.getElementById('cd-show-header');
+  if (headerEl) { headerEl.checked = showHeader; document.getElementById('cd-show-header-label').textContent = showHeader ? 'Visible' : 'Oculto'; }
   refreshCountdownStatus();
 }
 
@@ -1848,6 +1863,10 @@ document.getElementById('cd-scale').addEventListener('input', () => {
   document.getElementById('cd-scale-val').textContent = document.getElementById('cd-scale').value + '%';
 });
 
+document.getElementById('cd-show-header').addEventListener('change', function() {
+  document.getElementById('cd-show-header-label').textContent = this.checked ? 'Visible' : 'Oculto';
+});
+
 document.getElementById('btn-save-countdown').addEventListener('click', () => {
   const cdLayoutVal = document.querySelector('input[name="cd-layout"]:checked')?.value;
   const cdShowVal   = document.querySelector('input[name="cd-show"]:checked')?.value || 'both';
@@ -1860,6 +1879,7 @@ document.getElementById('btn-save-countdown').addEventListener('click', () => {
     fullscreen:   cdLayoutVal === 'fullscreen',
     showEvents:   cdShowVal,
     scale:        parseInt(document.getElementById('cd-scale')?.value || '100'),
+    showHeader:   document.getElementById('cd-show-header')?.checked !== false,
   };
   saveCountdownConfig(cd);
   // Save cd colors (stored in Colors config)
