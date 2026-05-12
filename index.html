@@ -2999,6 +2999,12 @@ function renderDayGrid(fixtures, competition) {
   }
 
   showPlaca('day');
+  saveDisplayCache('day', {
+    'day-grid': document.getElementById('day-grid').innerHTML,
+    'day-date': document.getElementById('day-date').textContent,
+    'day-comp': document.getElementById('day-comp').textContent,
+    'day-pages': document.getElementById('day-pages').innerHTML,
+  });
 }
 
 // ── PLACA MULTI-LIVE: varios partidos simultáneos ────────
@@ -3043,6 +3049,10 @@ function renderMultiLive(fixtures, competition) {
   }).join('');
 
   showPlaca('multilive');
+  saveDisplayCache('multilive', {
+    'ml-grid': document.getElementById('ml-grid').innerHTML,
+    'ml-comp': document.getElementById('ml-comp').textContent,
+  });
 }
 
 // ── UTILS ────────────────────────────────────────────
@@ -3052,6 +3062,35 @@ function showPlaca(name) {
   if (el) { el.classList.add('active'); state.currentPlaca = name; }
 }
 function showWaiting(msg) { setText('wait-status', msg); showPlaca('waiting'); }
+
+// ── Caché de pantalla para arranque instantáneo ───────────
+const DISPLAY_CACHE_KEY = () => LS('display_cache');
+const DISPLAY_CACHE_TTL = 15 * 60 * 1000; // 15 minutos
+
+function saveDisplayCache(placa, fields) {
+  try {
+    localStorage.setItem(DISPLAY_CACHE_KEY(), JSON.stringify({ placa, timestamp: Date.now(), html: fields }));
+  } catch {}
+}
+
+function restoreDisplayCache() {
+  try {
+    const mode = getCurrentMode();
+    if (mode === 'countdown' || mode === 'off') return false;
+    const raw = localStorage.getItem(DISPLAY_CACHE_KEY());
+    if (!raw) return false;
+    const cache = JSON.parse(raw);
+    if (!cache || Date.now() - cache.timestamp > DISPLAY_CACHE_TTL) return false;
+    Object.entries(cache.html || {}).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (['day-date','day-comp','ml-comp'].includes(id)) el.textContent = val;
+      else el.innerHTML = val;
+    });
+    showPlaca(cache.placa);
+    return true;
+  } catch { return false; }
+}
 function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 function setEmoji(id, e)  { const el = document.getElementById(id); if (el) el.textContent = e; }
 function setCrest(id, logoUrl, fallbackEmoji) {
@@ -3100,6 +3139,9 @@ function getTeamEmoji(name) {
 }
 
 setInterval(() => setText('live-update', new Date().toLocaleTimeString('es-UY')), 1000);
+
+// Restaurar último estado conocido al instante (evita loading screen al recargar).
+restoreDisplayCache();
 
 // Sync desde el servidor al cargar, luego arranca el ciclo principal.
 syncFromServer().then(() => {
