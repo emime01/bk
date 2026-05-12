@@ -1022,6 +1022,18 @@ main {
 
       <div class="schedule-row">
         <div class="schedule-label">
+          <strong>Encabezado</strong>
+          <span>Mostrar título "Contando los días" y nombre del evento</span>
+        </div>
+        <label class="cd-toggle-wrap">
+          <input type="checkbox" id="cd-show-header" checked>
+          <span class="cd-toggle-track"><span class="cd-toggle-thumb"></span></span>
+          <span class="cd-active-label" id="cd-show-header-label">Visible</span>
+        </label>
+      </div>
+
+      <div class="schedule-row">
+        <div class="schedule-label">
           <strong>Mostrar</strong>
           <span>Qué eventos mostrar en el contador</span>
         </div>
@@ -1106,6 +1118,7 @@ main {
       <button class="tab" data-comp="LL">LaLiga</button>
       <button class="tab" data-comp="BL">Bundesliga</button>
       <button class="tab" data-comp="SA">Serie A</button>
+      <button class="tab" data-comp="ARG">Argentina</button>
     </div>
 
     <h2>
@@ -1242,7 +1255,7 @@ function cfgApiUrl() {
 async function pushToServer() {
   if (!currentClient) return; // no push sin cliente seleccionado
   try {
-    const cfg      = loadConfig();
+    const selections = loadSelections();
     const schedule = loadSchedule();
     const bgs      = loadBackgrounds();
     const urlBgs   = {};
@@ -1253,7 +1266,7 @@ async function pushToServer() {
     const colors    = loadColorsConfig();
     const layout    = loadLayoutConfig();
     const videos    = loadVideos();
-    const payload   = { competition: cfg.competition, ids: cfg.ids, schedule, backgrounds: urlBgs, videos, countdown, colors, layout };
+    const payload   = { selections, schedule, backgrounds: urlBgs, videos, countdown, colors, layout };
     const r = await fetch(cfgApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1429,37 +1442,39 @@ document.querySelectorAll('[data-clear]').forEach(btn => {
   });
 });
 
-// Storage shape: { competition: 'CL', ids: ['123', ...] }
-// Backwards compat: a plain array is treated as CL ids.
-function loadConfig() {
+// Storage shape: { selections: { CL: ['id1'], URU: ['id2'] } }
+// Backwards compat: old { competition, ids } and plain array formats.
+function loadSelections() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY());
-    if (!raw) return { competition: 'CL', ids: [] };
+    if (!raw) return {};
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return { competition: 'CL', ids: parsed };
-    return {
-      competition: parsed.competition || 'CL',
-      ids: Array.isArray(parsed.ids) ? parsed.ids : [],
-    };
-  } catch { return { competition: 'CL', ids: [] }; }
+    if (Array.isArray(parsed)) return { CL: parsed };
+    if (parsed.competition && Array.isArray(parsed.ids)) return { [parsed.competition]: parsed.ids };
+    return (parsed.selections && typeof parsed.selections === 'object') ? parsed.selections : {};
+  } catch { return {}; }
 }
 
 function loadSelection() {
-  // Only return saved IDs when looking at the same competition that was saved.
-  const cfg = loadConfig();
-  return cfg.competition === currentCompetition ? cfg.ids : [];
+  return loadSelections()[currentCompetition] || [];
 }
 
 function saveSelection(ids) {
-  const payload = { competition: currentCompetition, ids };
-  localStorage.setItem(STORAGE_KEY(), JSON.stringify(payload));
+  const selections = loadSelections();
+  if (ids.length === 0) delete selections[currentCompetition];
+  else selections[currentCompetition] = ids;
+  localStorage.setItem(STORAGE_KEY(), JSON.stringify({ selections }));
   refreshOnAirIndicator();
 }
 
 function refreshOnAirIndicator() {
-  const cfg = loadConfig();
+  const selections = loadSelections();
   document.querySelectorAll('.tab').forEach(t => {
-    t.classList.toggle('live-on-air', t.dataset.comp === cfg.competition);
+    const count = (selections[t.dataset.comp] || []).length;
+    t.classList.toggle('live-on-air', count > 0);
+    let badge = t.querySelector('.tab-sel-count');
+    if (!badge) { badge = document.createElement('span'); badge.className = 'tab-sel-count'; t.appendChild(badge); }
+    badge.textContent = count > 0 ? ' (' + count + ')' : '';
   });
 }
 
@@ -1803,6 +1818,9 @@ function applyCountdownToInputs(cd) {
   document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', showVal === 'uruguay');
   const scaleEl = document.getElementById('cd-scale');
   if (scaleEl) { scaleEl.value = cd.scale || 100; document.getElementById('cd-scale-val').textContent = (cd.scale || 100) + '%'; }
+  const showHeader = cd.showHeader !== false;
+  const headerEl = document.getElementById('cd-show-header');
+  if (headerEl) { headerEl.checked = showHeader; document.getElementById('cd-show-header-label').textContent = showHeader ? 'Visible' : 'Oculto'; }
   refreshCountdownStatus();
 }
 
@@ -1848,6 +1866,10 @@ document.getElementById('cd-scale').addEventListener('input', () => {
   document.getElementById('cd-scale-val').textContent = document.getElementById('cd-scale').value + '%';
 });
 
+document.getElementById('cd-show-header').addEventListener('change', function() {
+  document.getElementById('cd-show-header-label').textContent = this.checked ? 'Visible' : 'Oculto';
+});
+
 document.getElementById('btn-save-countdown').addEventListener('click', () => {
   const cdLayoutVal = document.querySelector('input[name="cd-layout"]:checked')?.value;
   const cdShowVal   = document.querySelector('input[name="cd-show"]:checked')?.value || 'both';
@@ -1860,6 +1882,7 @@ document.getElementById('btn-save-countdown').addEventListener('click', () => {
     fullscreen:   cdLayoutVal === 'fullscreen',
     showEvents:   cdShowVal,
     scale:        parseInt(document.getElementById('cd-scale')?.value || '100'),
+    showHeader:   document.getElementById('cd-show-header')?.checked !== false,
   };
   saveCountdownConfig(cd);
   // Save cd colors (stored in Colors config)

@@ -1657,6 +1657,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   gap: 60px;
   background: var(--bg-dark);
 }
+#placa-countdown.hide-header .cd-header { display: none !important; }
 #placa-countdown .cd-header {
   display: flex;
   flex-direction: column;
@@ -1724,7 +1725,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 .cd-num.cd-highlight { color: var(--accent-alt); }
 .cd-lbl {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 13px;
+  font-size: calc(16px * var(--cd-scale, 1));
   letter-spacing: 3px;
   color: rgba(255,255,255,0.5);
   text-transform: uppercase;
@@ -1800,7 +1801,7 @@ body.has-mode-bg #placa-countdown.active .cd-num {
 }
 body.has-mode-bg #placa-countdown.active .cd-sep { font-size: calc(46px * var(--cd-scale, 1)); margin-bottom: 22px; }
 body.has-mode-bg #placa-countdown.active .cd-event-label { font-size: 18px; letter-spacing: 3px; }
-body.has-mode-bg #placa-countdown.active .cd-lbl { font-size: 11px; }
+body.has-mode-bg #placa-countdown.active .cd-lbl { font-size: calc(14px * var(--cd-scale, 1)); }
 
 /* == PANTALLA COMPLETA ================================== */
 
@@ -1932,7 +1933,7 @@ body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-num {
   font-size: calc(100px * var(--cd-scale, 1)); min-width: calc(126px * var(--cd-scale, 1)); padding: 10px 0;
 }
 body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-sep { font-size: calc(70px * var(--cd-scale, 1)); margin-bottom: 26px; }
-body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-lbl { font-size: 13px; }
+body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-lbl { font-size: calc(16px * var(--cd-scale, 1)); }
 </style>
 </head>
 <body>
@@ -2245,6 +2246,7 @@ function renderCountdown() {
   if (!cfg.active) { stopCountdown(); fetchMatches(); return; }
 
   document.documentElement.style.setProperty('--cd-scale', ((cfg.scale || 100) / 100).toFixed(2));
+  document.getElementById('placa-countdown')?.classList.toggle('hide-header', cfg.showHeader === false);
 
   const show = cfg.showEvents || 'both';
   const events = [
@@ -2344,19 +2346,17 @@ function applyModeBackground() {
   }
 }
 
-// Configuración del panel /admin: { competition: 'CL'|'LIB'|..., ids: [...] }.
-// Si no hay nada guardado, el default es Champions con todos los partidos.
+// Configuración del panel /admin: { selections: { CL: ['id1'], URU: ['id2'] } }
+// Backwards compat: old { competition, ids } and plain array formats.
 function loadDisplayConfig() {
   try {
     const raw = localStorage.getItem(LS('selected_matches'));
-    if (!raw) return { competition: 'CL', ids: [] };
+    if (!raw) return { selections: {} };
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return { competition: 'CL', ids: parsed };
-    return {
-      competition: parsed.competition || 'CL',
-      ids: Array.isArray(parsed.ids) ? parsed.ids : [],
-    };
-  } catch { return { competition: 'CL', ids: [] }; }
+    if (Array.isArray(parsed)) return { selections: { CL: parsed } };
+    if (parsed.competition && Array.isArray(parsed.ids)) return { selections: { [parsed.competition]: parsed.ids } };
+    return { selections: (parsed.selections && typeof parsed.selections === 'object') ? parsed.selections : {} };
+  } catch { return { selections: {} }; }
 }
 
 let state = {
@@ -2407,9 +2407,16 @@ async function syncFromServer() {
 
     let changed = false;
 
-    if (cfg.competition != null || cfg.ids != null) {
-      const next = JSON.stringify({ competition: cfg.competition || 'CL', ids: cfg.ids || [] });
-      console.log('[sync] saving bk_selected_matches:', next);
+    if (cfg.selections && typeof cfg.selections === 'object') {
+      const next = JSON.stringify({ selections: cfg.selections });
+      if (next !== localStorage.getItem(LS('selected_matches'))) {
+        localStorage.setItem(LS('selected_matches'), next);
+        changed = true;
+      }
+    } else if (cfg.competition != null || cfg.ids != null) {
+      // old server format — convert to new
+      const sel = Array.isArray(cfg.ids) && cfg.ids.length > 0 ? { [cfg.competition || 'CL']: cfg.ids } : {};
+      const next = JSON.stringify({ selections: sel });
       if (next !== localStorage.getItem(LS('selected_matches'))) {
         localStorage.setItem(LS('selected_matches'), next);
         changed = true;
@@ -2504,39 +2511,43 @@ async function fetchMatches() {
 
     const today = new Date().toISOString().slice(0, 10);
     const cfg   = loadDisplayConfig();
-    console.log('[fetch] cfg:', cfg, 'today:', today);
-    state.competition = cfg.competition || 'CL';
-    const data  = await apiGet(`competition=${cfg.competition}&date=${today}`);
-    console.log('[fetch] espn response count:', (data.response || []).length, 'first:', data.response?.[0]?.fixture?.id);
+    const selections = cfg.selections || {};
+    const entries = Object.entries(selections).filter(([, ids]) => ids.length > 0);
+    const toFetch = entries.length > 0 ? entries : [['CL', []]];
+    state.competition = toFetch[0][0];
+    console.log('[fetch] toFetch:', toFetch, 'today:', today);
 
-    const errs    = data.errors;
-    const hasErrs = Array.isArray(errs) ? errs.length > 0 : (errs && Object.keys(errs).length > 0);
-    if (hasErrs) {
-      console.error('API errors:', errs);
-      showWaiting('Error al obtener partidos');
-      return;
-    }
+    const results = await Promise.all(
+      toFetch.map(async ([comp, ids]) => {
+        try {
+          const data = await apiGet(`competition=${comp}&date=${today}`);
+          let matches = data.response || [];
+          if (ids.length > 0) matches = matches.filter(m => ids.includes(String(m.fixture.id)));
+          return matches.map(m => ({ ...m, _comp: comp }));
+        } catch (e) {
+          console.error('[fetch] error for', comp, e);
+          return [];
+        }
+      })
+    );
 
-    let all = data.response || [];
-
-    // Filtro opcional: si el panel admin guardó IDs, mostrar solo esos.
-    if (cfg.ids.length > 0) {
-      console.log('[fetch] filtering by ids:', cfg.ids, 'against:', all.map(m => String(m.fixture.id)));
-      all = all.filter(m => cfg.ids.includes(String(m.fixture.id)));
-    }
-    console.log('[fetch] after filter count:', all.length);
+    let all = results.flat();
+    console.log('[fetch] total after merge:', all.length);
 
     if (all.length === 0) {
       showWaiting('Sin partidos hoy');
       return;
     }
 
+    const compNames = [...new Set(all.map(f => f.league.name))];
+    const compLabel = compNames.length === 1 ? compNames[0] : 'Selección';
+
     // Modo DÍA: grilla con todos los partidos del día.
     if (mode === 'day') {
       clearTimeout(state.rotateTimeout);
       clearTimeout(state.quickPollTimeout);
       state.fixtures = all;
-      renderDayGrid(all, cfg.competition);
+      renderDayGrid(all, compLabel);
       return;
     }
 
@@ -2547,7 +2558,7 @@ async function fetchMatches() {
       // Sin partidos en vivo en horario en vivo → mostrar grilla del día.
       clearTimeout(state.rotateTimeout);
       state.fixtures = all;
-      renderDayGrid(all, cfg.competition);
+      renderDayGrid(all, compLabel);
       return;
     }
 
@@ -2557,7 +2568,7 @@ async function fetchMatches() {
       clearTimeout(state.quickPollTimeout);
       clearTimeout(state.dayRotateTimeout);
       state.fixtures = inPlay;
-      renderMultiLive(inPlay, cfg.competition);
+      renderMultiLive(inPlay, compLabel);
       return;
     }
 
@@ -2600,7 +2611,7 @@ async function handleLiveFixture(f) {
   let events = [];
   let stats  = null;
   try {
-    const sum = await apiGet(`competition=${state.competition}&event=${encodeURIComponent(f.fixture.id)}`);
+    const sum = await apiGet(`competition=${f._comp || state.competition}&event=${encodeURIComponent(f.fixture.id)}`);
     events = sum.events || [];
     stats  = sum.stats  || null;
   } catch (e) {
@@ -2873,14 +2884,17 @@ function renderLiveStats(stats) {
 
 // ── PLACA DÍA: grilla con todos los partidos del día ─────
 const COMP_LABELS = {
-  'CL':  'UEFA Champions League',
-  'UEL': 'UEFA Europa League',
-  'PL':  'Premier League',
-  'LL':  'LaLiga',
-  'BL':  'Bundesliga',
-  'SA':  'Serie A',
-  'LIB': 'Copa Libertadores',
-  'SUD': 'Copa Sudamericana',
+  'CL':   'UEFA Champions League',
+  'UEL':  'UEFA Europa League',
+  'PL':   'Premier League',
+  'LL':   'LaLiga',
+  'BL':   'Bundesliga',
+  'SA':   'Serie A',
+  'LIB':  'Copa Libertadores',
+  'SUD':  'Copa Sudamericana',
+  'URU':  'Primera División Uruguay',
+  'URU2': 'Segunda División Uruguay',
+  'ARG':  'Primera División Argentina',
 };
 
 const DAY_PAGE_SIZE = 5;

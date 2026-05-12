@@ -19,6 +19,7 @@ const LEAGUE_MAP = {
   'SUD':  'conmebol.sudamericana',
   'URU':  'uru.1',
   'URU2': 'uru.2',
+  'ARG':  'arg.1',
 };
 
 const LEAGUE_NAMES = {
@@ -32,6 +33,7 @@ const LEAGUE_NAMES = {
   'SUD':  'Copa Sudamericana',
   'URU':  'Primera División Uruguay',
   'URU2': 'Segunda División Uruguay',
+  'ARG':  'Primera División Argentina',
 };
 
 function mapStatus(comp) {
