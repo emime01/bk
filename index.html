@@ -26,6 +26,9 @@
   --cd-text:        #FFFFFF;
   --cd-border-color: rgba(200,160,40,0.7);
   --cd-scale:       1;
+  --cd-num-bg:      rgba(0,0,0,0.45);
+  --cd-lbl-color:   rgba(255,255,255,0.5);
+  --cd-event-label-color: #FFFFFF;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -1693,7 +1696,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   font-family: 'Anton', sans-serif;
   font-size: 24px;
   letter-spacing: 5px;
-  color: var(--cd-text, #fff);
+  color: var(--cd-event-label-color, var(--cd-text, #fff));
   text-transform: uppercase;
   text-align: center;
 }
@@ -1714,7 +1717,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   font-size: calc(120px * var(--cd-scale, 1));
   line-height: 1;
   color: var(--cd-text, #fff);
-  background: rgba(0,0,0,0.45);
+  background: var(--cd-num-bg, rgba(0,0,0,0.45));
   border: 2px solid var(--cd-border-color, rgba(200,160,40,0.7));
   border-radius: 10px;
   min-width: calc(160px * var(--cd-scale, 1));
@@ -1727,7 +1730,7 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: calc(16px * var(--cd-scale, 1));
   letter-spacing: 3px;
-  color: rgba(255,255,255,0.5);
+  color: var(--cd-lbl-color, rgba(255,255,255,0.5));
   text-transform: uppercase;
 }
 .cd-sep {
@@ -2172,9 +2175,12 @@ function applyClientColors(colors) {
     root.style.setProperty('--card-text',       colors.cardText);
     root.style.setProperty('--card-text-muted', colors.cardText + '80');
   }
-  if (colors.cdPanelBg)     root.style.setProperty('--cd-panel-bg',     colors.cdPanelBg);
-  if (colors.cdText)        root.style.setProperty('--cd-text',         colors.cdText);
-  if (colors.cdBorderColor) root.style.setProperty('--cd-border-color', colors.cdBorderColor);
+  if (colors.cdPanelBg)         root.style.setProperty('--cd-panel-bg',          colors.cdPanelBg);
+  if (colors.cdText)            root.style.setProperty('--cd-text',               colors.cdText);
+  if (colors.cdBorderColor)     root.style.setProperty('--cd-border-color',       colors.cdBorderColor);
+  if (colors.cdNumBg)           root.style.setProperty('--cd-num-bg',             colors.cdNumBg);
+  if (colors.cdLblColor)        root.style.setProperty('--cd-lbl-color',          colors.cdLblColor);
+  if (colors.cdEventLabelColor) root.style.setProperty('--cd-event-label-color',  colors.cdEventLabelColor);
 }
 
 function applyLayoutConfig(layout) {

@@ -1098,6 +1098,33 @@ main {
               <input type="text"  id="color-cd-text-text" value="#FFFFFF" maxlength="7">
             </div>
           </div>
+          <div class="color-field" style="margin:0;">
+            <label>Fondo de los números</label>
+            <div class="color-row">
+              <input type="color" id="color-cd-num-bg" value="#000000">
+              <input type="text"  id="color-cd-num-bg-text" value="#000000" maxlength="7">
+              <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+              <input type="range" id="color-cd-num-bg-opacity" min="0" max="100" value="45" style="width:80px;">
+              <span id="color-cd-num-bg-opacity-val" style="font-size:12px;min-width:32px;">45%</span>
+            </div>
+          </div>
+          <div class="color-field" style="margin:0;">
+            <label>DÍAS / HORAS / MINUTOS / SEGUNDOS</label>
+            <div class="color-row">
+              <input type="color" id="color-cd-lbl" value="#FFFFFF">
+              <input type="text"  id="color-cd-lbl-text" value="#FFFFFF" maxlength="7">
+              <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+              <input type="range" id="color-cd-lbl-opacity" min="0" max="100" value="50" style="width:80px;">
+              <span id="color-cd-lbl-opacity-val" style="font-size:12px;min-width:32px;">50%</span>
+            </div>
+          </div>
+          <div class="color-field" style="margin:0;">
+            <label>Nombre del evento (ej: MUNDIAL 2026)</label>
+            <div class="color-row">
+              <input type="color" id="color-cd-event-label" value="#FFFFFF">
+              <input type="text"  id="color-cd-event-label-text" value="#FFFFFF" maxlength="7">
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1709,10 +1736,26 @@ function applyColorsToInputs(c) {
   const valBrd = document.getElementById('color-cd-border-opacity-val');
   if (sldBrd) sldBrd.value = bOp;
   if (valBrd) valBrd.textContent = bOp + '%';
+
+  const { hex: nHex, opacity: nOp } = parseCdPanelBg(c.cdNumBg || 'rgba(0,0,0,0.45)');
+  set('color-cd-num-bg', nHex);
+  const sldNum = document.getElementById('color-cd-num-bg-opacity');
+  const valNum = document.getElementById('color-cd-num-bg-opacity-val');
+  if (sldNum) sldNum.value = nOp;
+  if (valNum) valNum.textContent = nOp + '%';
+
+  const { hex: lHex, opacity: lOp } = parseCdPanelBg(c.cdLblColor || 'rgba(255,255,255,0.5)');
+  set('color-cd-lbl', lHex);
+  const sldLbl = document.getElementById('color-cd-lbl-opacity');
+  const valLbl = document.getElementById('color-cd-lbl-opacity-val');
+  if (sldLbl) sldLbl.value = lOp;
+  if (valLbl) valLbl.textContent = lOp + '%';
+
+  set('color-cd-event-label', c.cdEventLabelColor || '#FFFFFF');
 }
 
 // Sincroniza color picker ↔ text input
-['accent','accent-alt','card-bg','card-text','cd-text','cd-panel-bg','cd-border'].forEach(id => {
+['accent','accent-alt','card-bg','card-text','cd-text','cd-panel-bg','cd-border','cd-num-bg','cd-lbl','cd-event-label'].forEach(id => {
   const col = document.getElementById('color-' + id);
   const txt = document.getElementById('color-' + id + '-text');
   if (col && txt) {
@@ -1745,6 +1788,14 @@ if (cardOpacitySlider) {
     if (cardOpacityValEl) cardOpacityValEl.textContent = cardOpacitySlider.value + '%';
   });
 }
+[
+  ['color-cd-num-bg-opacity', 'color-cd-num-bg-opacity-val'],
+  ['color-cd-lbl-opacity',    'color-cd-lbl-opacity-val'],
+].forEach(([sldId, valId]) => {
+  const sld = document.getElementById(sldId);
+  const val = document.getElementById(valId);
+  if (sld && val) sld.addEventListener('input', () => { val.textContent = sld.value + '%'; });
+});
 
 document.getElementById('btn-save-colors').addEventListener('click', () => {
   const existing = loadColorsConfig();
@@ -1890,11 +1941,18 @@ document.getElementById('btn-save-countdown').addEventListener('click', () => {
   const panelOp  = parseInt(document.getElementById('color-cd-opacity')?.value || '75');
   const borderHex = document.getElementById('color-cd-border-text')?.value || '#C8A028';
   const borderOp  = parseInt(document.getElementById('color-cd-border-opacity')?.value || '70');
+  const numBgHex = document.getElementById('color-cd-num-bg-text')?.value || '#000000';
+  const numBgOp  = parseInt(document.getElementById('color-cd-num-bg-opacity')?.value || '45');
+  const lblHex   = document.getElementById('color-cd-lbl-text')?.value || '#FFFFFF';
+  const lblOp    = parseInt(document.getElementById('color-cd-lbl-opacity')?.value || '50');
   const cdColors = {
     ...loadColorsConfig(),
-    cdPanelBg:    buildCdPanelBg(panelHex, panelOp),
-    cdText:       document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
-    cdBorderColor: buildCdPanelBg(borderHex, borderOp),
+    cdPanelBg:         buildCdPanelBg(panelHex, panelOp),
+    cdText:            document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
+    cdBorderColor:     buildCdPanelBg(borderHex, borderOp),
+    cdNumBg:           buildCdPanelBg(numBgHex, numBgOp),
+    cdLblColor:        buildCdPanelBg(lblHex, lblOp),
+    cdEventLabelColor: document.getElementById('color-cd-event-label-text')?.value || '#FFFFFF',
   };
   saveColorsConfig(cdColors);
   refreshCountdownStatus();
