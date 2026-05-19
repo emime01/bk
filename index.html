@@ -169,7 +169,7 @@ body.has-mode-bg #placa-day .day-stat-FT {
 }
 body.has-mode-bg #placa-day .day-min-text { color: var(--accent); }
 
-body.has-mode-bg #placa-day .day-team-side { gap: 12px; justify-content: space-between; }
+body.has-mode-bg #placa-day .day-team-side { gap: 12px; }
 body.has-mode-bg #placa-day .day-team-name {
   white-space: normal;
   text-overflow: clip;
@@ -2368,13 +2368,27 @@ function loadDisplayConfig() {
   } catch { return { selections: {}, demoMode: false }; }
 }
 
+const DEMO_FLAGS = {
+  'España':         'https://flagcdn.com/64x48/es.png',
+  'Cabo Verde':     'https://flagcdn.com/64x48/cv.png',
+  'Bélgica':        'https://flagcdn.com/64x48/be.png',
+  'Egipto':         'https://flagcdn.com/64x48/eg.png',
+  'Arabia Saudita': 'https://flagcdn.com/64x48/sa.png',
+  'Uruguay':        'https://flagcdn.com/64x48/uy.png',
+  'Irán':           'https://flagcdn.com/64x48/ir.png',
+  'Nueva Zelanda':  'https://flagcdn.com/64x48/nz.png',
+};
+
 function makeDemoFixture(id, timeHHMM, home, away, leagueName) {
   const today = new Date().toISOString().slice(0, 10);
   const [hh, mm] = timeHHMM.split(':');
   return {
     fixture: { id, date: `${today}T${hh}:${mm}:00Z`, status: { short: 'NS', long: 'Not Started', elapsed: null } },
     league: { id: 'demo', name: leagueName, round: 'Fase de Grupos' },
-    teams: { home: { id: id+'h', name: home, logo: null }, away: { id: id+'a', name: away, logo: null } },
+    teams: {
+      home: { id: id+'h', name: home, logo: DEMO_FLAGS[home] || null },
+      away: { id: id+'a', name: away, logo: DEMO_FLAGS[away] || null },
+    },
     goals: { home: 0, away: 0 },
     _comp: 'DEMO',
   };
