@@ -1161,6 +1161,7 @@ main {
       <button class="btn btn-secondary" id="btn-all">Seleccionar todos</button>
       <button class="btn btn-secondary" id="btn-none">Limpiar</button>
       <button class="btn btn-primary" id="btn-save">Guardar selección</button>
+      <button class="btn btn-secondary" id="btn-demo" style="background:var(--accent-alt);color:#000;border-color:var(--accent-alt);">Demo</button>
     </div>
   </div>
 
@@ -1283,6 +1284,7 @@ async function pushToServer() {
   if (!currentClient) return; // no push sin cliente seleccionado
   try {
     const selections = loadSelections();
+    const demoMode   = !!(JSON.parse(localStorage.getItem(STORAGE_KEY()) || '{}').demoMode);
     const schedule = loadSchedule();
     const bgs      = loadBackgrounds();
     const urlBgs   = {};
@@ -1293,7 +1295,7 @@ async function pushToServer() {
     const colors    = loadColorsConfig();
     const layout    = loadLayoutConfig();
     const videos    = loadVideos();
-    const payload   = { selections, schedule, backgrounds: urlBgs, videos, countdown, colors, layout };
+    const payload   = { selections, demoMode, schedule, backgrounds: urlBgs, videos, countdown, colors, layout };
     const r = await fetch(cfgApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1639,10 +1641,25 @@ document.getElementById('btn-save').addEventListener('click', () => {
   const ids = [...document.querySelectorAll('input[type="checkbox"]:checked')]
     .map(cb => cb.value);
   saveSelection(ids);
+  // disable demo mode when saving a real selection
+  const current = JSON.parse(localStorage.getItem(STORAGE_KEY()) || '{}');
+  localStorage.setItem(STORAGE_KEY(), JSON.stringify({ ...current, demoMode: false }));
   pushToServer();
   showToast(ids.length === 0
     ? 'Sin filtro · sincronizando…'
     : `${ids.length} partido${ids.length===1?'':'s'} guardado${ids.length===1?'':'s'} · sincronizando…`);
+});
+
+document.getElementById('btn-demo').addEventListener('click', () => {
+  const current = JSON.parse(localStorage.getItem(STORAGE_KEY()) || '{}');
+  const isDemoOn = !!current.demoMode;
+  const newDemo = !isDemoOn;
+  localStorage.setItem(STORAGE_KEY(), JSON.stringify({ ...current, demoMode: newDemo }));
+  pushToServer();
+  const btn = document.getElementById('btn-demo');
+  btn.textContent = newDemo ? 'Demo (ON)' : 'Demo';
+  btn.style.outline = newDemo ? '3px solid var(--bk-red)' : '';
+  showToast(newDemo ? 'Modo demo activado · sincronizando…' : 'Modo demo desactivado · sincronizando…');
 });
 
 document.querySelectorAll('.tab').forEach(tab => {
@@ -2014,6 +2031,10 @@ async function selectClient(slug) {
   }
   loadAndRender(savedCfg.competition || 'CL');
   refreshOnAirIndicator();
+  // Reflect demo mode state on button
+  const demoState = JSON.parse(localStorage.getItem(STORAGE_KEY()) || '{}');
+  const demoBtn = document.getElementById('btn-demo');
+  if (demoBtn && demoState.demoMode) { demoBtn.textContent = 'Demo (ON)'; demoBtn.style.outline = '3px solid var(--bk-red)'; }
   applyScheduleToInputs(loadSchedule());
   refreshScheduleStatus();
   refreshBgPreviews();

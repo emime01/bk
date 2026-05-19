@@ -2361,9 +2361,31 @@ function loadDisplayConfig() {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return { selections: { CL: parsed } };
     if (parsed.competition && Array.isArray(parsed.ids)) return { selections: { [parsed.competition]: parsed.ids } };
-    return { selections: (parsed.selections && typeof parsed.selections === 'object') ? parsed.selections : {} };
-  } catch { return { selections: {} }; }
+    return {
+      selections: (parsed.selections && typeof parsed.selections === 'object') ? parsed.selections : {},
+      demoMode: !!parsed.demoMode,
+    };
+  } catch { return { selections: {}, demoMode: false }; }
 }
+
+function makeDemoFixture(id, timeHHMM, home, away, leagueName) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [hh, mm] = timeHHMM.split(':');
+  return {
+    fixture: { id, date: `${today}T${hh}:${mm}:00Z`, status: { short: 'NS', long: 'Not Started', elapsed: null } },
+    league: { id: 'demo', name: leagueName, round: 'Fase de Grupos' },
+    teams: { home: { id: id+'h', name: home, logo: null }, away: { id: id+'a', name: away, logo: null } },
+    goals: { home: 0, away: 0 },
+    _comp: 'DEMO',
+  };
+}
+
+const DEMO_FIXTURES = [
+  makeDemoFixture('d1', '13:00', 'España',        'Cabo Verde',    'Copa del Mundo 2026'),
+  makeDemoFixture('d2', '16:00', 'Bélgica',        'Egipto',        'Copa del Mundo 2026'),
+  makeDemoFixture('d3', '19:00', 'Arabia Saudita', 'Uruguay',       'Copa del Mundo 2026'),
+  makeDemoFixture('d4', '22:00', 'Irán',           'Nueva Zelanda', 'Copa del Mundo 2026'),
+];
 
 let state = {
   currentPlaca: 'waiting',
@@ -2414,7 +2436,7 @@ async function syncFromServer() {
     let changed = false;
 
     if (cfg.selections && typeof cfg.selections === 'object') {
-      const next = JSON.stringify({ selections: cfg.selections });
+      const next = JSON.stringify({ selections: cfg.selections, demoMode: !!cfg.demoMode });
       if (next !== localStorage.getItem(LS('selected_matches'))) {
         localStorage.setItem(LS('selected_matches'), next);
         changed = true;
@@ -2422,7 +2444,7 @@ async function syncFromServer() {
     } else if (cfg.competition != null || cfg.ids != null) {
       // old server format — convert to new
       const sel = Array.isArray(cfg.ids) && cfg.ids.length > 0 ? { [cfg.competition || 'CL']: cfg.ids } : {};
-      const next = JSON.stringify({ selections: sel });
+      const next = JSON.stringify({ selections: sel, demoMode: false });
       if (next !== localStorage.getItem(LS('selected_matches'))) {
         localStorage.setItem(LS('selected_matches'), next);
         changed = true;
@@ -2517,6 +2539,18 @@ async function fetchMatches() {
 
     const today = new Date().toISOString().slice(0, 10);
     const cfg   = loadDisplayConfig();
+
+    // Modo demo: usar partidos de prueba sin llamar a la API
+    if (cfg.demoMode) {
+      const all = DEMO_FIXTURES;
+      const compLabel = 'Copa del Mundo 2026';
+      clearTimeout(state.rotateTimeout);
+      clearTimeout(state.quickPollTimeout);
+      state.fixtures = all;
+      renderDayGrid(all, compLabel);
+      return;
+    }
+
     const selections = cfg.selections || {};
     const entries = Object.entries(selections).filter(([, ids]) => ids.length > 0);
     const toFetch = entries.length > 0 ? entries : [['CL', []]];
