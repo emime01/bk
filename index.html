@@ -2280,8 +2280,12 @@ function applyClientColors(colors) {
 
 function applyLayoutConfig(layout) {
   if (!layout) return;
+  const isVertical = !!layout.vertical;
   document.body.classList.toggle('layout-top',      !!layout.top);
-  document.body.classList.toggle('layout-vertical', !!layout.vertical);
+  document.body.classList.toggle('layout-vertical', isVertical);
+  // Ajustar viewport para que el browser escale correctamente
+  const vp = document.querySelector('meta[name="viewport"]');
+  if (vp) vp.content = isVertical ? 'width=1080' : 'width=1920';
 }
 
 function applyCountdownLayout() {
