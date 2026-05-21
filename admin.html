@@ -912,12 +912,17 @@ main {
       <label class="layout-option selected" id="layout-opt-side">
         <input type="radio" name="layout-pos" value="side" checked>
         <strong>A un lado (lateral)</strong>
-        <span>Los marcadores y el contador se muestran en un panel a la derecha. La imagen de fondo llena toda la pantalla detrás.</span>
+        <span>Los marcadores y el contador se muestran en un panel a la derecha. La imagen de fondo llena toda la pantalla detrás. (Horizontal 1920×1080)</span>
       </label>
       <label class="layout-option" id="layout-opt-top">
         <input type="radio" name="layout-pos" value="top">
         <strong>Mitad superior</strong>
-        <span>Los marcadores y el contador aparecen en la franja superior. La imagen de fondo es visible en toda la pantalla.</span>
+        <span>Los marcadores y el contador aparecen en la franja superior. La imagen de fondo es visible en toda la pantalla. (Horizontal 1920×1080)</span>
+      </label>
+      <label class="layout-option" id="layout-opt-vertical">
+        <input type="radio" name="layout-pos" value="vertical">
+        <strong>Mitad inferior (vertical)</strong>
+        <span>Pantalla en formato vertical (portrait). Los marcadores y el contador aparecen en la mitad inferior. La imagen de fondo llena toda la pantalla. (Vertical 1080×1920)</span>
       </label>
     </div>
     <div class="actions">
@@ -1842,11 +1847,12 @@ function loadLayoutConfig() {
 function saveLayoutConfig(l) { localStorage.setItem(LAYOUT_KEY(), JSON.stringify(l)); }
 
 function applyLayoutToInputs(l) {
-  const top = !!l.top;
-  document.getElementById('layout-opt-side')?.classList.toggle('selected', !top);
-  document.getElementById('layout-opt-top')?.classList.toggle('selected', top);
+  const val = l.vertical ? 'vertical' : (l.top ? 'top' : 'side');
+  document.getElementById('layout-opt-side')?.classList.toggle('selected', val === 'side');
+  document.getElementById('layout-opt-top')?.classList.toggle('selected', val === 'top');
+  document.getElementById('layout-opt-vertical')?.classList.toggle('selected', val === 'vertical');
   document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
-    r.checked = (r.value === (top ? 'top' : 'side'));
+    r.checked = (r.value === val);
   });
 }
 
@@ -1859,7 +1865,8 @@ document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
 
 document.getElementById('btn-save-layout').addEventListener('click', () => {
   const selected = document.querySelector('input[name="layout-pos"]:checked');
-  const l = { top: selected?.value === 'top' };
+  const val = selected?.value || 'side';
+  const l = { top: val === 'top', vertical: val === 'vertical' };
   saveLayoutConfig(l);
   pushToServer();
   showToast('Formato guardado · sincronizando…');
