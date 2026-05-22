@@ -4,8 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920">
 <script>
-/* Detecta layout vertical ANTES del primer render y calcula el scale para
-   llenar toda la pantalla, sin importar el tamaño del viewport del CMS. */
+/* Modo vertical: el viewport por defecto (width=1920) hace que el browser
+   escale mal en pantallas de 1080px de ancho. Cambiamos el viewport a
+   width=device-width para medir el tamaño real y escalamos el canvas
+   1080×1920 con transform para llenar toda la pantalla. */
+window.__applyVerticalScale = function() {
+  if (!document.documentElement.classList.contains('layout-vertical')) return;
+  var vW = window.innerWidth  || screen.width;
+  var vH = window.innerHeight || screen.height;
+  var scale = Math.min(vW / 1080, vH / 1920);
+  var offX  = (vW - 1080 * scale) / 2;
+  var offY  = (vH - 1920 * scale) / 2;
+  var r = document.documentElement;
+  r.style.setProperty('--vscale',    scale);
+  r.style.setProperty('--voffset-x', offX + 'px');
+  r.style.setProperty('--voffset-y', offY + 'px');
+};
 (function() {
   try {
     var slug = (window.location.pathname.match(/^\/c\/([a-z0-9-]+)/) || [])[1] || null;
@@ -14,20 +28,14 @@
     if (!raw) return;
     var layout = JSON.parse(raw);
     if (!layout.vertical) return;
-
+    document.querySelector('meta[name="viewport"]').content = 'width=device-width, initial-scale=1';
     document.documentElement.classList.add('layout-vertical');
-
-    var vW = window.innerWidth  || screen.width;
-    var vH = window.innerHeight || screen.height;
-    var scale = Math.min(vW / 1080, vH / 1920);
-    var offX  = (vW - 1080 * scale) / 2;
-    var offY  = (vH - 1920 * scale) / 2;
-    var r = document.documentElement;
-    r.style.setProperty('--vscale',    scale);
-    r.style.setProperty('--voffset-x', offX + 'px');
-    r.style.setProperty('--voffset-y', offY + 'px');
+    window.__applyVerticalScale();
   } catch(e) {}
 })();
+window.addEventListener('resize', function() {
+  if (window.__applyVerticalScale) window.__applyVerticalScale();
+});
 </script>
 <title>Movimagen · Fútbol en Vivo</title>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
@@ -2328,17 +2336,9 @@ function applyLayoutConfig(layout) {
   document.body.classList.toggle('layout-top',      !!layout.top);
   document.body.classList.toggle('layout-vertical', isVertical);
   document.documentElement.classList.toggle('layout-vertical', isVertical);
-  if (isVertical) {
-    const vW = window.innerWidth;
-    const vH = window.innerHeight;
-    const scale = Math.min(vW / 1080, vH / 1920);
-    const offX  = (vW - 1080 * scale) / 2;
-    const offY  = (vH - 1920 * scale) / 2;
-    const r = document.documentElement;
-    r.style.setProperty('--vscale',    scale);
-    r.style.setProperty('--voffset-x', offX + 'px');
-    r.style.setProperty('--voffset-y', offY + 'px');
-  }
+  const vp = document.querySelector('meta[name="viewport"]');
+  if (vp) vp.content = isVertical ? 'width=device-width, initial-scale=1' : 'width=1920';
+  if (isVertical && window.__applyVerticalScale) window.__applyVerticalScale();
 }
 
 function applyCountdownLayout() {
