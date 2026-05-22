@@ -3,6 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920">
+<script>
+/* Aplica viewport vertical ANTES del primer render para que el browser escale bien */
+(function() {
+  try {
+    var slug = (window.location.pathname.match(/^\/c\/([a-z0-9-]+)/) || [])[1] || null;
+    var lsKey = slug ? ('mv_' + slug + '_layout') : 'bk_layout';
+    var raw = localStorage.getItem(lsKey);
+    if (raw) {
+      var layout = JSON.parse(raw);
+      if (layout.vertical) {
+        document.querySelector('meta[name="viewport"]').content = 'width=1080';
+        document.documentElement.classList.add('layout-vertical');
+      }
+    }
+  } catch(e) {}
+})();
+</script>
 <title>Movimagen · Fútbol en Vivo</title>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -1893,11 +1910,17 @@ body.has-mode-bg.layout-top #placa-countdown.active .cd-sep { font-size: 44px; }
 
 /* === LAYOUT VERTICAL (portrait 1080×1920) ============= */
 /* El contenido ocupa la MITAD INFERIOR (~960 px).         */
+/* Las dimensiones se aplican vía html.layout-vertical     */
+/* (seteado por inline script en <head>) para que el       */
+/* browser calcule la escala correcta desde el primer      */
+/* render, antes de que el JS principal corra.             */
 
+html.layout-vertical body,
 body.layout-vertical {
   width: 1080px;
   height: 1920px;
 }
+html.layout-vertical .placa,
 body.layout-vertical .placa {
   width: 1080px;
   height: 1920px;
