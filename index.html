@@ -47,6 +47,18 @@
   --cd-num-bg:      rgba(0,0,0,0.45);
   --cd-lbl-color:   rgba(255,255,255,0.5);
   --cd-event-label-color: #FFFFFF;
+
+  /* Geometría del panel integrado (modo horizontal lateral).
+     El overlay se renderiza dentro de este rectángulo, alineado a
+     la derecha, para encajar en el marco dibujado en la imagen de
+     fondo. Spec de diseño (lienzo 1920×1080):
+       zona de contenido → X: 1030→1850 (820px) · Y: 300→865 (565px)
+       zona de título    → arriba (Y: 200→290) para "PARTIDOS"/"CONTADOR"
+       zona de logos      → abajo (Y: 870→945) */
+  --panel-w:      820px;
+  --panel-right:  70px;
+  --panel-top:    300px;
+  --panel-bottom: 215px;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -101,11 +113,13 @@ body.has-mode-bg #placa-day {
   align-items: stretch;
 }
 body.has-mode-bg #placa-day .day-list {
-  flex: 0 0 800px;
-  width: 800px;
-  margin-right: 60px;
-  padding: 50px 0;
-  gap: 20px;
+  flex: 0 0 var(--panel-w);
+  width: var(--panel-w);
+  margin-right: var(--panel-right);
+  margin-top: var(--panel-top);
+  margin-bottom: var(--panel-bottom);
+  padding: 0;
+  gap: 14px;
   background: transparent;
   justify-content: center;
 }
@@ -219,12 +233,15 @@ body.has-mode-bg #placa-multilive {
   align-items: stretch;
 }
 body.has-mode-bg #placa-multilive .ml-grid {
-  flex: 0 0 800px;
-  width: 800px;
-  margin-right: 60px;
-  padding: 50px 0;
-  gap: 14px;
+  flex: 0 0 var(--panel-w);
+  width: var(--panel-w);
+  margin-right: var(--panel-right);
+  margin-top: var(--panel-top);
+  margin-bottom: var(--panel-bottom);
+  padding: 0;
+  gap: 12px;
   background: transparent;
+  align-content: center;
   /* siempre vertical en modo billboard */
   grid-template-columns: 1fr !important;
   grid-template-rows: none !important;
@@ -261,12 +278,13 @@ body.has-mode-bg #placa-live {
   justify-content: flex-end;
 }
 body.has-mode-bg #placa-live .match-half {
-  flex: 0 0 800px;
-  width: 800px;
-  margin-right: 60px;
-  margin-top: 50px;
-  margin-bottom: 50px;
+  flex: 0 0 var(--panel-w);
+  width: var(--panel-w);
+  margin-right: var(--panel-right);
+  margin-top: var(--panel-top);
+  margin-bottom: var(--panel-bottom);
   height: auto;
+  align-self: center;
   background: white;
   border-radius: 16px;
   border-right: none;
@@ -1784,16 +1802,18 @@ body.has-mode-bg #placa-countdown.active {
   background: transparent;
 }
 body.has-mode-bg #placa-countdown.active .cd-panel {
-  flex: 0 0 50%;
-  max-width: 960px;
+  flex: 0 0 var(--panel-w);
+  width: var(--panel-w);
+  margin-right: var(--panel-right);
+  margin-top: var(--panel-top);
+  margin-bottom: var(--panel-bottom);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 28px;
   background: var(--cd-panel-bg, transparent);
-  border-left: 2px solid var(--cd-border-color, rgba(200,160,40,0.7));
-  padding: 40px 36px;
+  padding: 0 24px;
 }
 body.has-mode-bg #placa-countdown.active .cd-header {
   display: flex;
