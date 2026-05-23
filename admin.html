@@ -788,47 +788,94 @@ main {
   <!-- Contenido del cliente seleccionado -->
   <div id="client-panels">
 
-  <!-- ── PANEL COLORES ──────────────────────────────── -->
+  <!-- ── PANEL PARTIDOS ─────────────────────────────── -->
   <div class="panel">
-    <h2><span>Colores de la interfaz</span></h2>
-    <div class="color-grid">
-      <div class="color-field">
-        <label>Color principal (marcadores, contador)</label>
-        <div class="color-row">
-          <input type="color" id="color-accent" value="#FF6B35">
-          <input type="text"  id="color-accent-text" value="#FF6B35" maxlength="7">
-        </div>
-      </div>
-      <div class="color-field">
-        <label>Color secundario (tiempo, VS, scores)</label>
-        <div class="color-row">
-          <input type="color" id="color-accent-alt" value="#FFB347">
-          <input type="text"  id="color-accent-alt-text" value="#FFB347" maxlength="7">
-        </div>
-      </div>
-      <div class="color-field">
-        <label>Fondo de tarjetas</label>
-        <div class="color-row">
-          <input type="color" id="color-card-bg" value="#FFFFFF">
-          <input type="text"  id="color-card-bg-text" value="#FFFFFF" maxlength="7">
-          <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
-          <input type="range" id="color-card-bg-opacity" min="0" max="100" value="100" style="width:80px;">
-          <span id="color-card-bg-opacity-val" style="font-size:12px;min-width:32px;">100%</span>
-        </div>
-      </div>
-      <div class="color-field">
-        <label>Texto de tarjetas</label>
-        <div class="color-row">
-          <input type="color" id="color-card-text" value="#1A1A1A">
-          <input type="text"  id="color-card-text-text" value="#1A1A1A" maxlength="7">
-        </div>
-      </div>
+    <div class="competition-tabs" id="competition-tabs">
+      <button class="tab active" data-comp="CL">Champions</button>
+      <button class="tab" data-comp="UEL">Europa League</button>
+      <button class="tab" data-comp="LIB">Libertadores</button>
+      <button class="tab" data-comp="SUD">Sudamericana</button>
+      <button class="tab" data-comp="URU">Uruguay 1ª</button>
+      <button class="tab" data-comp="URU2">Uruguay 2ª</button>
+      <button class="tab" data-comp="PL">Premier</button>
+      <button class="tab" data-comp="LL">LaLiga</button>
+      <button class="tab" data-comp="BL">Bundesliga</button>
+      <button class="tab" data-comp="SA">Serie A</button>
+      <button class="tab" data-comp="ARG">Argentina</button>
     </div>
+
+    <h2>
+      <span>Partidos del día</span>
+      <span class="count" id="count">— de —</span>
+    </h2>
+
+    <div class="match-list" id="match-list">
+      <div class="empty">Cargando partidos…</div>
+    </div>
+
     <div class="actions">
-      <button class="btn btn-primary" id="btn-save-colors">Guardar colores</button>
+      <button class="btn btn-secondary" id="btn-all">Seleccionar todos</button>
+      <button class="btn btn-secondary" id="btn-none">Limpiar</button>
+      <button class="btn btn-primary" id="btn-save">Guardar selección</button>
+      <button class="btn btn-secondary" id="btn-demo" style="background:var(--accent-alt);color:#000;border-color:var(--accent-alt);">Demo</button>
     </div>
   </div>
 
+  <!-- ── PANEL LAYOUT ───────────────────────────────── -->
+  <div class="panel">
+    <h2><span>Formato de pantalla</span></h2>
+    <div class="layout-options">
+      <label class="layout-option selected" id="layout-opt-side">
+        <input type="radio" name="layout-pos" value="side" checked>
+        <strong>A un lado (lateral)</strong>
+        <span>Los marcadores y el contador se muestran en un panel a la derecha. La imagen de fondo llena toda la pantalla detrás. (Horizontal 1920×1080)</span>
+      </label>
+      <label class="layout-option" id="layout-opt-top">
+        <input type="radio" name="layout-pos" value="top">
+        <strong>Mitad superior</strong>
+        <span>Los marcadores y el contador aparecen en la franja superior. La imagen de fondo es visible en toda la pantalla. (Horizontal 1920×1080)</span>
+      </label>
+      <label class="layout-option" id="layout-opt-vertical">
+        <input type="radio" name="layout-pos" value="vertical">
+        <strong>Mitad inferior (vertical)</strong>
+        <span>Pantalla en formato vertical (portrait). Los marcadores y el contador aparecen en la mitad inferior. La imagen de fondo llena toda la pantalla. (Vertical 1080×1920)</span>
+      </label>
+    </div>
+
+    <!-- Controles de tamaño del panel (solo modo lateral) -->
+    <div id="panel-size-controls" class="schedule" style="margin-top:20px;">
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Margen superior del panel</strong>
+          <span>Espacio desde el borde superior hasta el área de partidos</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="range" id="panel-top-slider" min="60" max="500" value="300" step="10" style="width:160px;">
+          <span id="panel-top-val" style="font-size:13px;min-width:45px;color:var(--gray-600);">300px</span>
+        </div>
+      </div>
+      <div class="schedule-row">
+        <div class="schedule-label">
+          <strong>Margen inferior del panel</strong>
+          <span>Espacio desde el área de partidos hasta el borde inferior</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input type="range" id="panel-bottom-slider" min="50" max="400" value="215" step="10" style="width:160px;">
+          <span id="panel-bottom-val" style="font-size:13px;min-width:45px;color:var(--gray-600);">215px</span>
+        </div>
+      </div>
+      <div class="help">
+        Altura del área de partidos: <strong id="panel-height-display">565px</strong>
+        <span style="color:var(--gray-600);font-weight:normal;"> de 1080px disponibles</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-save-layout">Guardar formato</button>
+    </div>
+  </div>
+
+  <!-- ── PANEL FONDOS ───────────────────────────────── -->
   <div class="panel">
     <h2>
       <span>Imagen de fondo por horario</span>
@@ -902,31 +949,6 @@ main {
       Subí una imagen (recomendado &lt; 1.5 MB, formato 16:9), pegá una URL de imagen, o pegá una URL de video (.mp4/.webm).
       El video tiene prioridad sobre la imagen cuando ambos están configurados. Si no configurás fondo
       para la <em>Cuenta atrás</em>, se usa el mismo fondo del Modo día como respaldo.
-    </div>
-  </div>
-
-  <!-- ── PANEL LAYOUT ───────────────────────────────── -->
-  <div class="panel">
-    <h2><span>Formato de pantalla</span></h2>
-    <div class="layout-options">
-      <label class="layout-option selected" id="layout-opt-side">
-        <input type="radio" name="layout-pos" value="side" checked>
-        <strong>A un lado (lateral)</strong>
-        <span>Los marcadores y el contador se muestran en un panel a la derecha. La imagen de fondo llena toda la pantalla detrás. (Horizontal 1920×1080)</span>
-      </label>
-      <label class="layout-option" id="layout-opt-top">
-        <input type="radio" name="layout-pos" value="top">
-        <strong>Mitad superior</strong>
-        <span>Los marcadores y el contador aparecen en la franja superior. La imagen de fondo es visible en toda la pantalla. (Horizontal 1920×1080)</span>
-      </label>
-      <label class="layout-option" id="layout-opt-vertical">
-        <input type="radio" name="layout-pos" value="vertical">
-        <strong>Mitad inferior (vertical)</strong>
-        <span>Pantalla en formato vertical (portrait). Los marcadores y el contador aparecen en la mitad inferior. La imagen de fondo llena toda la pantalla. (Vertical 1080×1920)</span>
-      </label>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary" id="btn-save-layout">Guardar formato</button>
     </div>
   </div>
 
@@ -1138,35 +1160,44 @@ main {
     </div>
   </div>
 
+  <!-- ── PANEL COLORES ──────────────────────────────── -->
   <div class="panel">
-    <div class="competition-tabs" id="competition-tabs">
-      <button class="tab active" data-comp="CL">Champions</button>
-      <button class="tab" data-comp="UEL">Europa League</button>
-      <button class="tab" data-comp="LIB">Libertadores</button>
-      <button class="tab" data-comp="SUD">Sudamericana</button>
-      <button class="tab" data-comp="URU">Uruguay 1ª</button>
-      <button class="tab" data-comp="URU2">Uruguay 2ª</button>
-      <button class="tab" data-comp="PL">Premier</button>
-      <button class="tab" data-comp="LL">LaLiga</button>
-      <button class="tab" data-comp="BL">Bundesliga</button>
-      <button class="tab" data-comp="SA">Serie A</button>
-      <button class="tab" data-comp="ARG">Argentina</button>
+    <h2><span>Colores de la interfaz</span></h2>
+    <div class="color-grid">
+      <div class="color-field">
+        <label>Color principal (marcadores, contador)</label>
+        <div class="color-row">
+          <input type="color" id="color-accent" value="#FF6B35">
+          <input type="text"  id="color-accent-text" value="#FF6B35" maxlength="7">
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Color secundario (tiempo, VS, scores)</label>
+        <div class="color-row">
+          <input type="color" id="color-accent-alt" value="#FFB347">
+          <input type="text"  id="color-accent-alt-text" value="#FFB347" maxlength="7">
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Fondo de tarjetas</label>
+        <div class="color-row">
+          <input type="color" id="color-card-bg" value="#FFFFFF">
+          <input type="text"  id="color-card-bg-text" value="#FFFFFF" maxlength="7">
+          <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+          <input type="range" id="color-card-bg-opacity" min="0" max="100" value="100" style="width:80px;">
+          <span id="color-card-bg-opacity-val" style="font-size:12px;min-width:32px;">100%</span>
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Texto de tarjetas</label>
+        <div class="color-row">
+          <input type="color" id="color-card-text" value="#1A1A1A">
+          <input type="text"  id="color-card-text-text" value="#1A1A1A" maxlength="7">
+        </div>
+      </div>
     </div>
-
-    <h2>
-      <span>Partidos del día</span>
-      <span class="count" id="count">— de —</span>
-    </h2>
-
-    <div class="match-list" id="match-list">
-      <div class="empty">Cargando partidos…</div>
-    </div>
-
     <div class="actions">
-      <button class="btn btn-secondary" id="btn-all">Seleccionar todos</button>
-      <button class="btn btn-secondary" id="btn-none">Limpiar</button>
-      <button class="btn btn-primary" id="btn-save">Guardar selección</button>
-      <button class="btn btn-secondary" id="btn-demo" style="background:var(--accent-alt);color:#000;border-color:var(--accent-alt);">Demo</button>
+      <button class="btn btn-primary" id="btn-save-colors">Guardar colores</button>
     </div>
   </div>
 
@@ -1835,7 +1866,7 @@ document.getElementById('btn-save-colors').addEventListener('click', () => {
 });
 
 // ── Layout ────────────────────────────────────────────────
-const DEFAULT_LAYOUT = { half: false };
+const DEFAULT_LAYOUT = { half: false, panelTop: 300, panelBottom: 215 };
 
 function loadLayoutConfig() {
   try {
@@ -1846,6 +1877,20 @@ function loadLayoutConfig() {
 
 function saveLayoutConfig(l) { localStorage.setItem(LAYOUT_KEY(), JSON.stringify(l)); }
 
+function updatePanelHeightDisplay() {
+  const top    = parseInt(document.getElementById('panel-top-slider')?.value    || 300, 10);
+  const bottom = parseInt(document.getElementById('panel-bottom-slider')?.value || 215, 10);
+  const h = Math.max(0, 1080 - top - bottom);
+  document.getElementById('panel-top-val').textContent    = top    + 'px';
+  document.getElementById('panel-bottom-val').textContent = bottom + 'px';
+  document.getElementById('panel-height-display').textContent = h + 'px';
+}
+
+function updatePanelSizeVisibility() {
+  const val = document.querySelector('input[name="layout-pos"]:checked')?.value || 'side';
+  document.getElementById('panel-size-controls').style.display = val === 'side' ? '' : 'none';
+}
+
 function applyLayoutToInputs(l) {
   const val = l.vertical ? 'vertical' : (l.top ? 'top' : 'side');
   document.getElementById('layout-opt-side')?.classList.toggle('selected', val === 'side');
@@ -1854,19 +1899,31 @@ function applyLayoutToInputs(l) {
   document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
     r.checked = (r.value === val);
   });
+  const topEl    = document.getElementById('panel-top-slider');
+  const bottomEl = document.getElementById('panel-bottom-slider');
+  if (topEl)    topEl.value    = l.panelTop    ?? 300;
+  if (bottomEl) bottomEl.value = l.panelBottom ?? 215;
+  updatePanelHeightDisplay();
+  updatePanelSizeVisibility();
 }
+
+document.getElementById('panel-top-slider').addEventListener('input', updatePanelHeightDisplay);
+document.getElementById('panel-bottom-slider').addEventListener('input', updatePanelHeightDisplay);
 
 document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
   r.addEventListener('change', () => {
     document.querySelectorAll('.layout-option').forEach(o => o.classList.remove('selected'));
     r.closest('.layout-option')?.classList.add('selected');
+    updatePanelSizeVisibility();
   });
 });
 
 document.getElementById('btn-save-layout').addEventListener('click', () => {
   const selected = document.querySelector('input[name="layout-pos"]:checked');
   const val = selected?.value || 'side';
-  const l = { top: val === 'top', vertical: val === 'vertical' };
+  const panelTop    = parseInt(document.getElementById('panel-top-slider').value,    10);
+  const panelBottom = parseInt(document.getElementById('panel-bottom-slider').value, 10);
+  const l = { top: val === 'top', vertical: val === 'vertical', panelTop, panelBottom };
   saveLayoutConfig(l);
   pushToServer();
   showToast('Formato guardado · sincronizando…');

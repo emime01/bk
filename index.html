@@ -2328,6 +2328,9 @@ function applyLayoutConfig(layout) {
   document.documentElement.classList.toggle('layout-vertical', isVertical);
   const vp = document.querySelector('meta[name="viewport"]');
   if (vp) vp.content = isVertical ? 'width=device-width, initial-scale=1' : 'width=1920';
+  const root = document.documentElement;
+  if (layout.panelTop    != null) root.style.setProperty('--panel-top',    layout.panelTop    + 'px');
+  if (layout.panelBottom != null) root.style.setProperty('--panel-bottom', layout.panelBottom + 'px');
   if (window.__fitCanvas) window.__fitCanvas();
 }
 
@@ -3339,6 +3342,12 @@ setInterval(() => setText('live-update', new Date().toLocaleTimeString('es-UY'))
 
 // Restaurar último estado conocido al instante (evita loading screen al recargar).
 restoreDisplayCache();
+
+// Aplicar layout guardado localmente antes del sync (panel sizes disponibles de inmediato).
+try {
+  const localLayout = JSON.parse(localStorage.getItem(LS('layout')) || 'null');
+  if (localLayout) applyLayoutConfig(localLayout);
+} catch(e) {}
 
 // Sync desde el servidor al cargar, luego arranca el ciclo principal.
 syncFromServer().then(() => {
