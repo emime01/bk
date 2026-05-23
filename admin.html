@@ -1051,19 +1051,12 @@ function LS(key) {
 }
 
 const STORAGE_KEY  = () => LS('selected_matches');
-const SCHEDULE_KEY = () => LS('schedule');
 const BG_KEY_FN    = () => LS('backgrounds');
 const VIDEOS_KEY   = () => LS('videos');
 const CD_KEY       = () => LS('countdown');
 const COLORS_KEY   = () => LS('colors');
 const LAYOUT_KEY   = () => LS('layout');
 
-const DEFAULT_SCHEDULE = {
-  dayStart:  '07:00',
-  dayEnd:    '18:00',
-  liveStart: '18:00',
-  liveEnd:   '23:00',
-};
 let currentCompetition = 'CL';
 let currentMatches = [];
 
@@ -1078,9 +1071,6 @@ async function syncFromServer() {
     if (cfg.competition != null || cfg.ids != null) {
       const payload = { competition: cfg.competition || 'CL', ids: Array.isArray(cfg.ids) ? cfg.ids : [] };
       localStorage.setItem(STORAGE_KEY(), JSON.stringify(payload));
-    }
-    if (cfg.schedule && typeof cfg.schedule === 'object') {
-      localStorage.setItem(SCHEDULE_KEY(), JSON.stringify(cfg.schedule));
     }
     if (cfg.backgrounds && typeof cfg.backgrounds === 'object') {
       let bgs;
@@ -1119,7 +1109,6 @@ async function pushToServer() {
   try {
     const selections = loadSelections();
     const demoMode   = !!(JSON.parse(localStorage.getItem(STORAGE_KEY()) || '{}').demoMode);
-    const schedule = loadSchedule();
     const bgs      = loadBackgrounds();
     const urlBgs   = {};
     for (const [k, v] of Object.entries(bgs)) {
@@ -1129,7 +1118,7 @@ async function pushToServer() {
     const colors    = loadColorsConfig();
     const layout    = loadLayoutConfig();
     const videos    = loadVideos();
-    const payload   = { selections, demoMode, schedule, backgrounds: urlBgs, videos, countdown, colors, layout };
+    const payload   = { selections, demoMode, backgrounds: urlBgs, videos, countdown, colors, layout };
     const r = await fetch(cfgApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1137,44 +1126,6 @@ async function pushToServer() {
     });
     if (!r.ok) console.warn('Config push failed:', r.status);
   } catch (e) { console.warn('Config push error:', e.message); }
-}
-
-function loadSchedule() {
-  try {
-    const raw = localStorage.getItem(SCHEDULE_KEY());
-    if (!raw) return { ...DEFAULT_SCHEDULE };
-    const parsed = JSON.parse(raw);
-    return { ...DEFAULT_SCHEDULE, ...parsed };
-  } catch { return { ...DEFAULT_SCHEDULE }; }
-}
-
-function saveSchedule(s) {
-  localStorage.setItem(SCHEDULE_KEY(), JSON.stringify(s));
-}
-
-function applyScheduleToInputs(s) {
-  document.getElementById('day-start').value  = s.dayStart;
-  document.getElementById('day-end').value    = s.dayEnd;
-  document.getElementById('live-start').value = s.liveStart;
-  document.getElementById('live-end').value   = s.liveEnd;
-}
-
-function getCurrentScheduleMode(s) {
-  const now = new Date();
-  const m = now.getHours() * 60 + now.getMinutes();
-  const toMin = (hhmm) => {
-    const [h, mm] = hhmm.split(':').map(Number);
-    return h * 60 + mm;
-  };
-  if (m >= toMin(s.dayStart)  && m < toMin(s.dayEnd))  return 'día';
-  if (m >= toMin(s.liveStart) && m < toMin(s.liveEnd)) return 'en vivo';
-  return 'fuera de horario';
-}
-
-function refreshScheduleStatus() {
-  const s = loadSchedule();
-  document.getElementById('schedule-status').textContent =
-    'Ahora: ' + getCurrentScheduleMode(s);
 }
 
 // ── Imágenes de fondo por modo ───────────────────────
@@ -1207,8 +1158,9 @@ function saveBackgrounds(bgs) {
 }
 function refreshBgPreviews() {
   const bgs = loadBackgrounds();
-  ['day','live','off','countdown'].forEach(mode => {
+  ['day','countdown'].forEach(mode => {
     const prev = document.getElementById('prev-' + mode);
+    if (!prev) return;
     const url  = bgs[mode];
     if (url) {
       prev.classList.add('has-image');
@@ -1220,14 +1172,16 @@ function refreshBgPreviews() {
       prev.innerHTML = '<div class="placeholder">Sin imagen</div>';
     }
     const urlInput = document.getElementById('url-' + mode);
-    if (url && !url.startsWith('data:')) urlInput.value = url;
-    else urlInput.value = '';
+    if (urlInput) {
+      if (url && !url.startsWith('data:')) urlInput.value = url;
+      else urlInput.value = '';
+    }
   });
 }
 
 function refreshVideoInputs() {
   const vids = loadVideos();
-  ['day','live','off','countdown'].forEach(mode => {
+  ['day','countdown'].forEach(mode => {
     const inp = document.getElementById('video-url-' + mode);
     if (inp) inp.value = vids[mode] || '';
   });
@@ -1448,27 +1402,6 @@ document.getElementById('btn-none').addEventListener('click', () => {
     cb.closest('.match').classList.remove('selected');
   });
   updateCount();
-});
-
-document.getElementById('btn-save-schedule').addEventListener('click', () => {
-  const s = {
-    dayStart:  document.getElementById('day-start').value  || DEFAULT_SCHEDULE.dayStart,
-    dayEnd:    document.getElementById('day-end').value    || DEFAULT_SCHEDULE.dayEnd,
-    liveStart: document.getElementById('live-start').value || DEFAULT_SCHEDULE.liveStart,
-    liveEnd:   document.getElementById('live-end').value   || DEFAULT_SCHEDULE.liveEnd,
-  };
-  saveSchedule(s);
-  refreshScheduleStatus();
-  pushToServer();
-  showToast('Horarios guardados · sincronizando…');
-});
-
-document.getElementById('btn-reset-schedule').addEventListener('click', () => {
-  applyScheduleToInputs(DEFAULT_SCHEDULE);
-  saveSchedule(DEFAULT_SCHEDULE);
-  refreshScheduleStatus();
-  pushToServer();
-  showToast('Horarios restaurados');
 });
 
 document.getElementById('btn-save').addEventListener('click', () => {
@@ -1709,12 +1642,23 @@ document.querySelectorAll('input[name="panel-size"]').forEach(r => {
     document.querySelectorAll('input[name="panel-size"]').forEach(x => {
       x.closest('.layout-option')?.classList.toggle('selected', x === r);
     });
+    // Auto-save on panel-size change
+    const pos  = document.querySelector('input[name="layout-pos"]:checked')?.value  || 'side';
+    const size = r.value;
+    const { panelTop, panelBottom } = PANEL_PRESETS[size] || PANEL_PRESETS.normal;
+    const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom };
+    saveLayoutConfig(l);
+    pushToServer();
+    showToast('Formato guardado · sincronizando…');
   });
 });
 
 document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
   r.addEventListener('change', () => {
-    document.querySelectorAll('.layout-option').forEach(o => o.classList.remove('selected'));
+    // Only remove selected from layout-pos labels, not panel-size labels
+    document.querySelectorAll('input[name="layout-pos"]').forEach(x => {
+      x.closest('.layout-option')?.classList.remove('selected');
+    });
     r.closest('.layout-option')?.classList.add('selected');
     // re-select the active panel-size option
     const activeSize = document.querySelector('input[name="panel-size"]:checked');
@@ -1735,112 +1679,32 @@ document.getElementById('btn-save-layout').addEventListener('click', () => {
 
 function applyCountdownToInputs(cd) {
   document.getElementById('cd-active').checked = !!cd.active;
-  if (cd.mundialDate)  document.getElementById('cd-mundial-date').value  = cd.mundialDate;
-  if (cd.mundialLabel) document.getElementById('cd-mundial-label').value = cd.mundialLabel;
-  if (cd.uruguayDate)  document.getElementById('cd-uruguay-date').value  = cd.uruguayDate;
-  if (cd.uruguayLabel) document.getElementById('cd-uruguay-label').value = cd.uruguayLabel;
-  const isFullscreen = !!cd.fullscreen;
-  document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
-    r.checked = (r.value === (isFullscreen ? 'fullscreen' : 'lateral'));
-  });
-  document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', !isFullscreen);
-  document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', isFullscreen);
-  const showVal = cd.showEvents || 'both';
-  document.querySelectorAll('input[name="cd-show"]').forEach(r => {
-    r.checked = (r.value === showVal);
-  });
-  document.getElementById('cd-show-opt-both')?.classList.toggle('selected', showVal === 'both');
-  document.getElementById('cd-show-opt-mundial')?.classList.toggle('selected', showVal === 'mundial');
-  document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', showVal === 'uruguay');
+  document.getElementById('cd-active-label').textContent = cd.active ? 'Activado' : 'Desactivado';
+  if (cd.targetDate)  document.getElementById('cd-target-date').value  = cd.targetDate;
+  if (cd.targetLabel) document.getElementById('cd-target-label').value = cd.targetLabel;
   const scaleEl = document.getElementById('cd-scale');
   if (scaleEl) { scaleEl.value = cd.scale || 100; document.getElementById('cd-scale-val').textContent = (cd.scale || 100) + '%'; }
-  const showHeader = cd.showHeader !== false;
-  const headerEl = document.getElementById('cd-show-header');
-  if (headerEl) { headerEl.checked = showHeader; document.getElementById('cd-show-header-label').textContent = showHeader ? 'Visible' : 'Oculto'; }
-  refreshCountdownStatus();
+  const statusEl = document.getElementById('cd-status');
+  if (statusEl) statusEl.textContent = cd.active ? 'ACTIVO' : '—';
 }
 
-function refreshCountdownStatus() {
-  const cd = loadCountdownConfig();
-  const label = document.getElementById('cd-active-label');
-  const status = document.getElementById('cd-status');
-  if (cd.active) {
-    if (label) label.textContent = 'Activado';
-    if (status) {
-      status.textContent = 'EN AIRE';
-      status.style.background = 'rgba(214,35,0,0.12)';
-      status.style.color = 'var(--bk-red)';
-    }
-  } else {
-    if (label) label.textContent = 'Desactivado';
-    if (status) {
-      status.textContent = 'Inactivo';
-      status.style.background = '';
-      status.style.color = '';
-    }
-  }
-}
-
-document.getElementById('cd-active').addEventListener('change', refreshCountdownStatus);
-
-document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
-  r.addEventListener('change', () => {
-    document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', r.value === 'lateral');
-    document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', r.value === 'fullscreen');
-  });
-});
-
-document.querySelectorAll('input[name="cd-show"]').forEach(r => {
-  r.addEventListener('change', () => {
-    document.getElementById('cd-show-opt-both')?.classList.toggle('selected', r.value === 'both');
-    document.getElementById('cd-show-opt-mundial')?.classList.toggle('selected', r.value === 'mundial');
-    document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', r.value === 'uruguay');
-  });
+document.getElementById('cd-active').addEventListener('change', function() {
+  document.getElementById('cd-active-label').textContent = this.checked ? 'Activado' : 'Desactivado';
+  document.getElementById('cd-status').textContent = this.checked ? 'ACTIVO' : '—';
 });
 
 document.getElementById('cd-scale').addEventListener('input', () => {
   document.getElementById('cd-scale-val').textContent = document.getElementById('cd-scale').value + '%';
 });
 
-document.getElementById('cd-show-header').addEventListener('change', function() {
-  document.getElementById('cd-show-header-label').textContent = this.checked ? 'Visible' : 'Oculto';
-});
-
 document.getElementById('btn-save-countdown').addEventListener('click', () => {
-  const cdLayoutVal = document.querySelector('input[name="cd-layout"]:checked')?.value;
-  const cdShowVal   = document.querySelector('input[name="cd-show"]:checked')?.value || 'both';
   const cd = {
-    active:       document.getElementById('cd-active').checked,
-    mundialDate:  document.getElementById('cd-mundial-date').value,
-    mundialLabel: document.getElementById('cd-mundial-label').value.trim() || 'MUNDIAL 2026',
-    uruguayDate:  document.getElementById('cd-uruguay-date').value,
-    uruguayLabel: document.getElementById('cd-uruguay-label').value.trim() || 'DEBUT URUGUAY',
-    fullscreen:   cdLayoutVal === 'fullscreen',
-    showEvents:   cdShowVal,
-    scale:        parseInt(document.getElementById('cd-scale')?.value || '100'),
-    showHeader:   document.getElementById('cd-show-header')?.checked !== false,
+    active:      document.getElementById('cd-active').checked,
+    targetDate:  document.getElementById('cd-target-date').value,
+    targetLabel: document.getElementById('cd-target-label').value || 'MUNDIAL 2026',
+    scale:       parseInt(document.getElementById('cd-scale').value, 10),
   };
   saveCountdownConfig(cd);
-  // Save cd colors (stored in Colors config)
-  const panelHex = document.getElementById('color-cd-panel-bg-text')?.value || '#000000';
-  const panelOp  = parseInt(document.getElementById('color-cd-opacity')?.value || '75');
-  const borderHex = document.getElementById('color-cd-border-text')?.value || '#C8A028';
-  const borderOp  = parseInt(document.getElementById('color-cd-border-opacity')?.value || '70');
-  const numBgHex = document.getElementById('color-cd-num-bg-text')?.value || '#000000';
-  const numBgOp  = parseInt(document.getElementById('color-cd-num-bg-opacity')?.value || '45');
-  const lblHex   = document.getElementById('color-cd-lbl-text')?.value || '#FFFFFF';
-  const lblOp    = parseInt(document.getElementById('color-cd-lbl-opacity')?.value || '50');
-  const cdColors = {
-    ...loadColorsConfig(),
-    cdPanelBg:         buildCdPanelBg(panelHex, panelOp),
-    cdText:            document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
-    cdBorderColor:     buildCdPanelBg(borderHex, borderOp),
-    cdNumBg:           buildCdPanelBg(numBgHex, numBgOp),
-    cdLblColor:        buildCdPanelBg(lblHex, lblOp),
-    cdEventLabelColor: document.getElementById('color-cd-event-label-text')?.value || '#FFFFFF',
-  };
-  saveColorsConfig(cdColors);
-  refreshCountdownStatus();
   pushToServer();
   showToast(cd.active ? 'Cuenta atrás activada · sincronizando…' : 'Cuenta atrás desactivada · sincronizando…');
 });
@@ -1903,8 +1767,6 @@ async function selectClient(slug) {
   const demoState = JSON.parse(localStorage.getItem(STORAGE_KEY()) || '{}');
   const demoBtn = document.getElementById('btn-demo');
   if (demoBtn && demoState.demoMode) { demoBtn.textContent = 'Demo (ON)'; demoBtn.style.outline = '3px solid var(--bk-red)'; }
-  applyScheduleToInputs(loadSchedule());
-  refreshScheduleStatus();
   refreshBgPreviews();
   refreshVideoInputs();
   applyCountdownToInputs(loadCountdownConfig());
@@ -1968,7 +1830,6 @@ async function init() {
     await selectClient(allClients[0].slug);
   }
 
-  setInterval(refreshScheduleStatus, 30000);
 }
 init();
 </script>
