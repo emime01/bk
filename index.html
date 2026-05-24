@@ -59,6 +59,7 @@
   --panel-right:  70px;
   --panel-top:    300px;
   --panel-bottom: 215px;
+  --panel-scale:  1;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -122,6 +123,8 @@ body.has-mode-bg #placa-day .day-list {
   gap: 14px;
   background: transparent;
   justify-content: center;
+  transform: scale(var(--panel-scale, 1));
+  transform-origin: top right;
 }
 body.has-mode-bg #placa-day .day-row {
   flex: none;
@@ -245,6 +248,8 @@ body.has-mode-bg #placa-multilive .ml-grid {
   /* siempre vertical en modo billboard */
   grid-template-columns: 1fr !important;
   grid-template-rows: none !important;
+  transform: scale(var(--panel-scale, 1));
+  transform-origin: top right;
 }
 body.has-mode-bg #placa-multilive .ml-card {
   background: white;
@@ -285,6 +290,8 @@ body.has-mode-bg #placa-live .match-half {
   margin-bottom: var(--panel-bottom);
   height: auto;
   align-self: center;
+  transform: scale(var(--panel-scale, 1));
+  transform-origin: top right;
   background: white;
   border-radius: 16px;
   border-right: none;
@@ -1814,6 +1821,8 @@ body.has-mode-bg #placa-countdown.active .cd-panel {
   gap: 28px;
   background: var(--cd-panel-bg, transparent);
   padding: 0 24px;
+  transform: scale(var(--panel-scale, 1));
+  transform-origin: top right;
 }
 body.has-mode-bg #placa-countdown.active .cd-header {
   display: flex;
@@ -2331,6 +2340,7 @@ function applyLayoutConfig(layout) {
   const root = document.documentElement;
   if (layout.panelTop    != null) root.style.setProperty('--panel-top',    layout.panelTop    + 'px');
   if (layout.panelBottom != null) root.style.setProperty('--panel-bottom', layout.panelBottom + 'px');
+  if (layout.panelScale  != null) root.style.setProperty('--panel-scale',  layout.panelScale);
   if (window.__fitCanvas) window.__fitCanvas();
 }
 
