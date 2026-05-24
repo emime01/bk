@@ -2358,18 +2358,9 @@ function loadSchedule() {
   } catch { return { ...DEFAULT_SCHEDULE }; }
 }
 function getCurrentMode() {
-  const s = loadSchedule();
   const cd = loadCountdownConfig();
-  if (cd.active && (cd.mundialDate || cd.uruguayDate)) return 'countdown';
-  const now = new Date();
-  const m = now.getHours() * 60 + now.getMinutes();
-  const toMin = (hhmm) => {
-    const [h, mm] = hhmm.split(':').map(Number);
-    return (h || 0) * 60 + (mm || 0);
-  };
-  if (m >= toMin(s.dayStart)  && m < toMin(s.dayEnd))  return 'day';
-  if (m >= toMin(s.liveStart) && m < toMin(s.liveEnd)) return 'live';
-  return 'off';
+  if (cd.active && (cd.targetDate || cd.mundialDate)) return 'countdown';
+  return 'day';
 }
 
 // ── CUENTA ATRÁS ─────────────────────────────────────────
@@ -2398,62 +2389,39 @@ function renderCountdown() {
   if (!cfg.active) { stopCountdown(); fetchMatches(); return; }
 
   document.documentElement.style.setProperty('--cd-scale', ((cfg.scale || 100) / 100).toFixed(2));
-  document.getElementById('placa-countdown')?.classList.toggle('hide-header', cfg.showHeader === false);
+  document.getElementById('placa-countdown')?.classList.remove('hide-header');
 
-  const show = cfg.showEvents || 'both';
-  const events = [
-    { id: 'mundial', label: cfg.mundialLabel || 'MUNDIAL 2026',    date: cfg.mundialDate },
-    { id: 'uruguay', label: cfg.uruguayLabel || 'DEBUT URUGUAY',   date: cfg.uruguayDate },
-  ].filter(e => e.date && (show === 'both' || show === e.id));
+  const targetDate  = cfg.targetDate || cfg.mundialDate;
+  const targetLabel = cfg.targetLabel || cfg.mundialLabel || 'MUNDIAL 2026';
+
+  if (!targetDate) { stopCountdown(); fetchMatches(); return; }
 
   const container = document.getElementById('cd-events');
   if (!container) return;
 
-  if (!events.length) {
-    container.innerHTML = '<div class="cd-done">Sin fechas configuradas</div>';
-    return;
-  }
+  const target = new Date(targetDate);
+  const now    = new Date();
+  const diff   = Math.max(0, target - now);
 
-  const now = Date.now();
-  container.innerHTML = events.map(evt => {
-    const diff = new Date(evt.date).getTime() - now;
-    if (diff <= 0) {
-      return `<div class="cd-event">
-        <div class="cd-event-label">${evt.label}</div>
-        <div class="cd-done">¡YA COMENZÓ!</div>
-      </div>`;
-    }
-    const days  = Math.floor(diff / 86400000);
-    const hours = Math.floor((diff % 86400000) / 3600000);
-    const mins  = Math.floor((diff % 3600000) / 60000);
-    const secs  = Math.floor((diff % 60000) / 1000);
-    const pad   = n => String(n).padStart(2, '0');
-    const highlight = days === 0 ? ' cd-highlight' : '';
-    return `<div class="cd-event">
-      <div class="cd-event-label">${evt.label}</div>
+  const days    = Math.floor(diff / 86400000);
+  const hours   = Math.floor((diff % 86400000) / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+  const pad     = n => String(n).padStart(2, '0');
+
+  container.innerHTML = `
+    <div class="cd-event" id="cd-event-target">
+      <div class="cd-event-label">${targetLabel}</div>
       <div class="cd-digits">
-        <div class="cd-unit">
-          <div class="cd-num${days === 0 ? '' : ' cd-highlight'}">${days}</div>
-          <div class="cd-lbl">DÍAS</div>
-        </div>
+        <div class="cd-unit"><div class="cd-num">${pad(days)}</div><div class="cd-lbl">DÍAS</div></div>
         <div class="cd-sep">:</div>
-        <div class="cd-unit">
-          <div class="cd-num${highlight}">${pad(hours)}</div>
-          <div class="cd-lbl">HORAS</div>
-        </div>
+        <div class="cd-unit"><div class="cd-num">${pad(hours)}</div><div class="cd-lbl">HORAS</div></div>
         <div class="cd-sep">:</div>
-        <div class="cd-unit">
-          <div class="cd-num${highlight}">${pad(mins)}</div>
-          <div class="cd-lbl">MINUTOS</div>
-        </div>
+        <div class="cd-unit"><div class="cd-num">${pad(minutes)}</div><div class="cd-lbl">MIN</div></div>
         <div class="cd-sep">:</div>
-        <div class="cd-unit">
-          <div class="cd-num${highlight}">${pad(secs)}</div>
-          <div class="cd-lbl">SEGUNDOS</div>
-        </div>
+        <div class="cd-unit"><div class="cd-num">${pad(seconds)}</div><div class="cd-lbl">SEG</div></div>
       </div>
     </div>`;
-  }).join('');
 }
 
 // Imagen de fondo por modo (configurable desde /admin).
@@ -2473,8 +2441,8 @@ function applyModeBackground() {
   const mode     = getCurrentMode();
   const bgs      = loadBackgrounds();
   const vids     = loadVideos();
-  const videoUrl = vids[mode] || vids['day'] || vids['live'];
-  const imgUrl   = bgs[mode]  || bgs['day']  || bgs['live'];
+  const videoUrl = mode === 'countdown' ? (vids['countdown'] || vids['day']) : vids['day'];
+  const imgUrl   = mode === 'countdown' ? (bgs['countdown']  || bgs['day'])  : bgs['day'];
 
   // Remove any existing video element
   const existingVid = document.getElementById('bg-video');
@@ -2689,14 +2657,6 @@ async function fetchMatches() {
       return;
     }
 
-    if (mode === 'off') {
-      clearTimeout(state.rotateTimeout);
-      clearTimeout(state.quickPollTimeout);
-      clearTimeout(state.dayRotateTimeout);
-      showWaiting('Fuera de horario de transmisión');
-      return;
-    }
-
     const today = new Date().toISOString().slice(0, 10);
     const cfg   = loadDisplayConfig();
 
@@ -2742,40 +2702,11 @@ async function fetchMatches() {
     const compNames = [...new Set(all.map(f => f.league.name))];
     const compLabel = compNames.length === 1 ? compNames[0] : 'Selección';
 
-    // Modo DÍA: grilla con todos los partidos del día.
-    if (mode === 'day') {
-      clearTimeout(state.rotateTimeout);
-      clearTimeout(state.quickPollTimeout);
-      state.fixtures = all;
-      renderDayGrid(all, compLabel);
-      return;
-    }
-
-    // Modo VIVO
-    const inPlay = all.filter(f => ['1H','2H','HT','ET','P','BT'].includes(f.fixture.status.short));
-
-    if (inPlay.length === 0) {
-      // Sin partidos en vivo en horario en vivo → mostrar grilla del día.
-      clearTimeout(state.rotateTimeout);
-      state.fixtures = all;
-      renderDayGrid(all, compLabel);
-      return;
-    }
-
-    if (inPlay.length >= 2) {
-      // Varios partidos en vivo simultáneos → grilla multi-live.
-      clearTimeout(state.rotateTimeout);
-      clearTimeout(state.quickPollTimeout);
-      clearTimeout(state.dayRotateTimeout);
-      state.fixtures = inPlay;
-      renderMultiLive(inPlay, compLabel);
-      return;
-    }
-
-    // Un solo partido en vivo → vista detallada con stats y eventos.
-    clearTimeout(state.dayRotateTimeout);
-    state.fixtures = inPlay;
-    handleLiveRotation();
+    // Always show day grid with live scores inline
+    clearTimeout(state.rotateTimeout);
+    clearTimeout(state.quickPollTimeout);
+    state.fixtures = all;
+    renderDayGrid(all, compLabel);
   } catch(e) {
     console.error(e);
     showWaiting('Error de conexión · Reintentando...');

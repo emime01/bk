@@ -327,7 +327,7 @@ main {
 
 .bg-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
 .bg-card {
@@ -876,7 +876,7 @@ main {
     </h2>
     <div class="bg-grid">
       <div class="bg-card" data-mode="day">
-        <h3>Modo día</h3>
+        <h3>Marcador</h3>
         <div class="bg-preview" id="prev-day"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-day">
@@ -891,40 +891,8 @@ main {
         </div>
       </div>
 
-      <div class="bg-card" data-mode="live">
-        <h3>Modo en vivo</h3>
-        <div class="bg-preview" id="prev-live"><div class="placeholder">Sin imagen</div></div>
-        <div class="file-row">
-          <input type="file" accept="image/*" id="file-live">
-          <input type="url" placeholder="Imagen: URL https://…" id="url-live">
-        </div>
-        <div class="file-row" style="margin-top:6px">
-          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-live">
-        </div>
-        <div class="row-actions">
-          <button class="btn btn-secondary" data-clear="live">Quitar</button>
-          <button class="btn btn-primary"   data-save-bg="live">Guardar</button>
-        </div>
-      </div>
-
-      <div class="bg-card" data-mode="off">
-        <h3>Fuera de horario</h3>
-        <div class="bg-preview" id="prev-off"><div class="placeholder">Sin imagen</div></div>
-        <div class="file-row">
-          <input type="file" accept="image/*" id="file-off">
-          <input type="url" placeholder="Imagen: URL https://…" id="url-off">
-        </div>
-        <div class="file-row" style="margin-top:6px">
-          <input type="url" placeholder="Video: URL .mp4 / .webm" id="video-url-off">
-        </div>
-        <div class="row-actions">
-          <button class="btn btn-secondary" data-clear="off">Quitar</button>
-          <button class="btn btn-primary"   data-save-bg="off">Guardar</button>
-        </div>
-      </div>
-
       <div class="bg-card" data-mode="countdown">
-        <h3>Cuenta atrás</h3>
+        <h3>Contador</h3>
         <div class="bg-preview" id="prev-countdown"><div class="placeholder">Sin imagen</div></div>
         <div class="file-row">
           <input type="file" accept="image/*" id="file-countdown">
@@ -946,42 +914,6 @@ main {
     </div>
   </div>
 
-  <!-- ── PANEL HORARIOS ─────────────────────────────── -->
-  <div class="panel">
-    <h2>
-      <span>Horarios automáticos</span>
-      <span class="count" id="schedule-status">—</span>
-    </h2>
-    <div class="schedule">
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Modo día</strong>
-          <span>Todos los partidos del día en una placa</span>
-        </div>
-        <div class="time-pair">
-          <input type="time" id="day-start" value="07:00">
-          <span class="dash">a</span>
-          <input type="time" id="day-end" value="18:00">
-        </div>
-      </div>
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Modo en vivo</strong>
-          <span>Resultados en tiempo real con marcador y minuto</span>
-        </div>
-        <div class="time-pair">
-          <input type="time" id="live-start" value="18:00">
-          <span class="dash">a</span>
-          <input type="time" id="live-end" value="23:00">
-        </div>
-      </div>
-    </div>
-    <div class="actions">
-      <button class="btn btn-secondary" id="btn-reset-schedule">Restaurar predeterminados</button>
-      <button class="btn btn-primary" id="btn-save-schedule">Guardar horarios</button>
-    </div>
-  </div>
-
   <!-- ── PANEL CUENTA ATRÁS ──────────────────────────── -->
   <div class="panel">
     <h2>
@@ -989,11 +921,10 @@ main {
       <span class="count" id="cd-status">—</span>
     </h2>
     <div class="schedule">
-
       <div class="schedule-row">
         <div class="schedule-label">
           <strong>Activar cuenta atrás</strong>
-          <span>Reemplaza la placa normal con los contadores de días</span>
+          <span>Muestra el contador en lugar del marcador</span>
         </div>
         <label class="cd-toggle-wrap">
           <input type="checkbox" id="cd-active">
@@ -1001,80 +932,16 @@ main {
           <span class="cd-active-label" id="cd-active-label">Desactivado</span>
         </label>
       </div>
-
       <div class="schedule-row">
         <div class="schedule-label">
-          <strong>Mundial 2026</strong>
-          <span>Fecha y hora de inicio del torneo (hora local Uruguay)</span>
+          <strong>Fecha del evento</strong>
+          <span>Hacia cuándo cuenta el reloj</span>
         </div>
         <div class="time-pair">
-          <input class="cd-date-input" type="datetime-local" id="cd-mundial-date" value="2026-06-11T18:00">
-          <input class="cd-text-input" type="text" id="cd-mundial-label" placeholder="MUNDIAL 2026">
+          <input class="cd-date-input" type="datetime-local" id="cd-target-date" value="2026-06-11T18:00">
+          <input class="cd-text-input" type="text" id="cd-target-label" placeholder="MUNDIAL 2026">
         </div>
       </div>
-
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Debut Uruguay</strong>
-          <span>Fecha y hora del primer partido de La Celeste</span>
-        </div>
-        <div class="time-pair">
-          <input class="cd-date-input" type="datetime-local" id="cd-uruguay-date" value="2026-06-19T21:00">
-          <input class="cd-text-input" type="text" id="cd-uruguay-label" placeholder="DEBUT URUGUAY">
-        </div>
-      </div>
-
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Visualización</strong>
-          <span>Cómo se muestra el contador cuando hay imagen o video de fondo</span>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <label class="layout-option selected" id="cd-layout-opt-side" style="flex:0 0 auto;padding:10px 18px;">
-            <input type="radio" name="cd-layout" value="lateral" checked>
-            <strong>A un lado</strong>
-          </label>
-          <label class="layout-option" id="cd-layout-opt-full" style="flex:0 0 auto;padding:10px 18px;">
-            <input type="radio" name="cd-layout" value="fullscreen">
-            <strong>Pantalla completa</strong>
-          </label>
-        </div>
-      </div>
-
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Encabezado</strong>
-          <span>Mostrar título "Contando los días" y nombre del evento</span>
-        </div>
-        <label class="cd-toggle-wrap">
-          <input type="checkbox" id="cd-show-header" checked>
-          <span class="cd-toggle-track"><span class="cd-toggle-thumb"></span></span>
-          <span class="cd-active-label" id="cd-show-header-label">Visible</span>
-        </label>
-      </div>
-
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Mostrar</strong>
-          <span>Qué eventos mostrar en el contador</span>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <label class="layout-option selected" id="cd-show-opt-both" style="flex:0 0 auto;padding:10px 18px;">
-            <input type="radio" name="cd-show" value="both" checked>
-            <strong>Ambos</strong>
-          </label>
-          <label class="layout-option" id="cd-show-opt-mundial" style="flex:0 0 auto;padding:10px 18px;">
-            <input type="radio" name="cd-show" value="mundial">
-            <strong>Solo Mundial</strong>
-          </label>
-          <label class="layout-option" id="cd-show-opt-uruguay" style="flex:0 0 auto;padding:10px 18px;">
-            <input type="radio" name="cd-show" value="uruguay">
-            <strong>Solo Uruguay</strong>
-          </label>
-        </div>
-      </div>
-
-
       <div class="schedule-row">
         <div class="schedule-label">
           <strong>Tamaño de los números</strong>
@@ -1085,70 +952,7 @@ main {
           <span id="cd-scale-val" style="font-size:13px;min-width:40px;color:var(--gray-600);">100%</span>
         </div>
       </div>
-
-      <div class="schedule-row">
-        <div class="schedule-label">
-          <strong>Colores del contador</strong>
-          <span>Fondo, borde y texto de los números</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div class="color-field" style="margin:0;">
-            <label>Fondo del panel</label>
-            <div class="color-row">
-              <input type="color" id="color-cd-panel-bg" value="#000000">
-              <input type="text"  id="color-cd-panel-bg-text" value="#000000" maxlength="7">
-              <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
-              <input type="range" id="color-cd-opacity" min="0" max="100" value="75" style="width:80px;">
-              <span id="color-cd-opacity-val" style="font-size:12px;min-width:32px;">75%</span>
-            </div>
-          </div>
-          <div class="color-field" style="margin:0;">
-            <label>Borde del panel y separadores</label>
-            <div class="color-row">
-              <input type="color" id="color-cd-border" value="#C8A028">
-              <input type="text"  id="color-cd-border-text" value="#C8A028" maxlength="7">
-              <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
-              <input type="range" id="color-cd-border-opacity" min="0" max="100" value="70" style="width:80px;">
-              <span id="color-cd-border-opacity-val" style="font-size:12px;min-width:32px;">70%</span>
-            </div>
-          </div>
-          <div class="color-field" style="margin:0;">
-            <label>Texto y números</label>
-            <div class="color-row">
-              <input type="color" id="color-cd-text" value="#FFFFFF">
-              <input type="text"  id="color-cd-text-text" value="#FFFFFF" maxlength="7">
-            </div>
-          </div>
-          <div class="color-field" style="margin:0;">
-            <label>Fondo de los números</label>
-            <div class="color-row">
-              <input type="color" id="color-cd-num-bg" value="#000000">
-              <input type="text"  id="color-cd-num-bg-text" value="#000000" maxlength="7">
-              <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
-              <input type="range" id="color-cd-num-bg-opacity" min="0" max="100" value="45" style="width:80px;">
-              <span id="color-cd-num-bg-opacity-val" style="font-size:12px;min-width:32px;">45%</span>
-            </div>
-          </div>
-          <div class="color-field" style="margin:0;">
-            <label>DÍAS / HORAS / MINUTOS / SEGUNDOS</label>
-            <div class="color-row">
-              <input type="color" id="color-cd-lbl" value="#FFFFFF">
-              <input type="text"  id="color-cd-lbl-text" value="#FFFFFF" maxlength="7">
-              <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
-              <input type="range" id="color-cd-lbl-opacity" min="0" max="100" value="50" style="width:80px;">
-              <span id="color-cd-lbl-opacity-val" style="font-size:12px;min-width:32px;">50%</span>
-            </div>
-          </div>
-          <div class="color-field" style="margin:0;">
-            <label>Nombre del evento (ej: MUNDIAL 2026)</label>
-            <div class="color-row">
-              <input type="color" id="color-cd-event-label" value="#FFFFFF">
-              <input type="text"  id="color-cd-event-label-text" value="#FFFFFF" maxlength="7">
-            </div>
-          </div>
-        </div>
-      </div>
-
+    </div>
     <div class="actions">
       <button class="btn btn-primary" id="btn-save-countdown">Guardar y sincronizar</button>
     </div>
@@ -1247,19 +1051,12 @@ function LS(key) {
 }
 
 const STORAGE_KEY  = () => LS('selected_matches');
-const SCHEDULE_KEY = () => LS('schedule');
 const BG_KEY_FN    = () => LS('backgrounds');
 const VIDEOS_KEY   = () => LS('videos');
 const CD_KEY       = () => LS('countdown');
 const COLORS_KEY   = () => LS('colors');
 const LAYOUT_KEY   = () => LS('layout');
 
-const DEFAULT_SCHEDULE = {
-  dayStart:  '07:00',
-  dayEnd:    '18:00',
-  liveStart: '18:00',
-  liveEnd:   '23:00',
-};
 let currentCompetition = 'CL';
 let currentMatches = [];
 
@@ -1274,9 +1071,6 @@ async function syncFromServer() {
     if (cfg.competition != null || cfg.ids != null) {
       const payload = { competition: cfg.competition || 'CL', ids: Array.isArray(cfg.ids) ? cfg.ids : [] };
       localStorage.setItem(STORAGE_KEY(), JSON.stringify(payload));
-    }
-    if (cfg.schedule && typeof cfg.schedule === 'object') {
-      localStorage.setItem(SCHEDULE_KEY(), JSON.stringify(cfg.schedule));
     }
     if (cfg.backgrounds && typeof cfg.backgrounds === 'object') {
       let bgs;
@@ -1315,7 +1109,6 @@ async function pushToServer() {
   try {
     const selections = loadSelections();
     const demoMode   = !!(JSON.parse(localStorage.getItem(STORAGE_KEY()) || '{}').demoMode);
-    const schedule = loadSchedule();
     const bgs      = loadBackgrounds();
     const urlBgs   = {};
     for (const [k, v] of Object.entries(bgs)) {
@@ -1325,7 +1118,7 @@ async function pushToServer() {
     const colors    = loadColorsConfig();
     const layout    = loadLayoutConfig();
     const videos    = loadVideos();
-    const payload   = { selections, demoMode, schedule, backgrounds: urlBgs, videos, countdown, colors, layout };
+    const payload   = { selections, demoMode, backgrounds: urlBgs, videos, countdown, colors, layout };
     const r = await fetch(cfgApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1333,44 +1126,6 @@ async function pushToServer() {
     });
     if (!r.ok) console.warn('Config push failed:', r.status);
   } catch (e) { console.warn('Config push error:', e.message); }
-}
-
-function loadSchedule() {
-  try {
-    const raw = localStorage.getItem(SCHEDULE_KEY());
-    if (!raw) return { ...DEFAULT_SCHEDULE };
-    const parsed = JSON.parse(raw);
-    return { ...DEFAULT_SCHEDULE, ...parsed };
-  } catch { return { ...DEFAULT_SCHEDULE }; }
-}
-
-function saveSchedule(s) {
-  localStorage.setItem(SCHEDULE_KEY(), JSON.stringify(s));
-}
-
-function applyScheduleToInputs(s) {
-  document.getElementById('day-start').value  = s.dayStart;
-  document.getElementById('day-end').value    = s.dayEnd;
-  document.getElementById('live-start').value = s.liveStart;
-  document.getElementById('live-end').value   = s.liveEnd;
-}
-
-function getCurrentScheduleMode(s) {
-  const now = new Date();
-  const m = now.getHours() * 60 + now.getMinutes();
-  const toMin = (hhmm) => {
-    const [h, mm] = hhmm.split(':').map(Number);
-    return h * 60 + mm;
-  };
-  if (m >= toMin(s.dayStart)  && m < toMin(s.dayEnd))  return 'día';
-  if (m >= toMin(s.liveStart) && m < toMin(s.liveEnd)) return 'en vivo';
-  return 'fuera de horario';
-}
-
-function refreshScheduleStatus() {
-  const s = loadSchedule();
-  document.getElementById('schedule-status').textContent =
-    'Ahora: ' + getCurrentScheduleMode(s);
 }
 
 // ── Imágenes de fondo por modo ───────────────────────
@@ -1403,8 +1158,9 @@ function saveBackgrounds(bgs) {
 }
 function refreshBgPreviews() {
   const bgs = loadBackgrounds();
-  ['day','live','off','countdown'].forEach(mode => {
+  ['day','countdown'].forEach(mode => {
     const prev = document.getElementById('prev-' + mode);
+    if (!prev) return;
     const url  = bgs[mode];
     if (url) {
       prev.classList.add('has-image');
@@ -1416,14 +1172,16 @@ function refreshBgPreviews() {
       prev.innerHTML = '<div class="placeholder">Sin imagen</div>';
     }
     const urlInput = document.getElementById('url-' + mode);
-    if (url && !url.startsWith('data:')) urlInput.value = url;
-    else urlInput.value = '';
+    if (urlInput) {
+      if (url && !url.startsWith('data:')) urlInput.value = url;
+      else urlInput.value = '';
+    }
   });
 }
 
 function refreshVideoInputs() {
   const vids = loadVideos();
-  ['day','live','off','countdown'].forEach(mode => {
+  ['day','countdown'].forEach(mode => {
     const inp = document.getElementById('video-url-' + mode);
     if (inp) inp.value = vids[mode] || '';
   });
@@ -1644,27 +1402,6 @@ document.getElementById('btn-none').addEventListener('click', () => {
     cb.closest('.match').classList.remove('selected');
   });
   updateCount();
-});
-
-document.getElementById('btn-save-schedule').addEventListener('click', () => {
-  const s = {
-    dayStart:  document.getElementById('day-start').value  || DEFAULT_SCHEDULE.dayStart,
-    dayEnd:    document.getElementById('day-end').value    || DEFAULT_SCHEDULE.dayEnd,
-    liveStart: document.getElementById('live-start').value || DEFAULT_SCHEDULE.liveStart,
-    liveEnd:   document.getElementById('live-end').value   || DEFAULT_SCHEDULE.liveEnd,
-  };
-  saveSchedule(s);
-  refreshScheduleStatus();
-  pushToServer();
-  showToast('Horarios guardados · sincronizando…');
-});
-
-document.getElementById('btn-reset-schedule').addEventListener('click', () => {
-  applyScheduleToInputs(DEFAULT_SCHEDULE);
-  saveSchedule(DEFAULT_SCHEDULE);
-  refreshScheduleStatus();
-  pushToServer();
-  showToast('Horarios restaurados');
 });
 
 document.getElementById('btn-save').addEventListener('click', () => {
@@ -1905,12 +1642,23 @@ document.querySelectorAll('input[name="panel-size"]').forEach(r => {
     document.querySelectorAll('input[name="panel-size"]').forEach(x => {
       x.closest('.layout-option')?.classList.toggle('selected', x === r);
     });
+    // Auto-save on panel-size change
+    const pos  = document.querySelector('input[name="layout-pos"]:checked')?.value  || 'side';
+    const size = r.value;
+    const { panelTop, panelBottom } = PANEL_PRESETS[size] || PANEL_PRESETS.normal;
+    const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom };
+    saveLayoutConfig(l);
+    pushToServer();
+    showToast('Formato guardado · sincronizando…');
   });
 });
 
 document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
   r.addEventListener('change', () => {
-    document.querySelectorAll('.layout-option').forEach(o => o.classList.remove('selected'));
+    // Only remove selected from layout-pos labels, not panel-size labels
+    document.querySelectorAll('input[name="layout-pos"]').forEach(x => {
+      x.closest('.layout-option')?.classList.remove('selected');
+    });
     r.closest('.layout-option')?.classList.add('selected');
     // re-select the active panel-size option
     const activeSize = document.querySelector('input[name="panel-size"]:checked');
@@ -1931,112 +1679,32 @@ document.getElementById('btn-save-layout').addEventListener('click', () => {
 
 function applyCountdownToInputs(cd) {
   document.getElementById('cd-active').checked = !!cd.active;
-  if (cd.mundialDate)  document.getElementById('cd-mundial-date').value  = cd.mundialDate;
-  if (cd.mundialLabel) document.getElementById('cd-mundial-label').value = cd.mundialLabel;
-  if (cd.uruguayDate)  document.getElementById('cd-uruguay-date').value  = cd.uruguayDate;
-  if (cd.uruguayLabel) document.getElementById('cd-uruguay-label').value = cd.uruguayLabel;
-  const isFullscreen = !!cd.fullscreen;
-  document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
-    r.checked = (r.value === (isFullscreen ? 'fullscreen' : 'lateral'));
-  });
-  document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', !isFullscreen);
-  document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', isFullscreen);
-  const showVal = cd.showEvents || 'both';
-  document.querySelectorAll('input[name="cd-show"]').forEach(r => {
-    r.checked = (r.value === showVal);
-  });
-  document.getElementById('cd-show-opt-both')?.classList.toggle('selected', showVal === 'both');
-  document.getElementById('cd-show-opt-mundial')?.classList.toggle('selected', showVal === 'mundial');
-  document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', showVal === 'uruguay');
+  document.getElementById('cd-active-label').textContent = cd.active ? 'Activado' : 'Desactivado';
+  if (cd.targetDate)  document.getElementById('cd-target-date').value  = cd.targetDate;
+  if (cd.targetLabel) document.getElementById('cd-target-label').value = cd.targetLabel;
   const scaleEl = document.getElementById('cd-scale');
   if (scaleEl) { scaleEl.value = cd.scale || 100; document.getElementById('cd-scale-val').textContent = (cd.scale || 100) + '%'; }
-  const showHeader = cd.showHeader !== false;
-  const headerEl = document.getElementById('cd-show-header');
-  if (headerEl) { headerEl.checked = showHeader; document.getElementById('cd-show-header-label').textContent = showHeader ? 'Visible' : 'Oculto'; }
-  refreshCountdownStatus();
+  const statusEl = document.getElementById('cd-status');
+  if (statusEl) statusEl.textContent = cd.active ? 'ACTIVO' : '—';
 }
 
-function refreshCountdownStatus() {
-  const cd = loadCountdownConfig();
-  const label = document.getElementById('cd-active-label');
-  const status = document.getElementById('cd-status');
-  if (cd.active) {
-    if (label) label.textContent = 'Activado';
-    if (status) {
-      status.textContent = 'EN AIRE';
-      status.style.background = 'rgba(214,35,0,0.12)';
-      status.style.color = 'var(--bk-red)';
-    }
-  } else {
-    if (label) label.textContent = 'Desactivado';
-    if (status) {
-      status.textContent = 'Inactivo';
-      status.style.background = '';
-      status.style.color = '';
-    }
-  }
-}
-
-document.getElementById('cd-active').addEventListener('change', refreshCountdownStatus);
-
-document.querySelectorAll('input[name="cd-layout"]').forEach(r => {
-  r.addEventListener('change', () => {
-    document.getElementById('cd-layout-opt-side')?.classList.toggle('selected', r.value === 'lateral');
-    document.getElementById('cd-layout-opt-full')?.classList.toggle('selected', r.value === 'fullscreen');
-  });
-});
-
-document.querySelectorAll('input[name="cd-show"]').forEach(r => {
-  r.addEventListener('change', () => {
-    document.getElementById('cd-show-opt-both')?.classList.toggle('selected', r.value === 'both');
-    document.getElementById('cd-show-opt-mundial')?.classList.toggle('selected', r.value === 'mundial');
-    document.getElementById('cd-show-opt-uruguay')?.classList.toggle('selected', r.value === 'uruguay');
-  });
+document.getElementById('cd-active').addEventListener('change', function() {
+  document.getElementById('cd-active-label').textContent = this.checked ? 'Activado' : 'Desactivado';
+  document.getElementById('cd-status').textContent = this.checked ? 'ACTIVO' : '—';
 });
 
 document.getElementById('cd-scale').addEventListener('input', () => {
   document.getElementById('cd-scale-val').textContent = document.getElementById('cd-scale').value + '%';
 });
 
-document.getElementById('cd-show-header').addEventListener('change', function() {
-  document.getElementById('cd-show-header-label').textContent = this.checked ? 'Visible' : 'Oculto';
-});
-
 document.getElementById('btn-save-countdown').addEventListener('click', () => {
-  const cdLayoutVal = document.querySelector('input[name="cd-layout"]:checked')?.value;
-  const cdShowVal   = document.querySelector('input[name="cd-show"]:checked')?.value || 'both';
   const cd = {
-    active:       document.getElementById('cd-active').checked,
-    mundialDate:  document.getElementById('cd-mundial-date').value,
-    mundialLabel: document.getElementById('cd-mundial-label').value.trim() || 'MUNDIAL 2026',
-    uruguayDate:  document.getElementById('cd-uruguay-date').value,
-    uruguayLabel: document.getElementById('cd-uruguay-label').value.trim() || 'DEBUT URUGUAY',
-    fullscreen:   cdLayoutVal === 'fullscreen',
-    showEvents:   cdShowVal,
-    scale:        parseInt(document.getElementById('cd-scale')?.value || '100'),
-    showHeader:   document.getElementById('cd-show-header')?.checked !== false,
+    active:      document.getElementById('cd-active').checked,
+    targetDate:  document.getElementById('cd-target-date').value,
+    targetLabel: document.getElementById('cd-target-label').value || 'MUNDIAL 2026',
+    scale:       parseInt(document.getElementById('cd-scale').value, 10),
   };
   saveCountdownConfig(cd);
-  // Save cd colors (stored in Colors config)
-  const panelHex = document.getElementById('color-cd-panel-bg-text')?.value || '#000000';
-  const panelOp  = parseInt(document.getElementById('color-cd-opacity')?.value || '75');
-  const borderHex = document.getElementById('color-cd-border-text')?.value || '#C8A028';
-  const borderOp  = parseInt(document.getElementById('color-cd-border-opacity')?.value || '70');
-  const numBgHex = document.getElementById('color-cd-num-bg-text')?.value || '#000000';
-  const numBgOp  = parseInt(document.getElementById('color-cd-num-bg-opacity')?.value || '45');
-  const lblHex   = document.getElementById('color-cd-lbl-text')?.value || '#FFFFFF';
-  const lblOp    = parseInt(document.getElementById('color-cd-lbl-opacity')?.value || '50');
-  const cdColors = {
-    ...loadColorsConfig(),
-    cdPanelBg:         buildCdPanelBg(panelHex, panelOp),
-    cdText:            document.getElementById('color-cd-text-text')?.value || '#FFFFFF',
-    cdBorderColor:     buildCdPanelBg(borderHex, borderOp),
-    cdNumBg:           buildCdPanelBg(numBgHex, numBgOp),
-    cdLblColor:        buildCdPanelBg(lblHex, lblOp),
-    cdEventLabelColor: document.getElementById('color-cd-event-label-text')?.value || '#FFFFFF',
-  };
-  saveColorsConfig(cdColors);
-  refreshCountdownStatus();
   pushToServer();
   showToast(cd.active ? 'Cuenta atrás activada · sincronizando…' : 'Cuenta atrás desactivada · sincronizando…');
 });
@@ -2099,8 +1767,6 @@ async function selectClient(slug) {
   const demoState = JSON.parse(localStorage.getItem(STORAGE_KEY()) || '{}');
   const demoBtn = document.getElementById('btn-demo');
   if (demoBtn && demoState.demoMode) { demoBtn.textContent = 'Demo (ON)'; demoBtn.style.outline = '3px solid var(--bk-red)'; }
-  applyScheduleToInputs(loadSchedule());
-  refreshScheduleStatus();
   refreshBgPreviews();
   refreshVideoInputs();
   applyCountdownToInputs(loadCountdownConfig());
@@ -2164,7 +1830,6 @@ async function init() {
     await selectClient(allClients[0].slug);
   }
 
-  setInterval(refreshScheduleStatus, 30000);
 }
 init();
 </script>
