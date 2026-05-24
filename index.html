@@ -2616,6 +2616,11 @@ async function syncFromServer() {
       applyClientColors(cfg.colors);
     }
     if (cfg.layout && typeof cfg.layout === 'object') {
+      const nextLayout = JSON.stringify(cfg.layout);
+      if (nextLayout !== localStorage.getItem(LS('layout'))) {
+        localStorage.setItem(LS('layout'), nextLayout);
+        changed = true;
+      }
       applyLayoutConfig(cfg.layout);
     }
     if (cfg.countdown && typeof cfg.countdown === 'object') {
