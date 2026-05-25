@@ -2591,6 +2591,8 @@ let state = {
   quickPollTimeout: null,
   dayPageIdx: 0,
   dayRotateTimeout: null,
+  restored: false,
+  hadSuccessfulFetch: false,
 };
 
 // ── Config sync cross-device (/api/config) ────────────
@@ -2735,6 +2737,7 @@ async function fetchMatches() {
       clearTimeout(state.rotateTimeout);
       clearTimeout(state.quickPollTimeout);
       state.fixtures = all;
+      state.hadSuccessfulFetch = true;
       renderDayGrid(all, compLabel);
       return;
     }
@@ -2763,6 +2766,9 @@ async function fetchMatches() {
     console.log('[fetch] total after merge:', all.length);
 
     if (all.length === 0) {
+      // No pisar el contenido restaurado del caché con la pantalla de carga
+      // si todavía no hubo un fetch exitoso (evita flash al recargar en el CMS).
+      if (state.restored && !state.hadSuccessfulFetch) return;
       showWaiting('Sin partidos hoy');
       return;
     }
@@ -2774,9 +2780,12 @@ async function fetchMatches() {
     clearTimeout(state.rotateTimeout);
     clearTimeout(state.quickPollTimeout);
     state.fixtures = all;
+    state.hadSuccessfulFetch = true;
     renderDayGrid(all, compLabel);
   } catch(e) {
     console.error(e);
+    // Mantener el contenido cacheado si el primer fetch tras recargar falla.
+    if (state.restored && !state.hadSuccessfulFetch) return;
     showWaiting('Error de conexión · Reintentando...');
   }
 }
@@ -3268,7 +3277,7 @@ function showWaiting(msg) { setText('wait-status', msg); showPlaca('waiting'); }
 
 // ── Caché de pantalla para arranque instantáneo ───────────
 const DISPLAY_CACHE_KEY = () => LS('display_cache');
-const DISPLAY_CACHE_TTL = 15 * 60 * 1000; // 15 minutos
+const DISPLAY_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 horas — el CMS puede rotar pantallas con poca frecuencia
 
 function saveDisplayCache(placa, fields) {
   try {
@@ -3291,6 +3300,7 @@ function restoreDisplayCache() {
       else el.innerHTML = val;
     });
     showPlaca(cache.placa);
+    state.restored = true;
     return true;
   } catch { return false; }
 }
@@ -3352,11 +3362,18 @@ try {
   if (localLayout) applyLayoutConfig(localLayout);
 } catch(e) {}
 
-// Sync desde el servidor al cargar, luego arranca el ciclo principal.
-syncFromServer().then(() => {
+// Arranca el ciclo principal de inmediato con la config local (sin esperar al
+// servidor). Así el contenido aparece al instante al recargar desde el CMS y no
+// se ve la pantalla de carga durante el fetch de /api/config (hasta 4s).
+applyModeBackground();
+applyCountdownLayout();
+fetchMatches();
+
+// Sync desde el servidor en segundo plano; si algo cambió, re-render.
+syncFromServer().then((changed) => {
   applyModeBackground();
   applyCountdownLayout();
-  fetchMatches();
+  if (changed) fetchMatches();
 });
 setInterval(fetchMatches, POLL_MS);
 
