@@ -993,6 +993,64 @@ main {
           <input type="text"  id="color-card-text-text" value="#1A1A1A" maxlength="7">
         </div>
       </div>
+
+      <div class="color-field" style="grid-column:1 / -1;">
+        <label style="font-size:14px;color:var(--gray-900);margin-top:6px;">Contador</label>
+      </div>
+      <div class="color-field">
+        <label>Texto de números</label>
+        <div class="color-row">
+          <input type="color" id="color-cd-text" value="#FFFFFF">
+          <input type="text"  id="color-cd-text-text" value="#FFFFFF" maxlength="7">
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Etiquetas de eventos</label>
+        <div class="color-row">
+          <input type="color" id="color-cd-event-label" value="#FFFFFF">
+          <input type="text"  id="color-cd-event-label-text" value="#FFFFFF" maxlength="7">
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Fondo de números</label>
+        <div class="color-row">
+          <input type="color" id="color-cd-num-bg" value="#000000">
+          <input type="text"  id="color-cd-num-bg-text" value="#000000" maxlength="7">
+          <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+          <input type="range" id="color-cd-num-bg-opacity" min="0" max="100" value="0" style="width:80px;">
+          <span id="color-cd-num-bg-opacity-val" style="font-size:12px;min-width:32px;">0%</span>
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Borde / separadores</label>
+        <div class="color-row">
+          <input type="color" id="color-cd-border" value="#C8A028">
+          <input type="text"  id="color-cd-border-text" value="#C8A028" maxlength="7">
+          <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+          <input type="range" id="color-cd-border-opacity" min="0" max="100" value="70" style="width:80px;">
+          <span id="color-cd-border-opacity-val" style="font-size:12px;min-width:32px;">70%</span>
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Texto de unidades (días, hs…)</label>
+        <div class="color-row">
+          <input type="color" id="color-cd-lbl" value="#FFFFFF">
+          <input type="text"  id="color-cd-lbl-text" value="#FFFFFF" maxlength="7">
+          <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+          <input type="range" id="color-cd-lbl-opacity" min="0" max="100" value="50" style="width:80px;">
+          <span id="color-cd-lbl-opacity-val" style="font-size:12px;min-width:32px;">50%</span>
+        </div>
+      </div>
+      <div class="color-field">
+        <label>Fondo del panel</label>
+        <div class="color-row">
+          <input type="color" id="color-cd-panel-bg" value="#000000">
+          <input type="text"  id="color-cd-panel-bg-text" value="#000000" maxlength="7">
+          <span style="font-size:12px;color:var(--gray-600);margin-left:6px;">opacidad:</span>
+          <input type="range" id="color-cd-opacity" min="0" max="100" value="0" style="width:80px;">
+          <span id="color-cd-opacity-val" style="font-size:12px;min-width:32px;">0%</span>
+        </div>
+      </div>
     </div>
     <div class="actions">
       <button class="btn btn-primary" id="btn-save-colors">Guardar colores</button>
@@ -1455,6 +1513,8 @@ const DEFAULT_COLORS = {
   cardBg: '#FFFFFF', cardBgOpacity: 100, cardText: '#1A1A1A',
   cdPanelBg: 'transparent', cdText: '#FFFFFF',
   cdBorderColor: 'rgba(200,160,40,0.70)',
+  cdNumBg: 'transparent', cdLblColor: 'rgba(255,255,255,0.50)',
+  cdEventLabelColor: '#FFFFFF',
 };
 
 function loadColorsConfig() {
@@ -1468,7 +1528,7 @@ function saveColorsConfig(c) { localStorage.setItem(COLORS_KEY(), JSON.stringify
 
 function parseCdPanelBg(rgba) {
   // Extrae el color hex y la opacidad de un rgba() o color hex
-  if (!rgba) return { hex: '#000000', opacity: 60 };
+  if (!rgba || rgba === 'transparent') return { hex: '#000000', opacity: 0 };
   const m = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
   if (m) {
     const r = parseInt(m[1]).toString(16).padStart(2,'0');
@@ -1583,13 +1643,21 @@ if (cardOpacitySlider) {
 
 document.getElementById('btn-save-colors').addEventListener('click', () => {
   const existing = loadColorsConfig();
+  const val = id => document.getElementById(id)?.value;
+  const num = id => parseInt(document.getElementById(id)?.value ?? '0');
   const c = {
     ...existing,
-    accent:        document.getElementById('color-accent-text').value,
-    accentAlt:     document.getElementById('color-accent-alt-text').value,
-    cardBg:        document.getElementById('color-card-bg-text').value,
+    accent:        val('color-accent-text'),
+    accentAlt:     val('color-accent-alt-text'),
+    cardBg:        val('color-card-bg-text'),
     cardBgOpacity: parseInt(document.getElementById('color-card-bg-opacity')?.value ?? '100'),
-    cardText:      document.getElementById('color-card-text-text').value,
+    cardText:      val('color-card-text-text'),
+    cdText:            val('color-cd-text-text'),
+    cdEventLabelColor: val('color-cd-event-label-text'),
+    cdNumBg:           buildCdPanelBg(val('color-cd-num-bg-text'), num('color-cd-num-bg-opacity')),
+    cdBorderColor:     buildCdPanelBg(val('color-cd-border-text'), num('color-cd-border-opacity')),
+    cdLblColor:        buildCdPanelBg(val('color-cd-lbl-text'),    num('color-cd-lbl-opacity')),
+    cdPanelBg:         buildCdPanelBg(val('color-cd-panel-bg-text'), num('color-cd-opacity')),
   };
   saveColorsConfig(c);
   pushToServer();
@@ -1610,8 +1678,8 @@ function saveLayoutConfig(l) { localStorage.setItem(LAYOUT_KEY(), JSON.stringify
 
 const PANEL_PRESETS = {
   normal: { panelTop: 300, panelBottom: 215 },
-  large:  { panelTop: 120, panelBottom: 80  },
-  full:   { panelTop: 40,  panelBottom: 40  },
+  large:  { panelTop: 190, panelBottom: 135 },
+  full:   { panelTop: 110, panelBottom: 80  },
 };
 
 function updatePanelSizeVisibility() {
