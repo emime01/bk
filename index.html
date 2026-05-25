@@ -59,9 +59,28 @@
   --panel-right:  70px;
   --panel-top:    300px;
   --panel-bottom: 215px;
+
+  /* Curvas de easing fuertes (filosofía de design engineering) */
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
+
+/* Entrada escalonada de tarjetas: fade + leve subida + escala.
+   ease-out fuerte para respuesta inmediata; nunca desde scale(0). */
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes digitEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes cardEnter  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes digitEnter { from { opacity: 0; } to { opacity: 1; } }
+}
 
 html { overflow: hidden; }
 
@@ -231,6 +250,14 @@ body.has-mode-bg #placa-day .day-team-name {
   overflow: hidden;
 }
 
+/* Entrada escalonada (stagger 55ms) al renderizar/rotar páginas */
+body.has-mode-bg #placa-day .day-row { animation: cardEnter 440ms var(--ease-out) both; }
+body.has-mode-bg #placa-day .day-row:nth-child(1) { animation-delay: 0ms; }
+body.has-mode-bg #placa-day .day-row:nth-child(2) { animation-delay: 55ms; }
+body.has-mode-bg #placa-day .day-row:nth-child(3) { animation-delay: 110ms; }
+body.has-mode-bg #placa-day .day-row:nth-child(4) { animation-delay: 165ms; }
+body.has-mode-bg #placa-day .day-row:nth-child(5) { animation-delay: 220ms; }
+
 /* Modo denso adaptado al ancho de 800px */
 body.has-mode-bg #placa-day .day-list.dense .day-row {
   grid-template-columns: 80px 1fr auto 1fr 100px;
@@ -277,6 +304,11 @@ body.has-mode-bg #placa-multilive .ml-card {
   gap: 18px;
 }
 body.has-mode-bg #placa-multilive .ml-card::before { display: none; }
+body.has-mode-bg #placa-multilive .ml-card { animation: cardEnter 440ms var(--ease-out) both; }
+body.has-mode-bg #placa-multilive .ml-card:nth-child(1) { animation-delay: 0ms; }
+body.has-mode-bg #placa-multilive .ml-card:nth-child(2) { animation-delay: 55ms; }
+body.has-mode-bg #placa-multilive .ml-card:nth-child(3) { animation-delay: 110ms; }
+body.has-mode-bg #placa-multilive .ml-card:nth-child(4) { animation-delay: 165ms; }
 body.has-mode-bg #placa-multilive .ml-team-name {
   color: rgba(255,255,255,0.90);
   font-size: 24px;
@@ -713,7 +745,7 @@ body.has-mode-bg #placa-waiting .wait-status {
   font-size: 110px;
   color: var(--white);
   line-height: 1;
-  transition: color 0.3s, text-shadow 0.3s;
+  transition: color 250ms var(--ease-out), text-shadow 250ms var(--ease-out);
 }
 #placa-live .score-n.flash { animation: score-flash 0.6s ease; }
 #placa-live .score-dash {
@@ -1160,7 +1192,7 @@ body.has-mode-bg #placa-waiting .wait-status {
   width: 9px; height: 9px;
   border-radius: 50%;
   background: rgba(255,255,255,0.18);
-  transition: all 0.4s ease;
+  transition: width 350ms var(--ease-out), background-color 350ms var(--ease-out), box-shadow 350ms var(--ease-out);
 }
 #placa-day .day-pages .dot.active {
   background: var(--accent-alt);
@@ -1844,6 +1876,8 @@ body.has-mode-bg #placa-countdown.active .cd-panel {
   background: var(--cd-panel-bg, transparent);
   padding: 0 24px;
 }
+/* Entrada suave al activar la placa (no se repite por segundo) */
+body.has-mode-bg #placa-countdown.active .cd-panel { animation: digitEnter 500ms var(--ease-out) both; }
 body.has-mode-bg #placa-countdown.active .cd-header {
   display: flex;
   width: 100%;
@@ -2127,10 +2161,6 @@ body.has-mode-bg.countdown-fullscreen #placa-countdown.active .cd-lbl { font-siz
 <!-- PLACA CUENTA ATRÁS -->
 <div class="placa" id="placa-countdown">
   <div class="cd-panel">
-    <div class="cd-header">
-      <div class="cd-brand"></div>
-      <div class="cd-title">Contando los días</div>
-    </div>
     <div class="cd-events" id="cd-events">
       <!-- generado por JS -->
     </div>
@@ -2429,7 +2459,6 @@ function renderCountdown() {
   document.getElementById('placa-countdown')?.classList.remove('hide-header');
 
   const targetDate  = cfg.targetDate || cfg.mundialDate;
-  const targetLabel = cfg.targetLabel || cfg.mundialLabel || 'MUNDIAL 2026';
 
   if (!targetDate) { stopCountdown(); fetchMatches(); return; }
 
@@ -2448,7 +2477,6 @@ function renderCountdown() {
 
   container.innerHTML = `
     <div class="cd-event" id="cd-event-target">
-      <div class="cd-event-label">${targetLabel}</div>
       <div class="cd-digits">
         <div class="cd-unit"><div class="cd-num">${pad(days)}</div><div class="cd-lbl">DÍAS</div></div>
         <div class="cd-sep">:</div>
