@@ -1597,7 +1597,7 @@ document.getElementById('btn-save-colors').addEventListener('click', () => {
 });
 
 // ── Layout ────────────────────────────────────────────────
-const DEFAULT_LAYOUT = { half: false, panelSize: 'normal', panelTop: 300, panelBottom: 215, panelScale: 1 };
+const DEFAULT_LAYOUT = { half: false, panelSize: 'normal', panelTop: 300, panelBottom: 215 };
 
 function loadLayoutConfig() {
   try {
@@ -1609,9 +1609,9 @@ function loadLayoutConfig() {
 function saveLayoutConfig(l) { localStorage.setItem(LAYOUT_KEY(), JSON.stringify(l)); }
 
 const PANEL_PRESETS = {
-  normal: { panelTop: 300, panelBottom: 215, panelScale: 1.0  },
-  large:  { panelTop: 100, panelBottom: 164, panelScale: 1.2  },
-  full:   { panelTop: 80,  panelBottom: 231, panelScale: 1.3  },
+  normal: { panelTop: 300, panelBottom: 215 },
+  large:  { panelTop: 190, panelBottom: 135 },
+  full:   { panelTop: 110, panelBottom: 80  },
 };
 
 function updatePanelSizeVisibility() {
@@ -1645,8 +1645,8 @@ document.querySelectorAll('input[name="panel-size"]').forEach(r => {
     // Auto-save on panel-size change
     const pos  = document.querySelector('input[name="layout-pos"]:checked')?.value  || 'side';
     const size = r.value;
-    const { panelTop, panelBottom, panelScale } = PANEL_PRESETS[size] || PANEL_PRESETS.normal;
-    const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom, panelScale };
+    const { panelTop, panelBottom } = PANEL_PRESETS[size] || PANEL_PRESETS.normal;
+    const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom };
     saveLayoutConfig(l);
     pushToServer();
     showToast('Formato guardado · sincronizando…');
@@ -1670,8 +1670,8 @@ document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
 document.getElementById('btn-save-layout').addEventListener('click', () => {
   const pos  = document.querySelector('input[name="layout-pos"]:checked')?.value  || 'side';
   const size = document.querySelector('input[name="panel-size"]:checked')?.value  || 'normal';
-  const { panelTop, panelBottom, panelScale } = PANEL_PRESETS[size] || PANEL_PRESETS.normal;
-  const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom, panelScale };
+  const { panelTop, panelBottom } = PANEL_PRESETS[size] || PANEL_PRESETS.normal;
+  const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom };
   saveLayoutConfig(l);
   pushToServer();
   showToast('Formato guardado · sincronizando…');

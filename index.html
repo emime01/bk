@@ -59,7 +59,6 @@
   --panel-right:  70px;
   --panel-top:    300px;
   --panel-bottom: 215px;
-  --panel-scale:  1;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -122,12 +121,10 @@ body.has-mode-bg #placa-day .day-list {
   padding: 0;
   gap: 14px;
   background: transparent;
-  justify-content: center;
-  transform: scale(var(--panel-scale, 1));
-  transform-origin: top right;
+  justify-content: stretch;
 }
 body.has-mode-bg #placa-day .day-row {
-  flex: none;
+  flex: 1 1 0;
   background: white;
   border: none;
   box-shadow: 0 8px 28px rgba(0,0,0,0.28);
@@ -248,8 +245,6 @@ body.has-mode-bg #placa-multilive .ml-grid {
   /* siempre vertical en modo billboard */
   grid-template-columns: 1fr !important;
   grid-template-rows: none !important;
-  transform: scale(var(--panel-scale, 1));
-  transform-origin: top right;
 }
 body.has-mode-bg #placa-multilive .ml-card {
   background: white;
@@ -290,8 +285,6 @@ body.has-mode-bg #placa-live .match-half {
   margin-bottom: var(--panel-bottom);
   height: auto;
   align-self: center;
-  transform: scale(var(--panel-scale, 1));
-  transform-origin: top right;
   background: white;
   border-radius: 16px;
   border-right: none;
@@ -1821,8 +1814,6 @@ body.has-mode-bg #placa-countdown.active .cd-panel {
   gap: 28px;
   background: var(--cd-panel-bg, transparent);
   padding: 0 24px;
-  transform: scale(var(--panel-scale, 1));
-  transform-origin: top right;
 }
 body.has-mode-bg #placa-countdown.active .cd-header {
   display: flex;
@@ -2340,7 +2331,6 @@ function applyLayoutConfig(layout) {
   const root = document.documentElement;
   if (layout.panelTop    != null) root.style.setProperty('--panel-top',    layout.panelTop    + 'px');
   if (layout.panelBottom != null) root.style.setProperty('--panel-bottom', layout.panelBottom + 'px');
-  if (layout.panelScale  != null) root.style.setProperty('--panel-scale',  layout.panelScale);
   if (window.__fitCanvas) window.__fitCanvas();
 }
 
@@ -3078,8 +3068,12 @@ function renderDayGrid(fixtures, competition) {
   const pageStart  = idx * DAY_PAGE_SIZE;
   const page       = sorted.slice(pageStart, pageStart + DAY_PAGE_SIZE);
 
-  // Dense mode for 4+ items; center alignment for fewer
-  grid.classList.toggle('dense', page.length >= 4);
+  // Dense mode (tipografía chica) según preset de tamaño:
+  // presets más grandes conservan tipografía grande con más partidos.
+  let panelSize = 'normal';
+  try { panelSize = JSON.parse(localStorage.getItem(LS('layout')) || '{}').panelSize || 'normal'; } catch {}
+  const denseThreshold = panelSize === 'full' ? 6 : panelSize === 'large' ? 5 : 4;
+  grid.classList.toggle('dense', page.length >= denseThreshold);
 
   const crestHtml = (t) => t.logo
     ? `<img src="${t.logo}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'⚽'}))">`
