@@ -1021,8 +1021,9 @@ body.has-mode-bg #placa-waiting .wait-status {
   content: '';
   position: absolute;
   left: 0; top: 0; bottom: 0;
-  width: 6px;
-  background: rgba(255,255,255,0.15);
+  width: 5px;
+  background: linear-gradient(180deg, var(--accent-alt) 0%, var(--accent) 100%);
+  opacity: 0.7;
 }
 #placa-day .day-row.live {
   background: linear-gradient(90deg, rgba(214,35,0,0.18) 0%, rgba(214,35,0,0.04) 100%);
@@ -1799,10 +1800,11 @@ body.has-mode-bg #placa-day .day-pages .dot.active {
 .cd-sep {
   font-family: 'Anton', sans-serif;
   font-size: calc(80px * var(--cd-scale, 1));
-  color: var(--cd-border-color, rgba(200,160,40,0.7));
+  color: var(--cd-border-color, rgba(200,160,40,0.55));
   line-height: 1;
   align-self: center;
   margin-bottom: 28px;
+  opacity: 0.70;
 }
 .cd-done {
   font-family: 'Anton', sans-serif;
