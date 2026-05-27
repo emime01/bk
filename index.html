@@ -59,6 +59,7 @@
   --panel-right:  70px;
   --panel-top:    300px;
   --panel-bottom: 215px;
+  --card-zoom:    1;     /* escala del contenido de las tarjetas (slider admin) */
 
   /* Curvas de easing fuertes (filosofía de design engineering) */
   --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
@@ -140,6 +141,7 @@ body.has-mode-bg #placa-day .day-list {
   padding: 0;
   gap: 14px;
   background: transparent;
+  zoom: var(--card-zoom);
   justify-content: stretch;
 }
 body.has-mode-bg #placa-day .day-row {
@@ -286,6 +288,7 @@ body.has-mode-bg #placa-multilive .ml-grid {
   gap: 12px;
   background: transparent;
   align-content: center;
+  zoom: var(--card-zoom);
   /* siempre vertical en modo billboard */
   grid-template-columns: 1fr !important;
   grid-template-rows: none !important;
@@ -340,6 +343,7 @@ body.has-mode-bg #placa-live .match-half {
   border-radius: 20px;
   border-right: none;
   padding: 28px 32px 20px;
+  zoom: var(--card-zoom);
 }
 body.has-mode-bg #placa-live .match-half::before { display: none; }
 body.has-mode-bg #placa-live .match-header { border-bottom-color: rgba(80,35,20,0.10); }
@@ -2396,6 +2400,7 @@ function applyLayoutConfig(layout) {
   const root = document.documentElement;
   if (layout.panelTop    != null) root.style.setProperty('--panel-top',    layout.panelTop    + 'px');
   if (layout.panelBottom != null) root.style.setProperty('--panel-bottom', layout.panelBottom + 'px');
+  if (layout.cardZoom    != null) root.style.setProperty('--card-zoom',    (layout.cardZoom / 100).toFixed(2));
   if (window.__fitCanvas) window.__fitCanvas();
 }
 
