@@ -864,6 +864,16 @@ main {
       </div>
     </div>
 
+    <!-- Zoom del contenido de las tarjetas -->
+    <div style="margin-top:20px;">
+      <div style="font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:10px;letter-spacing:0.3px;">Tamaño del contenido de las tarjetas</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <input type="range" id="card-zoom" min="60" max="140" value="100" style="flex:1;max-width:220px;">
+        <span id="card-zoom-val" style="font-size:13px;min-width:38px;font-weight:600;">100%</span>
+      </div>
+      <div style="font-size:12px;color:var(--gray-500);margin-top:6px;">Escala el texto, escudos y espaciados dentro de cada tarjeta. Combiná con el tamaño del panel para ajustar la vista.</div>
+    </div>
+
     <div class="actions">
       <button class="btn btn-primary" id="btn-save-layout">Guardar formato</button>
     </div>
@@ -1665,7 +1675,7 @@ document.getElementById('btn-save-colors').addEventListener('click', () => {
 });
 
 // ── Layout ────────────────────────────────────────────────
-const DEFAULT_LAYOUT = { half: false, panelSize: 'normal', panelTop: 300, panelBottom: 215 };
+const DEFAULT_LAYOUT = { half: false, panelSize: 'normal', panelTop: 300, panelBottom: 215, cardZoom: 100 };
 
 function loadLayoutConfig() {
   try {
@@ -1702,6 +1712,11 @@ function applyLayoutToInputs(l) {
   ['normal','large','full'].forEach(s => {
     document.getElementById('panel-size-' + s)?.classList.toggle('selected', s === size);
   });
+  const zoom = l.cardZoom ?? DEFAULT_LAYOUT.cardZoom;
+  const zoomEl = document.getElementById('card-zoom');
+  const zoomValEl = document.getElementById('card-zoom-val');
+  if (zoomEl) { zoomEl.value = zoom; }
+  if (zoomValEl) { zoomValEl.textContent = zoom + '%'; }
   updatePanelSizeVisibility();
 }
 
@@ -1711,10 +1726,11 @@ document.querySelectorAll('input[name="panel-size"]').forEach(r => {
       x.closest('.layout-option')?.classList.toggle('selected', x === r);
     });
     // Auto-save on panel-size change
-    const pos  = document.querySelector('input[name="layout-pos"]:checked')?.value  || 'side';
-    const size = r.value;
+    const pos      = document.querySelector('input[name="layout-pos"]:checked')?.value  || 'side';
+    const size     = r.value;
+    const cardZoom = parseInt(document.getElementById('card-zoom')?.value ?? '100', 10);
     const { panelTop, panelBottom } = PANEL_PRESETS[size] || PANEL_PRESETS.normal;
-    const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom };
+    const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom, cardZoom };
     saveLayoutConfig(l);
     pushToServer();
     showToast('Formato guardado · sincronizando…');
@@ -1735,11 +1751,18 @@ document.querySelectorAll('input[name="layout-pos"]').forEach(r => {
   });
 });
 
+// Slider de zoom en tiempo real (preview instantáneo)
+document.getElementById('card-zoom')?.addEventListener('input', function() {
+  const v = parseInt(this.value, 10);
+  document.getElementById('card-zoom-val').textContent = v + '%';
+});
+
 document.getElementById('btn-save-layout').addEventListener('click', () => {
-  const pos  = document.querySelector('input[name="layout-pos"]:checked')?.value  || 'side';
-  const size = document.querySelector('input[name="panel-size"]:checked')?.value  || 'normal';
+  const pos      = document.querySelector('input[name="layout-pos"]:checked')?.value  || 'side';
+  const size     = document.querySelector('input[name="panel-size"]:checked')?.value  || 'normal';
+  const cardZoom = parseInt(document.getElementById('card-zoom')?.value ?? '100', 10);
   const { panelTop, panelBottom } = PANEL_PRESETS[size] || PANEL_PRESETS.normal;
-  const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom };
+  const l = { top: pos === 'top', vertical: pos === 'vertical', panelSize: size, panelTop, panelBottom, cardZoom };
   saveLayoutConfig(l);
   pushToServer();
   showToast('Formato guardado · sincronizando…');
